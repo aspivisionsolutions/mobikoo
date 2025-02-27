@@ -3,6 +3,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const inspectionRoutes = require("./routes/inspectionRoutes");
 const inspectionReportRoutes = require("./routes/inspectionReportRoutes");
+const fineRoutes = require("./routes/fineRoutes");
 require("dotenv").config();
 const cors = require("cors");
 const Inspection = require("./models/inspection");
@@ -20,6 +21,7 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/inspection", inspectionRoutes);
 app.use("/api/inspection-report", inspectionReportRoutes);
+app.use("/api/fine", fineRoutes);
 
 // get all inspections for a phone checker
 app.get("/getInspections", protect , roleMiddleware(["phone_checker"]) , async (req, res)=>{
