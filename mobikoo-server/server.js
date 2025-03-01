@@ -6,6 +6,7 @@ const inspectionReportRoutes = require("./routes/inspectionReportRoutes");
 const fineRoutes = require("./routes/fineRoutes");
 const warrantyRoutes = require("./routes/warrantyRoutes");
 const devicesRoutes = require("./routes/devicesRoutes");
+const IssuedWarranty = require("./models/issuedWarranties");
 const bulkWarrantyPurchaseRoutes = require("./routes/bulkWarrantyPurchaseRoutes");
 require("dotenv").config();
 const cors = require("cors");
@@ -52,6 +53,20 @@ app.get("/getInspections", protect , roleMiddleware(["phone_checker"]) , async (
       });
     }
 })
+
+app.get('/customers-with-warranties', protect, roleMiddleware(['admin', 'shop_owner']), async (req, res) => {
+  try {
+      console.log("Authenticated User ID:", req.user.userId); // Debugging line
+
+      // Fetch issued warranties where shopOwnerId matches the authenticated user's ID
+      const issuedWarranties = await IssuedWarranty.find({ shopOwnerId: req.user.userId }).populate('customerId', 'name email phone').populate('planId', 'name price coverageDetails duration');
+
+      res.json(issuedWarranties);
+  } catch (error) {
+      console.error("Error fetching warranty details:", error); // Log the error for debugging
+      res.status(500).json({ message: "Error fetching warranty details", error: error.message });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
