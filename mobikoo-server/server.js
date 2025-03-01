@@ -6,6 +6,7 @@ const inspectionReportRoutes = require("./routes/inspectionReportRoutes");
 const fineRoutes = require("./routes/fineRoutes");
 const warrantyRoutes = require("./routes/warrantyRoutes");
 const devicesRoutes = require("./routes/devicesRoutes");
+const bulkWarrantyPurchaseRoutes = require("./routes/bulkWarrantyPurchaseRoutes");
 require("dotenv").config();
 const cors = require("cors");
 const Inspection = require("./models/inspection");
@@ -26,6 +27,7 @@ app.use("/api/inspection-report", inspectionReportRoutes);
 app.use("/api/fine", fineRoutes);
 app.use("/api/warranty", warrantyRoutes);
 app.use("/api/devices", devicesRoutes);
+app.use(bulkWarrantyPurchaseRoutes);
 
 // get all inspections for a phone checker
 app.get("/getInspections", protect , roleMiddleware(["phone_checker"]) , async (req, res)=>{
