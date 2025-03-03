@@ -1,18 +1,58 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiUser, FiBell, FiLogOut } from 'react-icons/fi';
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const userName = localStorage.getItem('userName') || 'Phone Checker';
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
+
   return (
-    <nav className="bg-blue-600 text-white px-6 py-3 flex justify-between items-center">
-      <div className="navbar-brand">
-        <h1 className="text-xl font-bold">Mobikoo</h1>
-      </div>
-      <div>
-        <button className="focus:outline-none">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="12" cy="7" r="4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+    <nav className="bg-white shadow-sm">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo/Brand */}
+          <div className="flex items-center">
+            <div className="text-xl font-bold text-gray-800">
+              MobiKoo
+            </div>
+          </div>
+
+          {/* Right side items */}
+          <div className="flex items-center space-x-4">
+            {/* Notifications */}
+            <button className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
+              <span className="sr-only">View notifications</span>
+              <FiBell className="h-6 w-6" />
+            </button>
+
+            {/* Profile Dropdown */}
+            <div className="relative flex items-center space-x-3">
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                  <FiUser className="h-5 w-5 text-gray-500" />
+                </div>
+                <div className="ml-3">
+                  <div className="text-sm font-medium text-gray-700">{userName}</div>
+                  <div className="text-xs text-gray-500">Phone Checker</div>
+                </div>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
+                title="Logout"
+              >
+                <FiLogOut className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
   );
