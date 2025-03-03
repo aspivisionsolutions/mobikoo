@@ -59,7 +59,7 @@ app.get('/customers-with-warranties', protect, roleMiddleware(['admin', 'shop_ow
       console.log("Authenticated User ID:", req.user.userId); // Debugging line
 
       // Fetch issued warranties where shopOwnerId matches the authenticated user's ID
-      const issuedWarranties = await IssuedWarranty.find({ shopOwnerId: req.user.userId }).populate('customerId', 'name email phone').populate('planId', 'name price coverageDetails duration');
+      const issuedWarranties = await IssuedWarranty.find({ shopOwnerId: req.user.userId }).populate('customerId', 'firstName lastName email phone').populate('planId', 'name price coverageDetails duration').populate("deviceId","IMEI");
 
       res.json(issuedWarranties);
   } catch (error) {
