@@ -163,8 +163,8 @@ const SignupPage = () => {
               >
                 <option value="" disabled>Select your role</option>
                 <option value="customer">Customer</option>
-                <option value="shop_owner">Shop Owner</option>
-                <option value="phone_checker">Phone Checker</option>
+                <option value="shop-owner">Shop Owner</option>
+                <option value="phone-checker">Phone Checker</option>
                 <option value="admin">Admin</option>
               </select>
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

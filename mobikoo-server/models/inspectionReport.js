@@ -1,21 +1,26 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const InspectionReportSchema = new mongoose.Schema({
-  inspectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Inspection", required: true },
-  phoneCheckerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  photos: [{ type: String }], // Store URLs of uploaded photos
-  videos: [{ type: String }], // Store URLs of uploaded videos
-  notes: { type: String, required: true },
-  hardwareCondition: { type: String, required: true },
-  softwareCondition: { type: String, required: true },
-  grade: { 
-    type: String, 
-    enum: ["A", "B", "C", "D"], 
-    required: true,
-    default: "C" 
-  }, // Helps determine warranty eligibility
-  createdAt: { type: Date, default: Date.now },
-  deviceIMEI: { type: String, required: true },
+const inspectionReportSchema = new mongoose.Schema({
+    inspectionRequestId: { type: String, required: true },
+    inspectionDate: { type: Date, required: true},
+    imeiNumber: { type: String, required: true },
+    deviceModel: { type: String, required: true },
+    serialNumber: { type: String, required: true },
+    operatingSystem: { type: String, required: true },
+    screenCondition: { type: String, required: true },
+    bodyCondition: { type: String, required: true },
+    batteryHealth: { type: String, required: true },
+    chargingPortFunctionality: { type: String, required: true },
+    cameraFunctionality: { type: String, required: true },
+    buttonsSensors: { type: String, required: true },
+    osFunctionality: { type: String, required: true },
+    performanceBenchmark: { type: String, required: true },
+    photos: { type: [String]},
+    comments: { type: String, required: true },
+    digitalSignature: { type: Boolean, required: true },
+    grade: { type: String, required: true }
 });
 
-module.exports = mongoose.model("InspectionReport", InspectionReportSchema);
+const InspectionReport = mongoose.model('InspectionReport', inspectionReportSchema);
+
+module.exports = InspectionReport;
