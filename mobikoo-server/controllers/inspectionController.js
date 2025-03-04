@@ -8,7 +8,7 @@ exports.createInspectionRequest = async (req, res) => {
   try {
 
     const shopOwner = await ShopOwner.findOne({userId: req.user.userId})
-
+    
     const newInspectionRequest = new InspectionRequest({
       shopOwnerId: shopOwner._id,
       inspectorId,
