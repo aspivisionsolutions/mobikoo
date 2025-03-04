@@ -1,29 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { FiSearch, FiCheckCircle, FiXCircle, FiMapPin, FiPhone } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
-const InspectionRequests = ({ requests, onStatusUpdate, standalone = false }) => {
+const InspectionRequests = ({ standalone = false }) => {
+  const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredRequests = requests.filter(request =>
-    request.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.shopId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.phoneNumber.includes(searchTerm)
-  );
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker', {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
+      });
+      setRequests(response.data);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      toast.error('Failed to fetch inspection requests');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (requestId, newStatus) => {
+    try {
+      await axios.patch(`http://localhost:5000/api/inspection/${requestId}/status`, 
+        { status: newStatus },
+        { headers: { Authorization: `${localStorage.getItem('token')}` }}
+      );
+      toast.success('Status updated successfully');
+      fetchRequests(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update status');
+    }
+  };
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'scheduled':
+      case 'accepted':
         return 'bg-blue-100 text-blue-800';
       case 'completed':
         return 'bg-green-100 text-green-800';
-      case 'cancelled':
+      case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const filteredRequests = requests.filter(request =>
+    request.shopOwner?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.area.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className={`h-full flex flex-col ${standalone ? 'ml-64' : ''}`}>
@@ -38,7 +74,7 @@ const InspectionRequests = ({ requests, onStatusUpdate, standalone = false }) =>
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white 
                      placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 
                      focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Search by Shop Name, ID or Phone Number"
+            placeholder="Search by Shop Owner or Area"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -51,13 +87,13 @@ const InspectionRequests = ({ requests, onStatusUpdate, standalone = false }) =>
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Shop Details
+                Shop Owner
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contact Info
+                Area
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Address
+                Date Requested
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -68,7 +104,13 @@ const InspectionRequests = ({ requests, onStatusUpdate, standalone = false }) =>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredRequests.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                  Loading requests...
+                </td>
+              </tr>
+            ) : filteredRequests.length === 0 ? (
               <tr>
                 <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
                   No inspection requests found
@@ -76,26 +118,23 @@ const InspectionRequests = ({ requests, onStatusUpdate, standalone = false }) =>
               </tr>
             ) : (
               filteredRequests.map((request) => (
-                <tr key={request.shopId} className="hover:bg-gray-50">
+                <tr key={request._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{request.shopName}</div>
-                    <div className="text-sm text-gray-500">ID: {request.shopId}</div>
+                    <div className="text-sm font-medium text-gray-900">{request.shopOwner?.name}</div>
+                    <div className="text-sm text-gray-500">{request.shopOwner?.email}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FiPhone className="mr-2 h-4 w-4" />
-                      {request.phoneNumber}
+                    <div className="flex items-center text-sm text-gray-900">
+                      <FiMapPin className="mr-2 h-4 w-4 text-gray-400" />
+                      {request.area}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-start text-sm text-gray-500">
-                      <FiMapPin className="mr-2 h-4 w-4 mt-0.5" />
-                      <span className="whitespace-pre-line">{request.shopAddress}</span>
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(request.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                   ${getStatusBadgeClass(request.status)}`}>
+                      ${getStatusBadgeClass(request.status)}`}>
                       {request.status}
                     </span>
                   </td>
@@ -103,24 +142,24 @@ const InspectionRequests = ({ requests, onStatusUpdate, standalone = false }) =>
                     {request.status === 'pending' && (
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => onStatusUpdate(request.shopId, 'scheduled')}
+                          onClick={() => handleStatusUpdate(request._id, 'accepted')}
                           className="text-blue-600 hover:text-blue-900"
-                          title="Schedule Inspection"
+                          title="Accept Request"
                         >
                           <FiCheckCircle className="h-5 w-5" />
                         </button>
                         <button
-                          onClick={() => onStatusUpdate(request.shopId, 'cancelled')}
+                          onClick={() => handleStatusUpdate(request._id, 'rejected')}
                           className="text-red-600 hover:text-red-900"
-                          title="Cancel Request"
+                          title="Reject Request"
                         >
                           <FiXCircle className="h-5 w-5" />
                         </button>
                       </div>
                     )}
-                    {request.status === 'scheduled' && (
+                    {request.status === 'accepted' && (
                       <button
-                        onClick={() => onStatusUpdate(request.shopId, 'completed')}
+                        onClick={() => handleStatusUpdate(request._id, 'completed')}
                         className="text-green-600 hover:text-green-900"
                         title="Mark as Completed"
                       >

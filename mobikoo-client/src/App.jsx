@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
 import PhoneCheckerLayout from './components/PhoneCheckerLayout';
+import ShopOwnerLayout from './components/ShopOwnerLayout';
 import PhoneCheckerDashboard from './pages/PhoneChecker/PhoneCheckerDashboard';
+import ShopOwnerDashboard from './pages/ShopOwner/ShopOwnerDashboard';
 import ClaimRequests from './pages/PhoneChecker/ClaimRequests';
 import InspectionRequests from './pages/PhoneChecker/InspectionRequests';
 import PhoneReports from './pages/PhoneChecker/PhoneReports';
@@ -26,6 +28,12 @@ const App = () => {
           <Route path="reports" element={<PhoneReports reports={[]} standalone={true} />} />
           <Route path="schedule" element={<div>Schedule Page (Coming Soon)</div>} />
           <Route path="settings" element={<div>Settings Page (Coming Soon)</div>} />
+        </Route>
+
+        {/* Shop Owner Routes */}
+        <Route path="/shop-owner" element={<ShopOwnerLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<ShopOwnerDashboard />} />
         </Route>
       </Routes>
     </Router>
