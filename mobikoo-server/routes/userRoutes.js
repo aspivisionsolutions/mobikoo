@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PhoneChecker = require('../models/phoneChecker');
+const ShopOwner = require('../models/shopOwner');
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware")
 
 // Existing routes...
@@ -16,6 +17,13 @@ router.get('/phone-checkers/:area', protect, roleMiddleware(['shop-owner']), asy
     }
 });
 
-// Existing routes...
+router.get('/shop-owners', protect , async (req, res) => {
+    try {
+        const shopOwners = await ShopOwner.find().populate('userId');
+        res.status(200).json(shopOwners);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
 
 module.exports = router;

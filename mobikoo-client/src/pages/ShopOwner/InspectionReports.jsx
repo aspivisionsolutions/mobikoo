@@ -6,6 +6,7 @@ const InspectionReports = () => {
   const [reports, setReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredReports, setFilteredReports] = useState([]);
 
   useEffect(() => {
     fetchReports();
@@ -14,8 +15,14 @@ const InspectionReports = () => {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/shop-owner/inspection-reports');
+      const response = await axios.get('http://localhost:5000/api/inspection/shopOwner/reports', {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+      console.log(response.data);
       setReports(response.data);
+      setFilteredReports(response.data);
     } catch (error) {
       console.error('Error fetching reports:', error);
     } finally {
@@ -26,7 +33,7 @@ const InspectionReports = () => {
   const handleDownloadReport = async (reportId) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/shop-owner/inspection-reports/${reportId}/download`,
+        `http://localhost:5000/api/shopOwner/reports/${reportId}/download`,
         { responseType: 'blob' }
       );
       
@@ -55,10 +62,17 @@ const InspectionReports = () => {
     }
   };
 
-  const filteredReports = reports.filter(report =>
-    report.deviceModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.imeiNumber.includes(searchTerm)
-  );
+  useEffect(() => {
+    if (searchTerm === '') {
+      setFilteredReports(reports); // Show all reports if search term is empty
+    } else {
+      const filtered = reports.filter(report =>
+        report.phoneModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.imeiNumber.includes(searchTerm)
+      );
+      setFilteredReports(filtered);
+    }
+  }, [reports, searchTerm]);
 
   return (
     <div className="h-full flex flex-col">
@@ -98,7 +112,7 @@ const InspectionReports = () => {
                 Grade
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Inspector ID
+                Inspector Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -122,7 +136,7 @@ const InspectionReports = () => {
               filteredReports.map((report) => (
                 <tr key={report.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(report.dateTime).toLocaleDateString()}
+                    {new Date(report.inspectionDate).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {report.deviceModel}
@@ -137,7 +151,7 @@ const InspectionReports = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {report.inspectorId}
+                    {report.inspectorId.firstName} {report.inspectorId.lastName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <button

@@ -7,10 +7,23 @@ const InspectionRequests = ({ standalone = false }) => {
   const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredRequests, setFilteredRequests] = useState([]);
 
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm === '') {
+      setFilteredRequests(requests); // Show all requests if search term is empty
+    } else {
+      const filtered = requests.filter(request =>
+        request.shopOwnerId?.ShopDetails?.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        request.shopOwnerId?.ShopDetails?.address?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredRequests(filtered);
+    }
+  }, [requests, searchTerm]);
 
   const fetchRequests = async () => {
     setIsLoading(true);
@@ -19,6 +32,7 @@ const InspectionRequests = ({ standalone = false }) => {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       setRequests(response.data);
+      setFilteredRequests(response.data); // Initially show all requests
     } catch (error) {
       console.error('Error fetching requests:', error);
       toast.error('Failed to fetch inspection requests');
@@ -29,12 +43,14 @@ const InspectionRequests = ({ standalone = false }) => {
 
   const handleStatusUpdate = async (requestId, newStatus) => {
     try {
-      await axios.patch(`http://localhost:5000/api/inspection/${requestId}/status`, 
+      await axios.patch(`http://localhost:5000/api/inspection/${requestId}`, 
         { status: newStatus },
         { headers: { Authorization: `${localStorage.getItem('token')}` }}
       );
-      toast.success('Status updated successfully');
-      fetchRequests(); // Refresh the list
+      setRequests(prevRequests => prevRequests.map(request => 
+        request._id === requestId ? { ...request, status: newStatus } : request
+      ));
+      toast.success(`Request ${newStatus} successfully`);
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
@@ -45,21 +61,16 @@ const InspectionRequests = ({ standalone = false }) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-blue-100 text-blue-800';
       case 'completed':
         return 'bg-green-100 text-green-800';
+      case 'accepted':
+        return 'bg-blue-100 text-blue-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const filteredRequests = requests.filter(request =>
-    request.shopOwner?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.area.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className={`h-full flex flex-col ${standalone ? 'ml-64' : ''}`}>
@@ -90,7 +101,7 @@ const InspectionRequests = ({ standalone = false }) => {
                 Shop Owner
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Area
+                Address
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date Requested
@@ -120,13 +131,12 @@ const InspectionRequests = ({ standalone = false }) => {
               filteredRequests.map((request) => (
                 <tr key={request._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{request.shopOwner?.name}</div>
-                    <div className="text-sm text-gray-500">{request.shopOwner?.email}</div>
+                    <div className="text-sm font-medium text-gray-900">{request.shopOwnerId?.shopDetails?.shopName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900">
                       <FiMapPin className="mr-2 h-4 w-4 text-gray-400" />
-                      {request.area}
+                      {request.shopOwnerId?.shopDetails?.address}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -5,7 +5,9 @@ import { FiSearch } from 'react-icons/fi';
 const PhoneReports = ({ standalone = false }) => {
   const [reports, setReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [phoneChecker, setPhoneChecker] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredReports, setFilteredReports] = useState([]);
 
   useEffect(() => {
     fetchReports();
@@ -14,8 +16,14 @@ const PhoneReports = ({ standalone = false }) => {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/phone-reports');
+      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker/reports', {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+      console.log(response.data);
       setReports(response.data);
+      setFilteredReports(response.data);
     } catch (error) {
       console.error('Error fetching reports:', error);
     } finally {
@@ -23,10 +31,17 @@ const PhoneReports = ({ standalone = false }) => {
     }
   };
 
-  const filteredReports = reports.filter(report =>
-    report.phoneModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.IMEI.includes(searchTerm)
-  );
+  useEffect(() => {
+    if (searchTerm === '') {
+      setFilteredReports(reports); // Show all reports if search term is empty
+    } else {
+      const filtered = reports.filter(report =>
+        report.phoneModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.imeiNumber.includes(searchTerm)
+      );
+      setFilteredReports(filtered);
+    }
+  }, [reports, searchTerm]);
 
   return (
     <div className={`h-full flex flex-col ${standalone ? 'ml-64' : ''}`}>
@@ -48,11 +63,26 @@ const PhoneReports = ({ standalone = false }) => {
         </div>
       </div>
 
+      {/* Phone Checker Filter */}
+      <div className="p-4">
+        <label className="block text-sm font-medium text-gray-700">Filter by Phone Checker</label>
+        <input
+          type="text"
+          value={phoneChecker}
+          onChange={(e) => setPhoneChecker(e.target.value)}
+          placeholder="Enter Phone Checker Name"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+        />
+      </div>
+
       {/* Reports Table */}
       <div className="flex-1 overflow-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Shop Name
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Phone Model
               </th>
@@ -63,10 +93,7 @@ const PhoneReports = ({ standalone = false }) => {
                 Grade
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date Checked
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
+                Date
               </th>
             </tr>
           </thead>
@@ -87,19 +114,24 @@ const PhoneReports = ({ standalone = false }) => {
               filteredReports.map((report) => (
                 <tr key={report.IMEI} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {report.phoneModel}
+                    {report.shopName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {report.deviceModel}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {report.IMEI}
+                    {report.imeiNumber}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {report.grade}
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                      ${report.grade === 'A' ? 'bg-green-100 text-green-800' :
+                        report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'}`}>
+                      {report.grade}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(report.dateChecked).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {report.status}
+                    {new Date(report.inspectionDate).toLocaleDateString()}
                   </td>
                 </tr>
               ))

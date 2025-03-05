@@ -6,10 +6,12 @@ import ClaimRequests from './ClaimRequests';
 import InspectionRequests from './InspectionRequests';
 
 const PhoneCheckerDashboard = () => {
+  const [shopOwners, setShopOwners] = useState([]);
   const [activeTab, setActiveTab] = useState('claims');
   const [claimRequests, setClaimRequests] = useState([]);
   const [inspectionRequests, setInspectionRequests] = useState([]);
   const [inspectionReports, setInspectionReports] = useState([]);
+  const [filteredReports, setFilteredReports] = useState([]);
   const [salesStats, setSalesStats] = useState({
     totalSales: 0,
     totalInspections: 0,
@@ -19,9 +21,7 @@ const PhoneCheckerDashboard = () => {
   const [showInspectionForm, setShowInspectionForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
-    shopNumber: '',
-    inspectorId: '', // Will be auto-populated
-    dateTime: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
+    shopName: '',
     imeiNumber: '',
     deviceModel: '',
     serialNumber: '',
@@ -48,6 +48,20 @@ const PhoneCheckerDashboard = () => {
     }
   }, [activeTab]);
 
+  const fetchShopOwners = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/user/shop-owners', {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+      setShopOwners(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch shop owners');
+      console.error('Error fetching shop owners:', error);
+    }
+  }
+
   const fetchRequests = async () => {
     setIsLoading(true);
     try {
@@ -69,8 +83,14 @@ const PhoneCheckerDashboard = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/inspections/reports');
+      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker/reports', {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+      console.log(response.data);
       setInspectionReports(response.data);
+      setFilteredReports(response.data);
     } catch (error) {
       toast.error('Failed to fetch inspection reports');
       console.error('Error fetching reports:', error);
@@ -88,7 +108,7 @@ const PhoneCheckerDashboard = () => {
 
   const handleStatusUpdate = async (requestId, type, newStatus) => {
     try {
-      const endpoint = type === 'claim' 
+      const endpoint = type === 'claim'
         ? `http://localhost:5000/api/claims/${requestId}/status`
         : `http://localhost:5000/api/inspections/${requestId}/status`;
 
@@ -103,14 +123,13 @@ const PhoneCheckerDashboard = () => {
 
   const handleInspectClick = () => {
     setShowInspectionForm(true);
+    fetchShopOwners();
   };
 
   const handleFormClose = () => {
     setShowInspectionForm(false);
     setFormData({
-      shopNumber: '',
-      inspectorId: '',
-      dateTime: new Date().toISOString().slice(0, 16),
+      shopName: '',
       imeiNumber: '',
       deviceModel: '',
       serialNumber: '',
@@ -157,20 +176,20 @@ const PhoneCheckerDashboard = () => {
     }
 
     try {
-      const formDataToSend = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (key === 'photos') {
-          formData.photos.forEach(photo => {
-            formDataToSend.append('photos', photo);
-          });
-        } else {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-
-      await axios.post('http://localhost:5000/api/inspections/submit', formDataToSend, {
+      //   const formDataToSend = new FormData();
+      //   Object.keys(formData).forEach(key => {
+      //     if (key === 'photos') {
+      //       formData.photos.forEach(photo => {
+      //         formDataToSend.append('photos', photo);
+      //       });
+      //     } else {
+      //       formDataToSend.append(key, formData[key]);
+      //     }
+      //   });
+      // console.log(formDataToSend)
+      await axios.post('http://localhost:5000/api/inspection/submitReport', { reportData: formData }, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          Authorization: `${localStorage.getItem('token')}`
         },
       });
 
@@ -185,10 +204,15 @@ const PhoneCheckerDashboard = () => {
 
   const handleDownloadReport = async (reportId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/inspections/reports/${reportId}/download`, {
-        responseType: 'blob'
+      const response = await axios.get(`http://localhost:5000/api/inspection/reports/${reportId}/download`, {
+        responseType: 'blob',
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
       });
-      
+
+
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -202,11 +226,18 @@ const PhoneCheckerDashboard = () => {
     }
   };
 
-  const filteredReports = inspectionReports.filter(report => 
-    report.shopNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.imeiNumber.includes(searchTerm) ||
-    report.deviceModel.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    if (searchTerm === '') {
+      setFilteredReports(inspectionReports); // Show all reports if search term is empty
+    } else {
+      const filtered = inspectionReports.filter(report =>
+        report.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.imeiNumber.includes(searchTerm) ||
+        report.deviceModel.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredReports(filtered);
+    }
+  }, [inspectionReports, searchTerm]);
 
   const renderReportsTab = () => (
     <div className="bg-white rounded-lg shadow">
@@ -232,7 +263,7 @@ const PhoneCheckerDashboard = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop Number</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device Model</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
@@ -251,10 +282,10 @@ const PhoneCheckerDashboard = () => {
               filteredReports.map((report) => (
                 <tr key={report.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(report.dateTime).toLocaleDateString()}
+                    {new Date(report.inspectionDate).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {report.shopNumber}
+                    {report.shopName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {report.imeiNumber}
@@ -266,7 +297,7 @@ const PhoneCheckerDashboard = () => {
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                       ${report.grade === 'A' ? 'bg-green-100 text-green-800' :
                         report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'}`}>
+                          'bg-red-100 text-red-800'}`}>
                       {report.grade}
                     </span>
                   </td>
@@ -275,7 +306,7 @@ const PhoneCheckerDashboard = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <button
-                      onClick={() => handleDownloadReport(report.id)}
+                      onClick={() => handleDownloadReport(report._id)}
                       className="text-blue-600 hover:text-blue-900 flex items-center"
                     >
                       <FiDownload className="h-4 w-4 mr-1" />
@@ -342,12 +373,12 @@ const PhoneCheckerDashboard = () => {
       {/* Main content area */}
       <main className="flex-1 ml-64 bg-gray-50 min-h-screen">
         <div className="max-w-full">
-      <Toaster position="top-right" />
-      
+          <Toaster position="top-right" />
+
           {/* Header with Stats */}
           <div className="p-4">
             <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-gray-600">
               Monitor your performance and manage inspections
             </p>
             <button
@@ -359,62 +390,59 @@ const PhoneCheckerDashboard = () => {
 
             {/* Stats Cards */}
             {renderStats()}
-      </div>
+          </div>
 
-      {/* Tabs */}
+          {/* Tabs */}
           <div className="px-4 border-b border-gray-200">
-        <nav className="flex space-x-4" aria-label="Tabs">
-          <button
-            onClick={() => setActiveTab('claims')}
-            className={`px-3 py-2 rounded-md text-sm font-medium ${
-              activeTab === 'claims'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Claim Requests
-          </button>
-          <button
-            onClick={() => setActiveTab('inspections')}
-            className={`px-3 py-2 rounded-md text-sm font-medium ${
-              activeTab === 'inspections'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Inspection Requests
-          </button>
+            <nav className="flex space-x-4" aria-label="Tabs">
               <button
-                onClick={() => setActiveTab('reports')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  activeTab === 'reports'
+                onClick={() => setActiveTab('claims')}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'claims'
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
+              >
+                Claim Requests
+              </button>
+              <button
+                onClick={() => setActiveTab('inspections')}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'inspections'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                Inspection Requests
+              </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'reports'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 Reports
               </button>
-        </nav>
-      </div>
+            </nav>
+          </div>
 
-      {/* Content */}
+          {/* Content */}
           <div className="p-4">
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow">
-          {activeTab === 'claims' ? (
-            <ClaimRequests 
-              requests={claimRequests} 
-              onStatusUpdate={(id, status) => handleStatusUpdate(id, 'claim', status)} 
-            />
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow">
+                {activeTab === 'claims' ? (
+                  <ClaimRequests
+                    requests={claimRequests}
+                    onStatusUpdate={(id, status) => handleStatusUpdate(id, 'claim', status)}
+                  />
                 ) : activeTab === 'inspections' ? (
-            <InspectionRequests 
-              requests={inspectionRequests} 
-              onStatusUpdate={(id, status) => handleStatusUpdate(id, 'inspection', status)} 
-            />
+                  <InspectionRequests
+                    requests={inspectionRequests}
+                    onStatusUpdate={(id, status) => handleStatusUpdate(id, 'inspection', status)}
+                  />
                 ) : (
                   renderReportsTab()
                 )}
@@ -437,41 +465,28 @@ const PhoneCheckerDashboard = () => {
                 ×
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Shop & Inspector Details */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Shop Number *</label>
-                  <input
-                    type="text"
-                    name="shopNumber"
-                    value={formData.shopNumber}
-                    onChange={handleInputChange}
+                  <select
+                    name="shopName"
+                    value={formData.shopName} // Bind to shopName in formData
+                    onChange={handleInputChange} // Use the new handler
                     required
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  />
+                  >
+                    <option value="">Select Shop</option>
+                    {shopOwners.map(owner => (
+                      <option key={owner._id} value={owner.shopDetails.shopName}>
+                        {owner.shopDetails.shopName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Inspector ID</label>
-                  <input
-                    type="text"
-                    name="inspectorId"
-                    value={formData.inspectorId}
-                    readOnly
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Date & Time</label>
-                  <input
-                    type="datetime-local"
-                    name="dateTime"
-                    value={formData.dateTime}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  />
-                </div>
+
               </div>
 
               {/* Device Identification */}

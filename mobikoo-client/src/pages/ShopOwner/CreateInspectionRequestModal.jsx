@@ -45,7 +45,7 @@ const CreateInspectionRequestModal = ({ isOpen, onClose, onSuccess }) => {
     try {
       const response = await axios.post('http://localhost:5000/api/inspection/create', {
         area,
-        inspectorId: selectedInspector._id,
+        inspectorId: selectedInspector.userId._id,
         inspectorEmail: selectedInspector.userId.email
       }, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
