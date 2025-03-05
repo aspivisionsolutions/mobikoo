@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { FiShield, FiCheckSquare, FiDollarSign, FiPlus, FiAlertCircle } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import InspectionReports from './InspectionReports';
 import Warranties from './Warranties';
 import CreateInspectionRequestModal from './CreateInspectionRequestModal';
 
 const ShopOwnerDashboard = () => {
-  const [activeTab, setActiveTab] = useState('inspections');
+  const location = useLocation();
+  const pathSegments = location.pathname.split('/');
+  const currentTab = pathSegments[pathSegments.length - 1];
+
+  const [activeTab, setActiveTab] = useState(currentTab || 'inspections');
   const [stats, setStats] = useState({
     totalWarranties: 0,
     totalInspections: 0,
@@ -22,6 +26,10 @@ const ShopOwnerDashboard = () => {
     fetchStats();
     fetchShopDetails();
   }, []);
+
+  useEffect(() => {
+    setActiveTab(currentTab);
+  }, [location.pathname]);
 
   const fetchStats = async () => {
     try {

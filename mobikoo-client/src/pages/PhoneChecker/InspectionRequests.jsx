@@ -17,9 +17,10 @@ const InspectionRequests = ({ standalone = false }) => {
     if (searchTerm === '') {
       setFilteredRequests(requests); // Show all requests if search term is empty
     } else {
+      console.log(requests)
       const filtered = requests.filter(request =>
         request.shopOwnerId.shopDetails.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        request.shopOwnerId?.ShopDetails?.address?.toLowerCase().includes(searchTerm.toLowerCase())
+        request.shopOwnerId?.shopDetails?.address?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredRequests(filtered);
     }
