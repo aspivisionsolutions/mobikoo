@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiPhone } from 'react-icons/fi';
+import ShopDetailsModal from '../components/ShopDetailsModal';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showShopDetailsModal, setShowShopDetailsModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     mobileNumber: '',
-    role: '',
+    role: 'shop-owner',
     password: '',
     confirmPassword: ''
   });
@@ -37,22 +40,28 @@ const SignupPage = () => {
     setIsLoading(true);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
-        name: formData.name,
-        email: formData.email,
-        mobileNumber: formData.mobileNumber,
-        role: formData.role,
-        password: formData.password
-      });
+      const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
       
-      toast.success('Registration successful!');
-      navigate('/login');
+      if (formData.role === 'shop-owner') {
+        // Store the token for the shop details modal
+        localStorage.setItem('token', response.data.token);
+        setShowShopDetailsModal(true);
+      } else {
+        toast.success('Registration successful! Please login.');
+        navigate('/login');
+      }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'An error occurred during registration';
+      const errorMessage = error.response?.data?.message || 'Registration failed';
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleShopDetailsModalClose = () => {
+    setShowShopDetailsModal(false);
+    toast.success('Registration successful! Please login.');
+    navigate('/login');
   };
 
   return (
@@ -70,26 +79,50 @@ const SignupPage = () => {
 
         {/* Form */}
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* Name Field */}
+          {/* First Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+              First Name
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiUser className="h-4 w-4 text-gray-400" />
               </div>
               <input
-                id="name"
-                name="name"
+                id="firstName"
+                name="firstName"
                 type="text"
                 required
-                value={formData.name}
+                value={formData.firstName}
                 onChange={handleChange}
                 className="appearance-none block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                           text-gray-900 placeholder-gray-500 text-sm"
-                placeholder="Enter your full name"
+                placeholder="Enter your first name"
+              />
+            </div>
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+              Last Name
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiUser className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                value={formData.lastName}
+                onChange={handleChange}
+                className="appearance-none block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                          text-gray-900 placeholder-gray-500 text-sm"
+                placeholder="Enter your last name"
               />
             </div>
           </div>
@@ -119,28 +152,7 @@ const SignupPage = () => {
           </div>
 
           {/* Mobile Number Field */}
-          <div>
-            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">
-              Mobile Number
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiPhone className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                id="mobileNumber"
-                name="mobileNumber"
-                type="tel"
-                required
-                value={formData.mobileNumber}
-                onChange={handleChange}
-                className="appearance-none block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                          text-gray-900 placeholder-gray-500 text-sm"
-                placeholder="Enter your mobile number"
-              />
-            </div>
-          </div>
+         
 
           {/* Role Selection */}
           <div>
@@ -161,8 +173,6 @@ const SignupPage = () => {
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                           text-gray-900 text-sm"
               >
-                <option value="" disabled>Select your role</option>
-                <option value="customer">Customer</option>
                 <option value="shop-owner">Shop Owner</option>
                 <option value="phone-checker">Phone Checker</option>
                 <option value="admin">Admin</option>
@@ -252,34 +262,32 @@ const SignupPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg
-                        shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-                        disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-lg
+                        shadow-sm text-sm font-medium text-white ${
+                          isLoading
+                            ? 'bg-blue-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                        }`}
             >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating account...
-                </div>
-              ) : (
-                'Create Account'
-              )}
+              {isLoading ? 'Creating account...' : 'Sign up'}
             </button>
 
             <div className="text-center text-sm">
               <span className="text-gray-600">Already have an account?</span>
               {' '}
-              <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign in instead
-              </a>
+              </Link>
             </div>
           </div>
         </form>
       </div>
+
+      {/* Shop Details Modal */}
+      <ShopDetailsModal
+        isOpen={showShopDetailsModal}
+        onClose={handleShopDetailsModalClose}
+      />
     </div>
   );
 };

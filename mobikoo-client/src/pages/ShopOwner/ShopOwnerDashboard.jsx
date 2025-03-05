@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
-import { FiShield, FiCheckSquare, FiDollarSign, FiPlus } from 'react-icons/fi';
+import { FiShield, FiCheckSquare, FiDollarSign, FiPlus, FiAlertCircle } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 import InspectionReports from './InspectionReports';
 import Warranties from './Warranties';
 import CreateInspectionRequestModal from './CreateInspectionRequestModal';
@@ -13,11 +14,13 @@ const ShopOwnerDashboard = () => {
     totalInspections: 0,
     totalSpent: 0
   });
+  const [shopDetails, setShopDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     fetchStats();
+    fetchShopDetails();
   }, []);
 
   const fetchStats = async () => {
@@ -32,52 +35,80 @@ const ShopOwnerDashboard = () => {
     }
   };
 
+  const fetchShopDetails = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
+      });
+      
+      if (response.data.shopprofile && response.data.shopprofile.length > 0) {
+        const profile = response.data.shopprofile[0];
+        setShopDetails({
+          shopName: profile.shopDetails?.shopName,
+          address: profile.shopDetails?.address,
+          mobileNumber: profile.phoneNumber
+        });
+      } else {
+        setShopDetails(null);
+      }
+    } catch (error) {
+      console.error('Error fetching shop details:', error);
+      setShopDetails(null);
+    }
+  };
+
+  const isShopDetailsComplete = () => {
+    return shopDetails && 
+           shopDetails.shopName && 
+           shopDetails.mobileNumber && 
+           shopDetails.address;
+  };
+
   const handleRequestSuccess = (newRequest) => {
     toast.success('Inspection request created successfully');
-    // Optionally refresh stats or data
     fetchStats();
   };
 
   const renderStats = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div className="bg-white rounded-lg shadow p-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Total Warranties</p>
-            <p className="text-2xl font-semibold text-gray-900">
+            <p className="text-xl sm:text-2xl font-semibold text-gray-900">
               {stats.totalWarranties}
             </p>
           </div>
-          <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-            <FiShield className="h-6 w-6 text-green-600" />
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 flex items-center justify-center">
+            <FiShield className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Total Inspections</p>
-            <p className="text-2xl font-semibold text-gray-900">
+            <p className="text-xl sm:text-2xl font-semibold text-gray-900">
               {stats.totalInspections}
             </p>
           </div>
-          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-            <FiCheckSquare className="h-6 w-6 text-blue-600" />
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 flex items-center justify-center">
+            <FiCheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Total Spent</p>
-            <p className="text-2xl font-semibold text-gray-900">
+            <p className="text-xl sm:text-2xl font-semibold text-gray-900">
               ₹{stats.totalSpent.toLocaleString('en-IN')}
             </p>
           </div>
-          <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-            <FiDollarSign className="h-6 w-6 text-purple-600" />
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 flex items-center justify-center">
+            <FiDollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
           </div>
         </div>
       </div>
@@ -85,84 +116,62 @@ const ShopOwnerDashboard = () => {
   );
 
   return (
-    <div className="h-screen flex">
-      <main className="flex-1 ml-64 bg-gray-50 min-h-screen">
-        <div className="max-w-full">
-          <Toaster position="top-right" />
-          
-          {/* Header with Stats */}
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Shop Dashboard</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  Monitor your inspections and warranties
-                </p>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-full">
+        <Toaster position="top-right" />
+        
+        {/* Header with Stats */}
+        <div className="p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Shop Dashboard</h1>
+              <p className="mt-1 text-sm text-gray-600">
+                Monitor your inspections and warranties
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {!isShopDetailsComplete() && (
+                <div className="flex items-center text-amber-600 bg-amber-50 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm">
+                  <FiAlertCircle className="mr-2 flex-shrink-0" />
+                  <span>
+                    Please <Link to="/shop-owner/profile" className="underline font-medium">complete your shop profile</Link> to create inspection requests
+                  </span>
+                </div>
+              )}
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+                disabled={!isShopDetailsComplete()}
+                className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center
+                  ${!isShopDetailsComplete()
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  }`}
               >
                 <FiPlus className="mr-2" />
                 New Inspection Request
               </button>
             </div>
-
-            {/* Stats Cards */}
-            {renderStats()}
           </div>
 
-          {/* Tabs */}
-          <div className="px-4 border-b border-gray-200">
-            <nav className="flex space-x-4" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('inspections')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  activeTab === 'inspections'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Inspection Reports
-              </button>
-              <button
-                onClick={() => setActiveTab('warranties')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  activeTab === 'warranties'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Warranties
-              </button>
-            </nav>
-          </div>
-
-          {/* Content */}
-          <div className="p-4">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow">
-                {activeTab === 'inspections' ? (
-                  <InspectionReports />
-                ) : (
-                  <Warranties />
-                )}
-              </div>
-            )}
-          </div>
+          {/* Stats Cards */}
+          {renderStats()}
         </div>
-      </main>
 
-      {/* Create Inspection Request Modal */}
-      <CreateInspectionRequestModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={handleRequestSuccess}
-      />
+        {/* Create Inspection Request Modal */}
+        {showCreateModal && (
+          <CreateInspectionRequestModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onSuccess={handleRequestSuccess}
+          />
+        )}
+
+        {/* Content based on active tab */}
+        <div className="px-4">
+          {activeTab === 'inspections' && <InspectionReports />}
+          {activeTab === 'warranties' && <Warranties />}
+        </div>
+      </div>
     </div>
   );
 };

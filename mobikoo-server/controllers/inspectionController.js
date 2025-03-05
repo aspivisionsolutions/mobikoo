@@ -10,16 +10,13 @@ const fs = require('fs'); // Required for file system operations
 exports.createInspectionRequest = async (req, res) => {
   const { area, inspectorId } = req.body;
   try {
-
     const shopOwner = await ShopOwner.findOne({userId: req.user.userId})
-    
     const newInspectionRequest = new InspectionRequest({
       shopOwnerId: shopOwner._id,
       inspectorId,
       status: "pending", 
       area, 
     });
-
     const savedRequest = await newInspectionRequest.save();
     res.status(201).json(savedRequest);
   } catch (error) {

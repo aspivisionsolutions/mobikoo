@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
-import { FiSearch, FiDownload, FiTrendingUp, FiPhone, FiCheckCircle } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiTrendingUp, FiPhone, FiCheckCircle, FiEye, FiArrowLeft } from 'react-icons/fi';
 import ClaimRequests from './ClaimRequests';
 import InspectionRequests from './InspectionRequests';
+import { InspectionReportDetails } from '../../components/InspectionReportDetails';
 
 const PhoneCheckerDashboard = () => {
   const [shopOwners, setShopOwners] = useState([]);
@@ -39,6 +40,7 @@ const PhoneCheckerDashboard = () => {
     digitalSignature: false,
     grade: ''
   });
+  const [selectedReport, setSelectedReport] = useState(null);
 
   useEffect(() => {
     fetchRequests();
@@ -239,218 +241,297 @@ const PhoneCheckerDashboard = () => {
     }
   }, [inspectionReports, searchTerm]);
 
-  const renderReportsTab = () => (
-    <div className="bg-white rounded-lg shadow">
-      {/* Search Bar */}
-      <div className="p-4 border-b">
-        <div className="max-w-md relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search by Shop Number, IMEI, or Device Model"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      {/* Reports Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device Model</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Condition</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredReports.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
-                  No reports found
-                </td>
-              </tr>
-            ) : (
-              filteredReports.map((report) => (
-                <tr key={report.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(report.inspectionDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {report.shopName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {report.imeiNumber}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {report.deviceModel}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                      ${report.grade === 'A' ? 'bg-green-100 text-green-800' :
-                        report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'}`}>
-                      {report.grade}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {report.bodyCondition}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button
-                      onClick={() => handleDownloadReport(report._id)}
-                      className="text-blue-600 hover:text-blue-900 flex items-center"
-                    >
-                      <FiDownload className="h-4 w-4 mr-1" />
-                      Download
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
   const renderStats = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Total Sales</p>
-            <p className="text-2xl font-semibold text-gray-900">
-              ₹{salesStats.totalSales.toLocaleString('en-IN')}
-            </p>
+        <div className="flex items-center">
+          <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+            <FiTrendingUp className="h-6 w-6" />
           </div>
-          <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-            <FiTrendingUp className="h-6 w-6 text-green-600" />
+          <div className="ml-4">
+            <p className="text-sm font-medium text-gray-500">Total Sales</p>
+            <p className="text-lg font-semibold text-gray-900">₹{salesStats.totalSales.toLocaleString('en-IN')}</p>
           </div>
         </div>
       </div>
-
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Total Inspections</p>
-            <p className="text-2xl font-semibold text-gray-900">
-              {salesStats.totalInspections}
-            </p>
+        <div className="flex items-center">
+          <div className="p-3 rounded-full bg-green-100 text-green-600">
+            <FiPhone className="h-6 w-6" />
           </div>
-          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-            <FiPhone className="h-6 w-6 text-blue-600" />
+          <div className="ml-4">
+            <p className="text-sm font-medium text-gray-500">Total Inspections</p>
+            <p className="text-lg font-semibold text-gray-900">{salesStats.totalInspections}</p>
           </div>
         </div>
       </div>
-
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Completed Inspections</p>
-            <p className="text-2xl font-semibold text-gray-900">
-              {salesStats.completedInspections}
-            </p>
+        <div className="flex items-center">
+          <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+            <FiCheckCircle className="h-6 w-6" />
           </div>
-          <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-            <FiCheckCircle className="h-6 w-6 text-purple-600" />
+          <div className="ml-4">
+            <p className="text-sm font-medium text-gray-500">Completed Inspections</p>
+            <p className="text-lg font-semibold text-gray-900">{salesStats.completedInspections}</p>
           </div>
         </div>
       </div>
     </div>
   );
+
+  const handleView = (report) => {
+    setSelectedReport(report);
+  };
+
+  const handleBack = () => {
+    setSelectedReport(null);
+  };
+
+  if (selectedReport) {
+    return (
+      <>
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center">
+            <button
+              onClick={handleBack}
+              className="mr-4 text-gray-500 hover:text-gray-700"
+            >
+              <FiArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-2xl font-semibold text-gray-900">Inspection Report Details</h1>
+          </div>
+        </div>
+
+        <div className="bg-white shadow rounded-lg">
+          <div className="p-6">
+            <InspectionReportDetails report={selectedReport} />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div className="h-screen flex">
-      {/* Main content area */}
-      <main className="flex-1 ml-64 bg-gray-50 min-h-screen">
-        <div className="max-w-full">
-          <Toaster position="top-right" />
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Dashboard Overview</h1>
+        {activeTab === 'inspections' && (
+          <button
+            onClick={handleInspectClick}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            New Inspection
+          </button>
+        )}
+      </div>
 
-          {/* Header with Stats */}
-          <div className="p-4">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Monitor your performance and manage inspections
-            </p>
-            <button
-              onClick={handleInspectClick}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              New Inspection
-            </button>
+      <Toaster />
+      {renderStats()}
 
-            {/* Stats Cards */}
-            {renderStats()}
-          </div>
-
-          {/* Tabs */}
-          <div className="px-4 border-b border-gray-200">
-            <nav className="flex space-x-4" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('claims')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'claims'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                Claim Requests
-              </button>
-              <button
-                onClick={() => setActiveTab('inspections')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'inspections'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                Inspection Requests
-              </button>
-              <button
-                onClick={() => setActiveTab('reports')}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'reports'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                Reports
-              </button>
-            </nav>
-          </div>
-
-          {/* Content */}
-          <div className="p-4">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow">
-                {activeTab === 'claims' ? (
-                  <ClaimRequests
-                    requests={claimRequests}
-                    onStatusUpdate={(id, status) => handleStatusUpdate(id, 'claim', status)}
-                  />
-                ) : activeTab === 'inspections' ? (
-                  <InspectionRequests
-                    requests={inspectionRequests}
-                    onStatusUpdate={(id, status) => handleStatusUpdate(id, 'inspection', status)}
-                  />
-                ) : (
-                  renderReportsTab()
-                )}
-              </div>
-            )}
-          </div>
+      {/* Navigation Tabs */}
+      <div className="bg-white shadow rounded-lg mb-6">
+        <div className="sm:hidden">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="claims">Claim Requests</option>
+            <option value="inspections">Inspection Requests</option>
+            <option value="reports">Reports</option>
+          </select>
         </div>
-      </main>
+        <div className="hidden sm:block">
+          <nav className="flex space-x-4 px-4 py-3" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('claims')}
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'claims'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Claim Requests
+            </button>
+            <button
+              onClick={() => setActiveTab('inspections')}
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'inspections'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Inspection Requests
+            </button>
+            <button
+              onClick={() => setActiveTab('reports')}
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'reports'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Reports
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        {activeTab === 'claims' && (
+          <ClaimRequests
+            requests={claimRequests}
+            onStatusUpdate={(id, status) => handleStatusUpdate(id, 'claim', status)}
+            isLoading={isLoading}
+          />
+        )}
+        {activeTab === 'inspections' && (
+          <InspectionRequests
+            requests={inspectionRequests}
+            onStatusUpdate={(id, status) => handleStatusUpdate(id, 'inspection', status)}
+            onInspect={handleInspectClick}
+            isLoading={isLoading}
+          />
+        )}
+        {activeTab === 'reports' && (
+          <div>
+            {/* Search Bar */}
+            <div className="p-4 border-b">
+              <div className="max-w-md relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white 
+                           placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 
+                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Search by Shop Name, IMEI, or Device Model"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Reports List */}
+            <div className="overflow-x-auto">
+              {/* Desktop Table View */}
+              <div className="hidden sm:block">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Shop Name
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Device Model
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        IMEI Number
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Grade
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredReports.map((report) => (
+                      <tr key={report._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {report.shopName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {report.deviceModel}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {report.imeiNumber}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${report.grade === 'A' ? 'bg-green-100 text-green-800' : 
+                              report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-red-100 text-red-800'}`}
+                          >
+                            Grade {report.grade}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex space-x-4">
+                            <button
+                              onClick={() => handleDownloadReport(report._id)}
+                              className="text-blue-600 hover:text-blue-900 flex items-center"
+                            >
+                              <FiDownload className="h-5 w-5 mr-1" />
+                              Download
+                            </button>
+                            <button
+                              onClick={() => handleView(report)}
+                              className="text-green-600 hover:text-green-900 flex items-center"
+                            >
+                              <FiEye className="h-5 w-5 mr-1" />
+                              View Report
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="sm:hidden">
+                <div className="px-4 py-4 space-y-4">
+                  {filteredReports.map((report) => (
+                    <div key={report._id} className="bg-white rounded-lg shadow-sm p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-gray-900">{report.shopName}</p>
+                          <p className="text-sm text-gray-500">{report.deviceModel}</p>
+                          <p className="text-sm text-gray-500">{report.imeiNumber}</p>
+                        </div>
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${report.grade === 'A' ? 'bg-green-100 text-green-800' : 
+                            report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-red-100 text-red-800'}`}
+                        >
+                          Grade {report.grade}
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200 flex space-x-2">
+                        <button
+                          onClick={() => handleDownloadReport(report._id)}
+                          className="flex-1 flex items-center justify-center px-4 py-2 border border-blue-600 rounded-md shadow-sm text-sm font-medium text-blue-600 hover:bg-blue-50"
+                        >
+                          <FiDownload className="h-4 w-4 mr-2" />
+                          Download
+                        </button>
+                        <button
+                          onClick={() => handleView(report)}
+                          className="flex-1 flex items-center justify-center px-4 py-2 border border-green-600 rounded-md shadow-sm text-sm font-medium text-green-600 hover:bg-green-50"
+                        >
+                          <FiEye className="h-4 w-4 mr-2" />
+                          View Report
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {filteredReports.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No reports found
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Inspection Form Modal */}
       {showInspectionForm && (
@@ -732,7 +813,7 @@ const PhoneCheckerDashboard = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

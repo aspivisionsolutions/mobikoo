@@ -16,7 +16,7 @@ const PhoneReports = ({ standalone = false }) => {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker/reports', {
+      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker', {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }

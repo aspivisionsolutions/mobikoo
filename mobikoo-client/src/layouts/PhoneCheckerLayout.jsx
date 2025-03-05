@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiHome, FiFileText, FiShield, FiLogOut, FiUser, FiSettings, FiMenu, FiX } from 'react-icons/fi';
+import { FiHome, FiClipboard, FiFileText, FiLogOut, FiUser, FiMenu, FiX } from 'react-icons/fi';
 
-const ShopOwnerLayout = () => {
+const PhoneCheckerLayout = () => {
   const navigate = useNavigate();
-  const shopName = "Shop Name"; // Replace with actual shop name from context/state
+  const userName = localStorage.getItem('userName') || 'Phone Checker';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    // Clear auth tokens/state
     localStorage.removeItem('token');
     navigate('/login');
   };
@@ -60,32 +59,37 @@ const ShopOwnerLayout = () => {
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
+          {/* Logo Section */}
+          <div className="p-4 border-b">
+            <span className="text-xl font-semibold text-gray-900">MobiKoo</span>
+          </div>
+
           {/* Profile Section */}
-          <div className="p-4 border-b mt-14 lg:mt-0">
+          <div className="p-4 border-b">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <FiUser className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">{shopName}</h2>
-                <p className="text-xs text-gray-500">Shop Owner</p>
+                <h2 className="text-sm font-semibold text-gray-900">{userName}</h2>
+                <p className="text-xs text-gray-500">Phone Checker</p>
               </div>
             </div>
           </div>
 
           {/* Navigation Links */}
           <div className="flex-1 py-4 overflow-y-auto">
-            <NavItem to="/shop-owner/dashboard" icon={FiHome}>
+            <NavItem to="/phone-checker/dashboard" icon={FiHome}>
               Dashboard
             </NavItem>
-            <NavItem to="/shop-owner/dashboard?tab=inspections" icon={FiFileText}>
-              Inspection Reports
+            <NavItem to="/phone-checker/claims" icon={FiClipboard}>
+              Claim Requests
             </NavItem>
-            <NavItem to="/shop-owner/dashboard?tab=warranties" icon={FiShield}>
-              Warranties
+            <NavItem to="/phone-checker/inspections" icon={FiClipboard}>
+              Inspection Requests
             </NavItem>
-            <NavItem to="/shop-owner/profile" icon={FiSettings}>
-              Shop Profile
+            <NavItem to="/phone-checker/reports" icon={FiFileText}>
+              Reports
             </NavItem>
           </div>
 
@@ -111,13 +115,17 @@ const ShopOwnerLayout = () => {
       )}
 
       {/* Main Content */}
-      <div className="lg:ml-64 pt-16 lg:pt-0">
-        <div className="p-4">
-          <Outlet />
-        </div>
+      <div className="lg:pl-64 flex flex-col flex-1">
+        <main className="flex-1">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+              <Outlet />
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
 };
 
-export default ShopOwnerLayout; 
+export default PhoneCheckerLayout; 
