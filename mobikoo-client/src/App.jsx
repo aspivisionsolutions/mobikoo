@@ -11,6 +11,7 @@ import ClaimRequests from './pages/PhoneChecker/ClaimRequests';
 import InspectionRequests from './pages/PhoneChecker/InspectionRequests';
 import PhoneReports from './pages/PhoneChecker/PhoneReports';
 import InspectionReportView from './pages/InspectionReportView';
+import PhoneCheckerProfile from './pages/PhoneChecker/PhoneCheckerProfile';
 import './App.css';
 
 const App = () => {
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/phone-checker" element={<PhoneCheckerLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<PhoneCheckerDashboard />} />
+          <Route path="profile" element={<PhoneCheckerProfile />} />
           <Route path="claims" element={<ClaimRequests />} />
           <Route path="inspections" element={<InspectionRequests />} />
           <Route path="reports" element={<PhoneReports />} />

@@ -82,6 +82,9 @@ const PhoneCheckerLayout = () => {
             <NavItem to="/phone-checker/dashboard" icon={FiHome}>
               Dashboard
             </NavItem>
+            <NavItem to="/phone-checker/profile" icon={FiUser}>
+              Profile
+            </NavItem>
             <NavItem to="/phone-checker/claims" icon={FiClipboard}>
               Claim Requests
             </NavItem>
