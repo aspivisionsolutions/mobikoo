@@ -59,4 +59,49 @@ router.get('/phone-checker', protect, async (req, res) => {
     }
 });
 
+// Updated route to create or update a ShopOwner
+router.post('/shop-owner', protect, async (req, res) => {
+    const { shopName, address, phoneNumber } = req.body;
+    const userId = req.user.userId;
+
+    try {
+        const updatedShopOwner = await ShopOwner.findOneAndUpdate(
+            { userId }, // Find by userId
+            {
+                userId, // Include userId in the update
+                phoneNumber,
+                shopDetails: {
+                    shopName,
+                    address
+                }
+            },
+            { new: true, upsert: true } // Create if not found, return the updated document
+        );
+        res.status(200).json({ message: "Shop owner created/updated successfully", updatedShopOwner });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+// Updated route to create or update a PhoneChecker
+router.post('/phone-checker', protect, async (req, res) => {
+    const { phoneNumber, area } = req.body;
+    const userId = req.user.userId;
+
+    try {
+        const updatedPhoneChecker = await PhoneChecker.findOneAndUpdate(
+            { userId }, // Find by userId
+            {   
+                userId, // Include userId in the update
+                phoneNumber,
+                area
+            },
+            { new: true, upsert: true } // Create if not found, return the updated document
+        );
+        res.status(200).json({ message: "Phone checker created/updated successfully", updatedPhoneChecker });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
 module.exports = router;
