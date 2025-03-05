@@ -16,7 +16,7 @@ const PhoneReports = ({ standalone = false }) => {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker', {
+      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker/reports', {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -36,7 +36,7 @@ const PhoneReports = ({ standalone = false }) => {
       setFilteredReports(reports); // Show all reports if search term is empty
     } else {
       const filtered = reports.filter(report =>
-        report.phoneModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.deviceModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
         report.imeiNumber.includes(searchTerm)
       );
       setFilteredReports(filtered);
@@ -61,18 +61,6 @@ const PhoneReports = ({ standalone = false }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-      </div>
-
-      {/* Phone Checker Filter */}
-      <div className="p-4">
-        <label className="block text-sm font-medium text-gray-700">Filter by Phone Checker</label>
-        <input
-          type="text"
-          value={phoneChecker}
-          onChange={(e) => setPhoneChecker(e.target.value)}
-          placeholder="Enter Phone Checker Name"
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-        />
       </div>
 
       {/* Reports Table */}

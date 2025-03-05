@@ -28,6 +28,7 @@ const ShopOwnerLayout = () => {
         }`
       }
       onClick={() => setIsMobileMenuOpen(false)}
+      end
     >
       <Icon className="mr-3 h-5 w-5" />
       {children}
@@ -78,10 +79,10 @@ const ShopOwnerLayout = () => {
             <NavItem to="/shop-owner/dashboard" icon={FiHome}>
               Dashboard
             </NavItem>
-            <NavItem to="/shop-owner/dashboard?tab=inspections" icon={FiFileText}>
+            <NavItem to="/shop-owner/dashboard/inspections" icon={FiFileText}>
               Inspection Reports
             </NavItem>
-            <NavItem to="/shop-owner/dashboard?tab=warranties" icon={FiShield}>
+            <NavItem to="/shop-owner/dashboard/warranties" icon={FiShield}>
               Warranties
             </NavItem>
             <NavItem to="/shop-owner/profile" icon={FiSettings}>

@@ -26,6 +26,7 @@ router.get('/shop-owners', protect , async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 });
+
 router.get('/shop-owner', protect , async (req, res) => {
     const userId = req.user.userId
     try {
@@ -37,6 +38,21 @@ router.get('/shop-owner', protect , async (req, res) => {
             return res.status(404).json({message:"Shop profile not found"})
         }else{
             return res.status(200).json({message:"Shop profile found",shopprofile})
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+// New route to fetch the phone checker profile for the logged-in user
+router.get('/phone-checker', protect, async (req, res) => {
+    const userId = req.user.userId;
+    try {
+        const phoneChecker = await PhoneChecker.findOne({ userId: userId }).populate('userId');
+        if (!phoneChecker) {
+            return res.status(404).json({ message: "Phone checker profile not found" });
+        } else {
+            return res.status(200).json({ message: "Phone checker profile found", phoneChecker });
         }
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
