@@ -1,6 +1,8 @@
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const PhoneChecker = require("../models/phoneChecker");
+const ShopOwner = require("../models/shopOwner");
 require("dotenv").config();
 
 // User Signup
@@ -12,16 +14,26 @@ exports.signup = async (req, res) => {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "User already exists" });
 
+    // Hash Password
+
     // Create new user
     user = new User({ firstName, lastName, email, password, role });
+    
+    if (role === "phone-checker") {
+      const pc = new PhoneChecker({ userId: user._id, phoneNumber: "", area: "Your Area" });
+      await pc.save();
+    } else {
+      const so = new ShopOwner({ userId: user._id, phoneNumber: "", shopDetails: {shopName:"Your Shop Name",address:"Your Shop Address"} });
+      await so.save();
+    }
     await user.save();
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server Error" });
   }
 };
-
 // User Login
 exports.login = async (req, res) => {
   try {

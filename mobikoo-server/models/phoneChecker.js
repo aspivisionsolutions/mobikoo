@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const phoneCheckerSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    phoneNumber: { type: String, required: true },
+    phoneNumber: { type: String },
     area: { type: String, required: true }
 });
 

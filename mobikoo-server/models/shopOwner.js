@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const shopOwnerSchema = new mongoose.Schema({
     userId : { type: mongoose.Schema.Types.ObjectId, ref: 'User' , required: true},
-    phoneNumber: { type: String, required: true },
+    phoneNumber: { type: String, required: false},
     shopDetails: {
         shopName : {type: String, required: true},
         address: {type: String, required: true}

@@ -31,9 +31,8 @@ router.get('/shop-owner', protect , async (req, res) => {
     const userId = req.user.userId
     try {
         const shopowner = await User.findOne({_id:userId})
-
         console.log(shopowner)
-        const shopprofile = await ShopOwner.find({userId:shopowner._id})
+        const shopprofile = await ShopOwner.find({userId:shopowner._id}).populate("userId")
         if(!shopprofile){
             return res.status(404).json({message:"Shop profile not found"})
         }else{
@@ -47,6 +46,7 @@ router.get('/shop-owner', protect , async (req, res) => {
 // New route to fetch the phone checker profile for the logged-in user
 router.get('/phone-checker', protect, async (req, res) => {
     const userId = req.user.userId;
+    
     try {
         const phoneChecker = await PhoneChecker.findOne({ userId: userId }).populate('userId');
         if (!phoneChecker) {

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiShoppingBag, FiPhone, FiMapPin, FiSave } from 'react-icons/fi';
+import { FiUser, FiShoppingBag, FiPhone, FiMapPin, FiSave, FiMail } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const ShopOwnerProfile = () => {
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
     shopName: '',
     mobileNumber: '',
     address: ''
@@ -26,10 +29,13 @@ const ShopOwnerProfile = () => {
       const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      
+      console.log(response.data)
       if (response.data.shopprofile && response.data.shopprofile.length > 0) {
         const profile = response.data.shopprofile[0];
         const newFormData = {
+          firstName: profile.userId.firstName || '',
+          lastName: profile.userId.lastName || '',
+          email: profile.userId.email || '',
           shopName: profile.shopDetails?.shopName || '',
           address: profile.shopDetails?.address || '',
           mobileNumber: profile.phoneNumber || ''
@@ -62,7 +68,13 @@ const ShopOwnerProfile = () => {
     setIsLoading(true);
 
     try {
-      await axios.put('http://localhost:5000/api/user/shop-owner', formData, {
+      const submitData = {
+        shopName: formData.shopName,
+        phoneNumber: formData.mobileNumber,
+        address: formData.address
+      };
+
+      await axios.post('http://localhost:5000/api/user/shop-owner', submitData, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       toast.success('Shop details updated successfully');
@@ -90,94 +102,151 @@ const ShopOwnerProfile = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Shop Name */}
-          {(existingFields.shopName || isEditing) && (
-            <div>
-              <label htmlFor="shopName" className="block text-sm font-medium text-gray-700">
-                Shop Name
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiShoppingBag className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  name="shopName"
-                  id="shopName"
-                  required
-                  disabled={!isEditing}
-                  className={`block w-full pl-10 pr-3 py-2 border ${
-                    isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
-                  } rounded-md leading-5 
-                  ${isEditing ? 'focus:ring-blue-500 focus:border-blue-500' : ''} 
-                  text-gray-900 placeholder-gray-500 text-sm`}
-                  placeholder="Enter your shop name"
-                  value={formData.shopName}
-                  onChange={handleChange}
-                />
+          {/* First Name */}
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+              First Name
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiUser className="h-5 w-5 text-gray-400" />
               </div>
+              <input
+                type="text"
+                name="firstName"
+                id="firstName"
+                value={formData.firstName}
+                disabled={true}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900"
+              />
             </div>
-          )}
+            {isEditing && <p className="mt-1 text-sm text-red-500">This field cannot be edited</p>}
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+              Last Name
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiUser className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                name="lastName"
+                id="lastName"
+                value={formData.lastName}
+                disabled={true}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900"
+              />
+            </div>
+            {isEditing && <p className="mt-1 text-sm text-red-500">This field cannot be edited</p>}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiMail className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                value={formData.email}
+                disabled={true}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900"
+              />
+            </div>
+            {isEditing && <p className="mt-1 text-sm text-red-500">This field cannot be edited</p>}
+          </div>
+
+          {/* Shop Name */}
+          <div>
+            <label htmlFor="shopName" className="block text-sm font-medium text-gray-700">
+              Shop Name
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiShoppingBag className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                name="shopName"
+                id="shopName"
+                required
+                disabled={!isEditing}
+                className={`block w-full pl-10 pr-3 py-2 border ${
+                  isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
+                } rounded-md leading-5 
+                ${isEditing ? 'focus:ring-blue-500 focus:border-blue-500' : ''} 
+                text-gray-900 placeholder-gray-500 text-sm`}
+                placeholder="Enter your shop name"
+                value={formData.shopName}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
 
           {/* Mobile Number */}
-          {(existingFields.mobileNumber || isEditing) && (
-            <div>
-              <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700">
-                Shop Mobile Number
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiPhone className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="tel"
-                  name="mobileNumber"
-                  id="mobileNumber"
-                  required
-                  disabled={!isEditing}
-                  className={`block w-full pl-10 pr-3 py-2 border ${
-                    isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
-                  } rounded-md leading-5 
-                  ${isEditing ? 'focus:ring-blue-500 focus:border-blue-500' : ''} 
-                  text-gray-900 placeholder-gray-500 text-sm`}
-                  placeholder="Enter shop mobile number"
-                  value={formData.mobileNumber}
-                  onChange={handleChange}
-                  pattern="[0-9]{10}"
-                  title="Please enter a valid 10-digit mobile number"
-                />
+          <div>
+            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700">
+              Shop Mobile Number
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiPhone className="h-5 w-5 text-gray-400" />
               </div>
+              <input
+                type="tel"
+                name="mobileNumber"
+                id="mobileNumber"
+                required
+                disabled={!isEditing}
+                className={`block w-full pl-10 pr-3 py-2 border ${
+                  isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
+                } rounded-md leading-5 
+                ${isEditing ? 'focus:ring-blue-500 focus:border-blue-500' : ''} 
+                text-gray-900 placeholder-gray-500 text-sm`}
+                placeholder="Enter shop mobile number"
+                value={formData.mobileNumber}
+                onChange={handleChange}
+                pattern="[0-9]{10}"
+                title="Please enter a valid 10-digit mobile number"
+              />
             </div>
-          )}
+          </div>
 
           {/* Shop Address */}
-          {(existingFields.address || isEditing) && (
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                Shop Address
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiMapPin className="h-5 w-5 text-gray-400" />
-                </div>
-                <textarea
-                  name="address"
-                  id="address"
-                  required
-                  disabled={!isEditing}
-                  rows="3"
-                  className={`block w-full pl-10 pr-3 py-2 border ${
-                    isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
-                  } rounded-md leading-5 
-                  ${isEditing ? 'focus:ring-blue-500 focus:border-blue-500' : ''} 
-                  text-gray-900 placeholder-gray-500 text-sm`}
-                  placeholder="Enter your shop address"
-                  value={formData.address}
-                  onChange={handleChange}
-                />
+          <div>
+            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+              Shop Address
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiMapPin className="h-5 w-5 text-gray-400" />
               </div>
+              <textarea
+                name="address"
+                id="address"
+                required
+                disabled={!isEditing}
+                rows="3"
+                className={`block w-full pl-10 pr-3 py-2 border ${
+                  isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
+                } rounded-md leading-5 
+                ${isEditing ? 'focus:ring-blue-500 focus:border-blue-500' : ''} 
+                text-gray-900 placeholder-gray-500 text-sm`}
+                placeholder="Enter your shop address"
+                value={formData.address}
+                onChange={handleChange}
+              />
             </div>
-          )}
+          </div>
 
           {/* Show message if no fields exist */}
           {!existingFields.shopName && !existingFields.mobileNumber && !existingFields.address && !isEditing && (

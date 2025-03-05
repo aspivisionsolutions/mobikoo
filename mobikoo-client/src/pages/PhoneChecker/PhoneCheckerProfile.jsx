@@ -5,15 +5,11 @@ import toast from 'react-hot-toast';
 
 const PhoneCheckerProfile = () => {
   const [profile, setProfile] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     mobileNumber: '',
     area: '',
-    city: '',
-    state: '',
-    pincode: '',
-    experience: '',
-    specialization: '',
     isProfileComplete: false
   });
 
@@ -26,12 +22,24 @@ const PhoneCheckerProfile = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/phone-checker/profile', {
+      const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
       });
-      setProfile(response.data);
+      
+      // Map the received data to our profile structure
+      const { phoneChecker } = response.data;
+      const profileData = {
+        firstName: phoneChecker.userId.firstName || '',
+        lastName: phoneChecker.userId.lastName || '',
+        email: phoneChecker.userId.email || '',
+        mobileNumber: phoneChecker.phoneNumber || '', // Map phoneNumber to mobileNumber
+        area: phoneChecker.area || '',
+        isProfileComplete: true
+      };
+      
+      setProfile(profileData);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -51,7 +59,13 @@ const PhoneCheckerProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put('http://localhost:5000/api/phone-checker/profile', profile, {
+      // Only send phoneNumber and area as per API requirements
+      const submitData = {
+        phoneNumber: profile.mobileNumber,
+        area: profile.area
+      };
+
+      await axios.post('http://localhost:5000/api/user/phone-checker', submitData, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -94,22 +108,41 @@ const PhoneCheckerProfile = () => {
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700">First Name</label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiUser className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  name="name"
-                  value={profile.name}
+                  name="firstName"
+                  value={profile.firstName}
                   onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className={`block w-full pl-10 pr-3 py-2 border ${
-                    isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
-                  } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                  disabled={true}
+                  required
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md bg-gray-50"
                 />
               </div>
+              {isEditing && <p className="mt-1 text-sm text-red-500">This field cannot be edited</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Last Name</label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiUser className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={profile.lastName}
+                  onChange={handleInputChange}
+                  disabled={true}
+                  required
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md bg-gray-50"
+                />
+              </div>
+              {isEditing && <p className="mt-1 text-sm text-red-500">This field cannot be edited</p>}
             </div>
 
             <div>
@@ -126,6 +159,7 @@ const PhoneCheckerProfile = () => {
                   className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md bg-gray-50"
                 />
               </div>
+              {isEditing && <p className="mt-1 text-sm text-red-500">This field cannot be edited</p>}
             </div>
 
             <div>
@@ -140,6 +174,7 @@ const PhoneCheckerProfile = () => {
                   value={profile.mobileNumber}
                   onChange={handleInputChange}
                   disabled={!isEditing}
+                  required
                   className={`block w-full pl-10 pr-3 py-2 border ${
                     isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
                   } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
@@ -159,6 +194,7 @@ const PhoneCheckerProfile = () => {
                   value={profile.area}
                   onChange={handleInputChange}
                   disabled={!isEditing}
+                  required
                   className={`block w-full pl-10 pr-3 py-2 border ${
                     isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
                   } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
@@ -167,8 +203,6 @@ const PhoneCheckerProfile = () => {
             </div>
           </div>
 
-          {/* Location Information */}
-          
           {/* Submit Button */}
           {isEditing && (
             <div className="flex justify-end">
