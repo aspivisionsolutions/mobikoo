@@ -19,7 +19,8 @@ const inspectionReportSchema = new mongoose.Schema({
     photos: { type: [String]},
     comments: { type: String, required: true },
     digitalSignature: { type: Boolean, required: true },
-    grade: { type: String, required: true }
+    grade: { type: String, required: true },
+    warrantyStatus:{type:String,default:"not-purchased"}
 });
 
 const InspectionReport = mongoose.model('InspectionReport', inspectionReportSchema);
