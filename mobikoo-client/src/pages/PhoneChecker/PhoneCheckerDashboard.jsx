@@ -543,26 +543,31 @@ const PhoneCheckerDashboard = () => {
                           <div className="flex space-x-4">
                             <button
                               onClick={() => handleDownloadReport(report._id)}
-                              className="text-blue-600 hover:text-blue-900 flex items-center"
+                              className="px-3 py-1.5 text-blue-600 hover:text-blue-900 flex items-center border border-blue-600 rounded-md hover:bg-blue-50 cursor-pointer"
                             >
                               <FiDownload className="h-5 w-5 mr-1" />
                               Download
                             </button>
                             <button
                               onClick={() => handleView(report)}
-                              className="text-green-600 hover:text-green-900 flex items-center"
+                              className="px-3 py-1.5 text-green-600 hover:text-green-900 flex items-center border border-green-600 rounded-md hover:bg-green-50 cursor-pointer"
                             >
                               <FiEye className="h-5 w-5 mr-1" />
                               View Report
                             </button>
-                            {report.warrantyStatus == 'not-purchased' && (
+                            {report.warrantyStatus === 'not-purchased' ? (
                               <button
                                 onClick={() => handlePurchaseWarranty(report)}
-                                className="text-purple-600 hover:text-purple-900 flex items-center"
+                                className="px-3 py-1.5 text-purple-600 hover:text-purple-900 flex items-center border border-purple-600 rounded-md hover:bg-purple-50 cursor-pointer"
                               >
                                 <FiShield className="h-5 w-5 mr-1" />
                                 Purchase Warranty
                               </button>
+                            ) : (
+                              <span className="px-3 py-1.5 text-green-600 flex items-center border border-green-600 rounded-md bg-green-50">
+                                <FiShield className="h-5 w-5 mr-1" />
+                                Warranty Purchased
+                              </span>
                             )}
                           </div>
                         </td>
@@ -594,14 +599,14 @@ const PhoneCheckerDashboard = () => {
                       <div className="pt-2 border-t border-gray-200 flex space-x-2">
                         <button
                           onClick={() => handleDownloadReport(report._id)}
-                          className="flex-1 flex items-center justify-center px-4 py-2 border border-blue-600 rounded-md shadow-sm text-sm font-medium text-blue-600 hover:bg-blue-50"
+                          className="flex-1 flex items-center justify-center px-4 py-2 border border-blue-600 rounded-md shadow-sm text-sm font-medium text-blue-600 hover:bg-blue-50 cursor-pointer"
                         >
                           <FiDownload className="h-4 w-4 mr-2" />
                           Download
                         </button>
                         <button
                           onClick={() => handleView(report)}
-                          className="flex-1 flex items-center justify-center px-4 py-2 border border-green-600 rounded-md shadow-sm text-sm font-medium text-green-600 hover:bg-green-50"
+                          className="flex-1 flex items-center justify-center px-4 py-2 border border-green-600 rounded-md shadow-sm text-sm font-medium text-green-600 hover:bg-green-50 cursor-pointer"
                         >
                           <FiEye className="h-4 w-4 mr-2" />
                           View Report

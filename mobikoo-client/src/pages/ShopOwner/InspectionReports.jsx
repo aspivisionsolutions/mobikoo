@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiDownload, FiEye, FiSearch, FiArrowLeft } from 'react-icons/fi';
+import { FiDownload, FiEye, FiSearch, FiArrowLeft, FiShield } from 'react-icons/fi';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 
@@ -177,25 +177,35 @@ const InspectionReports = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-3">
+                      <div className="flex space-x-4">
                         <button
                           onClick={() => handleView(report)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="px-3 py-1.5 text-blue-600 hover:text-blue-900 flex items-center border border-blue-600 rounded-md hover:bg-blue-50 cursor-pointer"
                         >
-                          <FiEye className="h-5 w-5" />
+                          <FiEye className="h-5 w-5 mr-1" />
+                          View
                         </button>
                         <button
                           onClick={() => handleDownload(report._id)}
-                          className="text-green-600 hover:text-green-900"
+                          className="px-3 py-1.5 text-green-600 hover:text-green-900 flex items-center border border-green-600 rounded-md hover:bg-green-50 cursor-pointer"
                         >
-                          <FiDownload className="h-5 w-5" />
+                          <FiDownload className="h-5 w-5 mr-1" />
+                          Download
                         </button>
-                        <button
-                          onClick={() => handleActivateWarranty(report)}
-                          className="text-sm font-medium text-indigo-600 hover:text-indigo-900 whitespace-nowrap"
-                        >
-                          Activate Warranty
-                        </button>
+                        {report.warrantyStatus === 'purchased' ? (
+                          <button
+                            onClick={() => handleActivateWarranty(report)}
+                            className="px-3 py-1.5 text-indigo-600 hover:text-indigo-900 flex items-center border border-indigo-600 rounded-md hover:bg-indigo-50 cursor-pointer"
+                          >
+                            <FiShield className="h-5 w-5 mr-1" />
+                            Activate Warranty
+                          </button>
+                        ) : (
+                          <span className="px-3 py-1.5 text-red-600 flex items-center border border-red-600 rounded-md bg-red-50">
+                            <FiShield className="h-5 w-5 mr-1" />
+                            Not Purchased
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -223,27 +233,35 @@ const InspectionReports = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-3">
                       <button
                         onClick={() => handleView(report)}
-                        className="flex items-center justify-center w-full py-2 text-sm text-blue-600 hover:text-blue-900 border border-blue-600 rounded-md"
+                        className="flex items-center justify-center w-full px-4 py-2 text-sm text-blue-600 hover:text-blue-900 border border-blue-600 rounded-md hover:bg-blue-50 cursor-pointer"
                       >
-                        <FiEye className="h-4 w-4 mr-1" />
+                        <FiEye className="h-4 w-4 mr-2" />
                         View Report
                       </button>
                       <button
                         onClick={() => handleDownload(report._id)}
-                        className="flex items-center justify-center w-full py-2 text-sm text-green-600 hover:text-green-900 border border-green-600 rounded-md"
+                        className="flex items-center justify-center w-full px-4 py-2 text-sm text-green-600 hover:text-green-900 border border-green-600 rounded-md hover:bg-green-50 cursor-pointer"
                       >
-                        <FiDownload className="h-4 w-4 mr-1" />
+                        <FiDownload className="h-4 w-4 mr-2" />
                         Download Report
                       </button>
-                      <button
-                        onClick={() => handleActivateWarranty(report)}
-                        className="flex items-center justify-center w-full py-2 text-sm text-indigo-600 hover:text-indigo-900 border border-indigo-600 rounded-md"
-                      >
-                        Activate Warranty
-                      </button>
+                      {report.warrantyStatus === 'purchased' ? (
+                        <button
+                          onClick={() => handleActivateWarranty(report)}
+                          className="flex items-center justify-center w-full px-4 py-2 text-sm text-indigo-600 hover:text-indigo-900 border border-indigo-600 rounded-md hover:bg-indigo-50 cursor-pointer"
+                        >
+                          <FiShield className="h-4 w-4 mr-2" />
+                          Activate Warranty
+                        </button>
+                      ) : (
+                        <div className="flex items-center justify-center w-full px-4 py-2 text-sm text-red-600 border border-red-600 rounded-md bg-red-50">
+                          <FiShield className="h-4 w-4 mr-2" />
+                          Not Purchased
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
