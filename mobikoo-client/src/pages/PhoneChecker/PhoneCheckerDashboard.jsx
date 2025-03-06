@@ -316,24 +316,54 @@ const PhoneCheckerDashboard = () => {
 
   const handleWarrantyPurchaseConfirm = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/warranty/purchase`, {
-        reportId: reportForWarranty._id,
-        deviceModel: reportForWarranty.deviceModel,
-        imeiNumber: reportForWarranty.imeiNumber,
-        grade: reportForWarranty.grade,
-        planId: warrantyPlan._id
-      }, {
-        headers: { Authorization: `${localStorage.getItem('token')}` }
-      });
-      
-      toast.success('Warranty purchased successfully');
-      setShowWarrantyModal(false);
-      setWarrantyPlan(null);
-      setReportForWarranty(null);
-      fetchReports(); // Refresh the reports list
+        // Create order with Razorpay
+        const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
+            amount: warrantyPlan.price, // Amount in INR
+            receipt: reportForWarranty._id,
+            notes: {}, // Ensure this is set in your environment
+        });
+
+        const options = {
+            key: "rzp_test_wrWBdn4mFAZoo8", // Updated to use the prefixed variable
+            amount: orderResponse.data.amount, // Amount in paise
+            currency: orderResponse.data.currency,
+            name: 'Warranty Purchase',
+            description: 'Purchase of warranty plan',
+            order_id: orderResponse.data.id, // Order ID returned from Razorpay
+            handler: async function (response) {
+                // Handle successful payment
+                await axios.post(`http://localhost:5000/api/payment/warranty/purchase`, {
+                    reportId: reportForWarranty._id,
+                    deviceModel: reportForWarranty.deviceModel,
+                    imeiNumber: reportForWarranty.imeiNumber,
+                    grade: reportForWarranty.grade,
+                    planId: warrantyPlan._id,
+                    razorpayPaymentId: response.razorpay_payment_id // Include payment ID
+                }, {
+                    headers: { Authorization: `${localStorage.getItem('token')}` }
+                });
+
+                toast.success('Warranty purchased successfully');
+                setShowWarrantyModal(false);
+                setWarrantyPlan(null);
+                setReportForWarranty(null);
+                fetchReports();
+            },
+            prefill: {
+                name: 'Customer Name', 
+                email: 'customer@example.com', 
+                contact: '9999999999' 
+            },
+            theme: {
+                color: '#F37254' 
+            }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open(); 
     } catch (error) {
-      console.error('Error purchasing warranty:', error);
-      toast.error(error.response?.data?.message || 'Failed to purchase warranty');
+        console.error('Error purchasing warranty:', error);
+        toast.error(error.response?.data?.message || 'Failed to purchase warranty');
     }
   };
 

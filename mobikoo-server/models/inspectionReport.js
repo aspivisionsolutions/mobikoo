@@ -20,7 +20,9 @@ const inspectionReportSchema = new mongoose.Schema({
     comments: { type: String, required: true },
     digitalSignature: { type: Boolean, required: true },
     grade: { type: String, required: true },
-    warrantyStatus:{type:String,default:"not-purchased",enum:["not-purchased,purchased,activated"]}
+    warrantyStatus:{type:String,default:"not-purchased",enum:["not-purchased","purchased","activated"]},
+    warrantyPlanId: { type: mongoose.Schema.Types.ObjectId, ref: 'WarrantyPlan' },
+    razorpayPaymentId: { type: String }
 });
 
 const InspectionReport = mongoose.model('InspectionReport', inspectionReportSchema);
