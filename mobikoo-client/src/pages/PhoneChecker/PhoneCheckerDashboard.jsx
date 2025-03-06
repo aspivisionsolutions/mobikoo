@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
-import { FiSearch, FiDownload, FiTrendingUp, FiPhone, FiCheckCircle, FiEye, FiArrowLeft } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiTrendingUp, FiPhone, FiCheckCircle, FiEye, FiArrowLeft, FiShield, FiX } from 'react-icons/fi';
 import ClaimRequests from './ClaimRequests';
 import InspectionRequests from './InspectionRequests';
 import { InspectionReportDetails } from '../../components/InspectionReportDetails';
@@ -40,7 +40,10 @@ const PhoneCheckerDashboard = () => {
     digitalSignature: false,
     grade: ''
   });
-  const [selectedReport, setSelectedReport] = useState(null);
+  const [reportToView, setReportToView] = useState(null);
+  const [showWarrantyModal, setShowWarrantyModal] = useState(false);
+  const [warrantyPlan, setWarrantyPlan] = useState(null);
+  const [reportForWarranty, setReportForWarranty] = useState(null);
 
   useEffect(() => {
     fetchRequests();
@@ -280,14 +283,61 @@ const PhoneCheckerDashboard = () => {
   );
 
   const handleView = (report) => {
-    setSelectedReport(report);
+    setReportToView(report);
   };
 
   const handleBack = () => {
-    setSelectedReport(null);
+    setReportToView(null);
   };
 
-  if (selectedReport) {
+  const handlePurchaseWarranty = async (report) => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/warranty/plans', {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
+      });
+      
+      let plan = null;
+      if (report.grade === 'A') {
+        plan = response.data.data[0]; // Basic Protection Plan
+      } else if (report.grade === 'B') {
+        plan = response.data.data[1]; // Premium Protection Plan
+      } else if (report.grade === 'C') {
+        plan = response.data.data[2]; // Ultimate Protection Plan
+      }
+
+      setWarrantyPlan(plan);
+      setReportForWarranty(report);
+      setShowWarrantyModal(true);
+    } catch (error) {
+      console.error('Error fetching warranty plans:', error);
+      toast.error('Failed to fetch warranty plans');
+    }
+  };
+
+  const handleWarrantyPurchaseConfirm = async () => {
+    try {
+      await axios.post(`http://localhost:5000/api/warranty/purchase`, {
+        reportId: reportForWarranty._id,
+        deviceModel: reportForWarranty.deviceModel,
+        imeiNumber: reportForWarranty.imeiNumber,
+        grade: reportForWarranty.grade,
+        planId: warrantyPlan._id
+      }, {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
+      });
+      
+      toast.success('Warranty purchased successfully');
+      setShowWarrantyModal(false);
+      setWarrantyPlan(null);
+      setReportForWarranty(null);
+      fetchReports(); // Refresh the reports list
+    } catch (error) {
+      console.error('Error purchasing warranty:', error);
+      toast.error(error.response?.data?.message || 'Failed to purchase warranty');
+    }
+  };
+
+  if (reportToView) {
     return (
       <>
         <div className="flex justify-between items-center mb-6">
@@ -304,7 +354,7 @@ const PhoneCheckerDashboard = () => {
 
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
-            <InspectionReportDetails report={selectedReport} />
+            <InspectionReportDetails report={reportToView} />
           </div>
         </div>
       </>
@@ -475,6 +525,15 @@ const PhoneCheckerDashboard = () => {
                               <FiEye className="h-5 w-5 mr-1" />
                               View Report
                             </button>
+                            {report.warrantyStatus == 'not-purchased' && (
+                              <button
+                                onClick={() => handlePurchaseWarranty(report)}
+                                className="text-purple-600 hover:text-purple-900 flex items-center"
+                              >
+                                <FiShield className="h-5 w-5 mr-1" />
+                                Purchase Warranty
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -810,6 +869,82 @@ const PhoneCheckerDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Warranty Plans Modal */}
+      {showWarrantyModal && warrantyPlan && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Warranty Plan</h2>
+              <button
+                onClick={() => {
+                  setShowWarrantyModal(false);
+                  setWarrantyPlan(null);
+                  setReportForWarranty(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FiX className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="bg-gradient-to-br from-white to-blue-50 rounded-lg p-6 border border-blue-100 shadow-sm">
+              {/* Price Section */}
+              <div className="text-center mb-6">
+                <div className="inline-block bg-blue-600 text-white text-2xl font-bold px-6 py-3 rounded-full">
+                  ₹{warrantyPlan.price}
+                </div>
+              </div>
+
+              {/* Plan Details */}
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{warrantyPlan.planName}</h3>
+                  <p className="text-gray-600">{warrantyPlan.coverageDetails}</p>
+                </div>
+
+                {/* Duration and Coverage */}
+                <div className="bg-white rounded-lg p-4">
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Duration:</h4>
+                    <div className="flex items-center text-gray-600">
+                      <FiCheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                      <span>{warrantyPlan.durationMonths} Months Coverage</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Coverage Details:</h4>
+                    <div className="flex items-start">
+                      <FiCheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5" />
+                      <span className="text-gray-600">{warrantyPlan.coverageDetails}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowWarrantyModal(false);
+                  setWarrantyPlan(null);
+                  setReportForWarranty(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleWarrantyPurchaseConfirm}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                Purchase Now
+              </button>
+            </div>
           </div>
         </div>
       )}
