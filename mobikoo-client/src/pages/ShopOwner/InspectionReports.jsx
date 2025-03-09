@@ -73,15 +73,15 @@ const InspectionReports = () => {
 
   const handleSubmitActivation = async (formData) => {
     try {
-      await axios.post('http://localhost:5000/api/shop-owner/warranty-documents', {
+      await axios.post('http://localhost:5000/api/warranty/activate-warranty', {
         deviceModel: activatingReport.deviceModel,
         imeiNumber: activatingReport.imeiNumber,
         grade: activatingReport.grade,
-        inspectionId: activatingReport._id,
+        inspectionReportId: activatingReport._id,
         customerName: formData.customerName,
-        mobileNumber: formData.mobileNumber,
-        aadharNumber: formData.aadharNumber,
-        email: formData.email || undefined
+        customerPhoneNumber: formData.mobileNumber,
+        customerAdhaarNumber: formData.aadharNumber,
+        customerEmailId: formData.email || undefined
       }, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
@@ -89,7 +89,7 @@ const InspectionReports = () => {
       // Update the report status in the local state
       setReports(reports.map(report => 
         report._id === activatingReport._id 
-          ? { ...report, warrantyStatus: 'in_review' } 
+          ? { ...report, warrantyStatus: 'activated' } 
           : report
       ));
       
@@ -221,10 +221,10 @@ const InspectionReports = () => {
                             <FiShield className="h-5 w-5 mr-1" />
                             Activate Warranty
                           </button>
-                        ) : report.warrantyStatus === 'in_review' ? (
+                        ) : report.warrantyStatus === 'activated' ? (
                           <span className="px-3 py-1.5 text-blue-600 flex items-center border border-blue-600 rounded-md bg-blue-50">
                             <FiShield className="h-5 w-5 mr-1" />
-                            In Review
+                            Activated
                           </span>
                         ) : (
                           <span className="px-3 py-1.5 text-red-600 flex items-center border border-red-600 rounded-md bg-red-50">
