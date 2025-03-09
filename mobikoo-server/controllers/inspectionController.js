@@ -95,7 +95,7 @@ exports.getInspectionReportsForPhoneChecker = async (req, res) => {
 
     const phoneChecker = await PhoneChecker.findOne({ userId: req.user.userId });
 
-    const reports = await InspectionReport.find({ inspectorId: req.user.userId });
+    const reports = await InspectionReport.find({ inspectorId: req.user.userId }).populate('warrantyDetails');
     reports.inspectorId = phoneChecker;
     res.status(200).json(reports);
   } catch (error) {
@@ -107,7 +107,7 @@ exports.getInspectionReportsForPhoneChecker = async (req, res) => {
 exports.downloadInspectionReport = async (req, res) => {
   const { id } = req.params;
   try {
-    const report = await InspectionReport.findById(id);
+    const report = await InspectionReport.findById(id).populate('warrantyDetails');
     
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
@@ -164,7 +164,9 @@ exports.downloadInspectionReport = async (req, res) => {
 exports.getInspectionReportsForShopOwner = async (req, res) => {
   try {
     const shopOwner = await ShopOwner.findOne({ userId: req.user.userId });
-    const reports = await InspectionReport.find({ shopName: shopOwner.shopDetails.shopName }).populate('inspectorId');
+    const reports = await InspectionReport.find({ shopName: shopOwner.shopDetails.shopName })
+      .populate('inspectorId')
+      .populate('warrantyDetails');
     res.status(200).json(reports);
   } catch (error) {
     console.error("Error fetching inspection reports for shop owner:", error);

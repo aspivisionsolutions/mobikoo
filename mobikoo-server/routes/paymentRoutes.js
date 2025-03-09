@@ -2,13 +2,14 @@ const express = require('express');
 const Razorpay = require('razorpay'); // Import Razorpay SDK
 const router = express.Router();
 const InspectionReport = require('../models/inspectionReport'); // Import the InspectionReport model
+const IssuedWarranties = require('../models/issuedWarranties'); // Import the IssuedWarranties model
 require('dotenv').config();
 const {protect} = require('../middlewares/authMiddleware')
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID, // Replace with your Razorpay key ID
-    key_secret: process.env.RAZORPAY_KEY_SECRET // Replace with your Razorpay key secret
+    key_id: process.env.RAZORPAY_KEY_ID, 
+    key_secret: process.env.RAZORPAY_KEY_SECRET 
 });
 
 // Create Order POST endpoint
@@ -51,10 +52,19 @@ router.post('/warranty/purchase', async (req, res) => {
             return res.status(404).json({ error: 'Inspection report not found' });
         }
 
+        // Create a new IssuedWarranties object
+        const newIssuedWarranty = new IssuedWarranties({
+            inspectionReport: reportId, // Link to the inspection report
+            warrantyPlanId: planId, // Store the warranty plan ID
+            razorpayPaymentId: razorpayPaymentId // Store the payment ID
+        });
+
+        // Save the issued warranty
+        await newIssuedWarranty.save();
+
         // Update the report with warranty details
         report.warrantyStatus = 'purchased'; // Update warranty status
-        report.warrantyPlanId = planId; // Store the warranty plan ID
-        report.razorpayPaymentId = razorpayPaymentId; 
+        report.warrantyDetails = newIssuedWarranty._id; // Link the issued warranty to the report
 
         await report.save(); // Save the updated report
 
@@ -83,9 +93,20 @@ router.post('/warranty/bulk-purchase', protect, async (req, res) => {
         const updatedReports = await Promise.all(reports.map(async (report) => {
             const purchaseDetail = purchaseDetails.find(detail => detail.reportId.toString() === report._id.toString());
             if (purchaseDetail) {
-                report.warrantyStatus = 'purchased';
-                report.warrantyPlanId = purchaseDetail.planId; // Store the corresponding planId
-                report.razorpayPaymentId = razorpayPaymentId; // Update Razorpay payment ID
+                // Create a new IssuedWarranties object for each report
+                const newIssuedWarranty = new IssuedWarranties({
+                    inspectionReport: report._id, // Link to the inspection report
+                    warrantyPlanId: purchaseDetail.planId, // Store the corresponding planId
+                    razorpayPaymentId: razorpayPaymentId // Update Razorpay payment ID
+                });
+
+                // Save the issued warranty
+                await newIssuedWarranty.save();
+
+                // Update the report with warranty details
+                report.warrantyStatus = 'purchased'; // Update warranty status
+                report.warrantyDetails = newIssuedWarranty._id; // Link the issued warranty to the report
+
                 await report.save(); // Save the updated report
             }
             return report;
