@@ -56,7 +56,8 @@ router.post('/warranty/purchase', async (req, res) => {
         const newIssuedWarranty = new IssuedWarranties({
             inspectionReport: reportId, // Link to the inspection report
             warrantyPlanId: planId, // Store the warranty plan ID
-            razorpayPaymentId: razorpayPaymentId // Store the payment ID
+            razorpayPaymentId: razorpayPaymentId, // Store the payment ID
+            issueDate: new Date().toISOString().split('T')[0] // Set issueDate to today's date only
         });
 
         // Save the issued warranty
@@ -97,7 +98,8 @@ router.post('/warranty/bulk-purchase', protect, async (req, res) => {
                 const newIssuedWarranty = new IssuedWarranties({
                     inspectionReport: report._id, // Link to the inspection report
                     warrantyPlanId: purchaseDetail.planId, // Store the corresponding planId
-                    razorpayPaymentId: razorpayPaymentId // Update Razorpay payment ID
+                    razorpayPaymentId: razorpayPaymentId,
+                    issueDate: new Date().toISOString().split('T')[0],
                 });
 
                 // Save the issued warranty

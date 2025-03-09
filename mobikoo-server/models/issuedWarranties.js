@@ -13,6 +13,9 @@ const issuedWarrantiesSchema = mongoose.Schema({
     },
     razorpayPaymentId: { 
         type: String 
+    },
+    issueDate: {
+        type: Date
     }
 })
 
