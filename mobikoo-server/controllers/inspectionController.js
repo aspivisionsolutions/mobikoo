@@ -197,7 +197,7 @@ exports.getInspectionReportsForShopOwner = async (req, res) => {
 exports.getAllInspectionReports = async (req, res) => {
     try {
         const reports = await InspectionReport.find()
-        .populate('warrantyPlanId', 'planName duration price')  
+        
             .populate('inspectorId', 'name email')
             .sort({ createdAt: -1 });
 
