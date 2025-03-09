@@ -13,10 +13,10 @@ const Warranties = () => {
 
   const fetchWarranties = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/shop-owner/warranty-documents', {
+      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      setWarranties(response.data);
+      setWarranties(response.data.data);
     } catch (error) {
       console.error('Error fetching warranties:', error);
     } finally {
@@ -52,25 +52,29 @@ const Warranties = () => {
   };
 
   const headers = [
-    { key: 'issueDate', label: 'Issue Date', format: (value) => new Date(value).toLocaleDateString() },
-    { key: 'expiryDate', label: 'Expiry Date', format: (value) => new Date(value).toLocaleDateString() },
+    { key: 'issueDate', label: 'Issue Date'},
+    { key: 'expiryDate', label: 'Expiry Date'},
     { key: 'phoneModel', label: 'Phone Model' },
     { key: 'status', label: 'Status' },
     { key: 'actions', label: 'Actions' }
   ];
 
   const renderRow = (warranty, index, viewType) => {
+    const issueDate = new Date(warranty.inspectionReport.inspectionDate);
+    const durationMonths = warranty.warrantyPlanId.durationMonths;
+    const expiryDate = new Date(issueDate.setMonth(issueDate.getMonth() + durationMonths));
+
     if (viewType === 'desktop') {
       return (
         <tr key={index}>
           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            {new Date(warranty.issueDate).toLocaleDateString()}
+            {issueDate.toLocaleDateString()}
           </td>
           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            {new Date(warranty.expiryDate).toLocaleDateString()}
+            {expiryDate.toLocaleDateString()}
           </td>
           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            {warranty.phoneModel}
+            {warranty.inspectionReport.deviceModel}
           </td>
           <td className="px-6 py-4 whitespace-nowrap">
             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -78,7 +82,7 @@ const Warranties = () => {
                 warranty.status === 'Expired' ? 'bg-red-100 text-red-800' : 
                 'bg-gray-100 text-gray-800'}`}
             >
-              {warranty.status}
+              {warranty.inspectionReport.warrantyStatus}
             </span>
           </td>
           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

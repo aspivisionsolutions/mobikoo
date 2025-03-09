@@ -1,6 +1,7 @@
 const WarrantyPlan = require('../models/warranties');
 const InspectionReport = require('../models/inspectionReport');
 const Customer = require('../models/customer');
+const IssuedWarranties = require('../models/issuedWarranties');
 
 // Get all warranty plans
 exports.getAllWarrantyPlans = async (req, res) => {
@@ -71,5 +72,22 @@ exports.activateWarranty = async (req, res) => {
     } catch (error) {
         console.error('Error activating warranty:', error);
         res.status(500).json({ error: error.message });
+    }
+};
+
+// Function to get all issued warranties
+exports.getAllIssuedWarranties = async (req, res) => {
+    try {
+        const issuedWarranties = await IssuedWarranties.find().populate('inspectionReport warrantyPlanId');
+        res.status(200).json({
+            success: true,
+            data: issuedWarranties
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching issued warranties',
+            error: error.message
+        });
     }
 };
