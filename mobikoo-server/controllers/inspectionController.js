@@ -106,9 +106,13 @@ exports.getInspectionReportsForPhoneChecker = async (req, res) => {
 
 exports.downloadInspectionReport = async (req, res) => {
   const { id } = req.params;
+  console.log(id)
   try {
-    const report = await InspectionReport.findById(id).populate('warrantyDetails');
-    
+    const report = await InspectionReport.findById(id).populate({
+      path: 'warrantyDetails',
+      populate: { path: 'warrantyPlanId' }
+    });
+    console.log(report)
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
     }
@@ -135,6 +139,21 @@ exports.downloadInspectionReport = async (req, res) => {
       // Format the key to be more readable
       const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
       doc.fontSize(12).text(`${formattedKey}: ${value}`);
+    }
+
+    // Add warranty details if available
+    if (report.warrantyDetails) {
+      doc.moveDown();
+      doc.fontSize(14).text('Warranty Details:', { underline: true });
+      const { warrantyPlanId, razorpayPaymentId } = report.warrantyDetails;
+
+      // Add warranty plan details if populated
+      if (warrantyPlanId) {
+        const planDetails = warrantyPlanId.toObject();
+        doc.fontSize(12).text(`Warranty Plan ID: ${planDetails._id}`);
+        doc.fontSize(12).text(`Plan Name: ${planDetails.planName}`);
+      }
+      doc.fontSize(12).text(`Payment ID: ${razorpayPaymentId}`);
     }
 
     // Check for photos and add them to the PDF

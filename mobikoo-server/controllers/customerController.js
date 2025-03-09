@@ -11,7 +11,7 @@ exports.getAllCustomers = async (req, res) => {
                 path: 'warrantyDetails',
                 populate: {
                     path: 'warrantyPlanId', // Populate the warrantyPlanId within warrantyDetails
-                    model: WarrantyPlan // Specify the model to populate
+                    model: WarrantyPlan
                 }
             });
 

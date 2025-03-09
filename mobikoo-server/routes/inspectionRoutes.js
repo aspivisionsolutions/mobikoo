@@ -48,6 +48,6 @@ router.get("/phoneChecker/reports", protect, roleMiddleware(["phone-checker"]), 
 
 router.get("/shopOwner/reports", protect, roleMiddleware(["shop-owner"]), getInspectionReportsForShopOwner);
 
-router.get("/reports/:id/download", protect, roleMiddleware(["phone-checker"]), downloadInspectionReport);
+router.get("/reports/:id/download", protect, roleMiddleware(["phone-checker", "shop-owner","admin"]), downloadInspectionReport);
 
 module.exports = router;

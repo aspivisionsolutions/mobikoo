@@ -37,9 +37,10 @@ const InspectionReports = () => {
   );
 
   const handleDownload = async (reportId) => {
+    console.log(reportId)
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/shop-owner/inspection-reports/${reportId}/download`,
+        `http://localhost:5000/api/inspection/reports/${reportId}/download`,
         { 
           responseType: 'blob',
           headers: { Authorization: `${localStorage.getItem('token')}` }
