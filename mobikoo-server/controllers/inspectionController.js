@@ -173,3 +173,22 @@ exports.getInspectionReportsForShopOwner = async (req, res) => {
 }
 
 
+exports.getAllInspectionReports = async (req, res) => {
+    try {
+        const reports = await InspectionReport.find()
+        .populate('warrantyPlanId', 'planName duration price')  
+            .populate('inspectorId', 'name email')
+            .sort({ createdAt: -1 });
+
+        if (!reports || reports.length === 0) {
+            return res.status(404).json({ message: "No inspection reports found" });
+        }
+
+        res.status(200).json({ reports });
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching inspection reports", details: error.message });
+    }
+};
+
+
+

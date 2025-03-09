@@ -13,6 +13,7 @@ import PhoneReports from './pages/PhoneChecker/PhoneReports';
 import InspectionReportView from './pages/InspectionReportView';
 import PhoneCheckerProfile from './pages/PhoneChecker/PhoneCheckerProfile';
 import './App.css';
+import AdminDashboard from './pages/Admin/AdminDashboard';
 
 const App = () => {
   return (
@@ -44,6 +45,8 @@ const App = () => {
           <Route path="profile" element={<ShopOwnerProfile />} />
           <Route path="reports/:reportId" element={<InspectionReportView />} />
         </Route>
+
+        <Route path='/admin/dashboard' element={<AdminDashboard/>}/>
       </Routes>
     </Router>
   );

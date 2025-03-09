@@ -1,0 +1,343 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { FiDownload, FiEye, FiSearch, FiRefreshCw } from 'react-icons/fi';
+
+const PhoneInspectionTable = () => {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [responseDebug, setResponseDebug] = useState(null); // For debugging the API response
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [reportsPerPage] = useState(10);
+
+  const fetchReports = async () => {
+    setLoading(true);
+    setError(null);
+    setResponseDebug(null);
+    
+    try {
+
+const response = await axios.get('http://localhost:5000/api/inspection/admin/reports', {
+  headers: { Authorization: `${localStorage.getItem('token')}` }
+});
+console.log(response.data);
+      
+      // Store the raw response for debugging
+      setResponseDebug(JSON.stringify(response.data, null, 2));
+      
+      // Try different possible response structures
+      if (response.data && Array.isArray(response.data.reports)) {
+        setReports(response.data.reports);
+      } else if (response.data && Array.isArray(response.data)) {
+        setReports(response.data);
+      } else if (response.data && typeof response.data === 'object') {
+        // Try to extract any array from the response
+        const possibleArrays = Object.values(response.data).filter(value => Array.isArray(value));
+        if (possibleArrays.length > 0) {
+          // Use the first array found in the response
+          setReports(possibleArrays[0]);
+        } else {
+          // Create an array from the object if it seems like a single report
+          if (response.data.id || response.data.inspectionId || response.data.deviceName) {
+            setReports([response.data]);
+          } else {
+            setReports([]);
+            setError('Could not find reports data in the API response');
+          }
+        }
+      } else {
+        setReports([]);
+        setError('Received unexpected data format from server');
+      }
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      setError(`Failed to load inspection reports: ${error.message}`);
+      setResponseDebug(error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  // Filter reports (with safety checks)
+  const filteredReports = reports && Array.isArray(reports) 
+    ? reports.filter(report => {
+        if (!report) return false;
+        const device = (report.deviceModel || '').toLowerCase();
+        const customer = (report.customerName || '').toLowerCase();
+        const id = (report.inspectionId || '').toLowerCase();
+        const status = (report.status || '').toLowerCase();
+        const term = searchTerm.toLowerCase();
+        return device.includes(term) || customer.includes(term) || id.includes(term) || status.includes(term);
+      })
+    : [];
+
+  // Pagination logic
+  const indexOfLastReport = currentPage * reportsPerPage;
+  const indexOfFirstReport = indexOfLastReport - reportsPerPage;
+  const currentReports = filteredReports.slice(indexOfFirstReport, indexOfLastReport);
+  const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
+
+  // Format date to a more readable format
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  };
+
+  // Status badge component
+  const StatusBadge = ({ status }) => {
+    let bgColor = '';
+    
+    switch((status || '').toLowerCase()) {
+      case 'activated':
+        bgColor = 'bg-green-100 text-green-800';
+        break;
+      case 'pending':
+        bgColor = 'bg-yellow-100 text-yellow-800';
+        break;
+      case 'failed':
+        bgColor = 'bg-red-100 text-red-800';
+        break;
+      default:
+        bgColor = 'bg-gray-100 text-gray-800';
+    }
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor}`}>
+        {status || 'Unknown'}
+      </span>
+    );
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Header and search */}
+      <div className="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 md:mb-0">Phone Inspection Reports</h2>
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search reports..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+            />
+            <FiSearch className="absolute left-3 top-3 text-gray-400" />
+          </div>
+          <button 
+            onClick={fetchReports}
+            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <FiRefreshCw className="mr-2" />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Loading state */}
+      {loading && (
+        <div className="p-6 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Loading inspection reports...</p>
+        </div>
+      )}
+
+      {/* Error state with debug info */}
+      {error && !loading && (
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+            <h3 className="text-red-800 font-medium">Error</h3>
+            <p className="text-red-600">{error}</p>
+          </div>
+          
+          {responseDebug && (
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">API Response (Debug):</h3>
+              <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-64">
+                <pre className="text-xs text-gray-800 whitespace-pre-wrap">{responseDebug}</pre>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                * This information can help identify the correct data structure to use
+              </p>
+            </div>
+          )}
+          
+          <button 
+            onClick={fetchReports}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Mock data button (for development/testing) */}
+      {error && !loading && (
+        <div className="px-6 pb-4">
+          <button 
+            onClick={() => {
+              // Sample mock data
+              const mockData = [
+                {
+                  inspectionId: "INS-10001",
+                  deviceName: "iPhone 13 Pro",
+                  customerName: "John Smith",
+                  date: "2024-03-01",
+                  shopName: "Main Street Shop",
+                  status: "Completed"
+                },
+                {
+                  inspectionId: "INS-10002",
+                  deviceName: "Samsung Galaxy S22",
+                  customerName: "Alice Johnson",
+                  date: "2024-03-02",
+                  shopName: "Downtown Store",
+                  status: "Pending"
+                }
+              ];
+              setReports(mockData);
+              setError(null);
+            }}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            Load Sample Data (for testing)
+          </button>
+        </div>
+      )}
+
+      {/* Table */}
+      {!loading && !error && (
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentReports.length > 0 ? (
+                  currentReports.map((report, index) => (
+                    <tr key={report.id || index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {report.inspectionId || `INS-${10000 + index}`}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {report.deviceModel || 'Unknown Device'}
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {report.customerName || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(report.inspectionDate)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {report.shopName || report.shopId || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {report.grade || 'N/A'}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {report.serialNumber || 'N/A'}
+            </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusBadge status={report.warrantyStatus
+} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex space-x-2">
+                          <button
+                            className="p-1 rounded-full text-blue-600 hover:bg-blue-100"
+                            title="View Report"
+                          >
+                            <FiEye size={18} />
+                          </button>
+                          <button
+                            className="p-1 rounded-full text-green-600 hover:bg-green-100"
+                            title="Download Report"
+                          >
+                            <FiDownload size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                      No inspection reports found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {filteredReports.length > 0 && (
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{indexOfFirstReport + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(indexOfLastReport, filteredReports.length)}
+                </span>{' '}
+                of <span className="font-medium">{filteredReports.length}</span> reports
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === totalPages || totalPages === 0
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default PhoneInspectionTable;

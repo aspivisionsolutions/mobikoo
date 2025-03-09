@@ -1,6 +1,10 @@
 const express = require("express");
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
 const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner } = require("../controllers/inspectionController");
+const { getAllInspectionReports } = require('../controllers/inspectionController');
+
+
+
 
 const router = express.Router();
 
@@ -27,6 +31,13 @@ router.get(
   roleMiddleware(["shop-owner"]),
   getInspectionRequestsByShopOwner
 );
+router.get(
+  "/admin/reports",
+  protect,
+  roleMiddleware(["admin"]),
+  getAllInspectionReports // Controller function for admin reports
+);
+
 
 // Route to submit an inspection report by a phone checker
 router.post(
@@ -49,5 +60,6 @@ router.get("/phoneChecker/reports", protect, roleMiddleware(["phone-checker"]), 
 router.get("/shopOwner/reports", protect, roleMiddleware(["shop-owner"]), getInspectionReportsForShopOwner);
 
 router.get("/reports/:id/download", protect, roleMiddleware(["phone-checker"]), downloadInspectionReport);
+router.get('/admin/reports', protect, roleMiddleware(["admin"]),getAllInspectionReports);
 
 module.exports = router;
