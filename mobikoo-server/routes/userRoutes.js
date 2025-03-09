@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const PhoneChecker = require('../models/phoneChecker');
 const ShopOwner = require('../models/shopOwner');
+const Customer = require('../models/customer');
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
 const User = require('../models/user');
+const { getAllCustomers, getCustomersForShopOwner } = require('../controllers/customerController');
 
 // Existing routes...
 
@@ -103,5 +105,11 @@ router.post('/phone-checker', protect, async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 });
+
+// New route to fetch all customers
+router.get('/customers', protect, getAllCustomers);
+
+// New route to fetch customers for a specific shop owner
+router.get('/shop-owner/customers', protect, getCustomersForShopOwner);
 
 module.exports = router;

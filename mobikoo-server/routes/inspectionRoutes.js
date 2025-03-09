@@ -61,5 +61,6 @@ router.get("/shopOwner/reports", protect, roleMiddleware(["shop-owner"]), getIns
 
 router.get("/reports/:id/download", protect, roleMiddleware(["phone-checker"]), downloadInspectionReport);
 router.get('/admin/reports', protect, roleMiddleware(["admin"]),getAllInspectionReports);
+router.get("/reports/:id/download", protect, roleMiddleware(["phone-checker", "shop-owner","admin"]), downloadInspectionReport);
 
 module.exports = router;

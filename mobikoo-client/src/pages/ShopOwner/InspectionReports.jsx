@@ -3,12 +3,15 @@ import axios from 'axios';
 import { FiDownload, FiEye, FiSearch, FiArrowLeft, FiShield } from 'react-icons/fi';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
+import WarrantyActivationDialog from '../../components/WarrantyActivationDialog';
 
 const InspectionReports = () => {
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activatingReport, setActivatingReport] = useState(null);
 
   useEffect(() => {
     fetchReports();
@@ -34,9 +37,10 @@ const InspectionReports = () => {
   );
 
   const handleDownload = async (reportId) => {
+    console.log(reportId)
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/shop-owner/inspection-reports/${reportId}/download`,
+        `http://localhost:5000/api/inspection/reports/${reportId}/download`,
         { 
           responseType: 'blob',
           headers: { Authorization: `${localStorage.getItem('token')}` }
@@ -63,21 +67,39 @@ const InspectionReports = () => {
     setSelectedReport(null);
   };
 
-  const handleActivateWarranty = async (report) => {
+  const handleActivateWarranty = (report) => {
+    setActivatingReport(report);
+    setDialogOpen(true);
+  };
+
+  const handleSubmitActivation = async (formData) => {
     try {
-      await axios.post('http://localhost:5000/api/shop-owner/warranty-documents', {
-        deviceModel: report.deviceModel,
-        imeiNumber: report.imeiNumber,
-        grade: report.grade,
-        inspectionId: report._id
+      await axios.post('http://localhost:5000/api/warranty/activate-warranty', {
+        deviceModel: activatingReport.deviceModel,
+        imeiNumber: activatingReport.imeiNumber,
+        grade: activatingReport.grade,
+        inspectionReportId: activatingReport._id,
+        customerName: formData.customerName,
+        customerPhoneNumber: formData.mobileNumber,
+        customerAdhaarNumber: formData.aadharNumber,
+        customerEmailId: formData.email || undefined
       }, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      // Show success message or handle response
-      alert('Warranty activated successfully');
+      
+      // Update the report status in the local state
+      setReports(reports.map(report => 
+        report._id === activatingReport._id 
+          ? { ...report, warrantyStatus: 'activated' } 
+          : report
+      ));
+      
+      // Close the dialog
+      setDialogOpen(false);
+      setActivatingReport(null);
     } catch (error) {
       console.error('Error activating warranty:', error);
-      alert('Failed to activate warranty');
+      throw error; // Re-throw to be caught by the dialog component
     }
   };
 
@@ -200,6 +222,11 @@ const InspectionReports = () => {
                             <FiShield className="h-5 w-5 mr-1" />
                             Activate Warranty
                           </button>
+                        ) : report.warrantyStatus === 'activated' ? (
+                          <span className="px-3 py-1.5 text-blue-600 flex items-center border border-blue-600 rounded-md bg-blue-50">
+                            <FiShield className="h-5 w-5 mr-1" />
+                            Activated
+                          </span>
                         ) : (
                           <span className="px-3 py-1.5 text-red-600 flex items-center border border-red-600 rounded-md bg-red-50">
                             <FiShield className="h-5 w-5 mr-1" />
@@ -256,6 +283,11 @@ const InspectionReports = () => {
                           <FiShield className="h-4 w-4 mr-2" />
                           Activate Warranty
                         </button>
+                      ) : report.warrantyStatus === 'in_review' ? (
+                        <div className="flex items-center justify-center w-full px-4 py-2 text-sm text-blue-600 border border-blue-600 rounded-md bg-blue-50">
+                          <FiShield className="h-4 w-4 mr-2" />
+                          In Review
+                        </div>
                       ) : (
                         <div className="flex items-center justify-center w-full px-4 py-2 text-sm text-red-600 border border-red-600 rounded-md bg-red-50">
                           <FiShield className="h-4 w-4 mr-2" />
@@ -270,8 +302,21 @@ const InspectionReports = () => {
           />
         )}
       </div>
+
+      {/* Warranty Activation Dialog */}
+      {activatingReport && (
+        <WarrantyActivationDialog
+          isOpen={dialogOpen}
+          onClose={() => {
+            setDialogOpen(false);
+            setActivatingReport(null);
+          }}
+          onSubmit={handleSubmitActivation}
+          productId={activatingReport._id}
+        />
+      )}
     </div>
   );
 };
 
-export default InspectionReports; 
+export default InspectionReports;
