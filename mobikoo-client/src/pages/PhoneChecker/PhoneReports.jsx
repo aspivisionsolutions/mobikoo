@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiSearch, FiDownload, FiEye, FiShield, FiX, FiCheckCircle } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiEye, FiShield, FiX, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import { toast } from 'react-toastify'; // Ensure you have toast notifications set up
+import InspectionReportDetails from '../../components/InspectionReportDetails';
 
 const PhoneReports = ({ standalone = false }) => {
   const [reports, setReports] = useState([]);

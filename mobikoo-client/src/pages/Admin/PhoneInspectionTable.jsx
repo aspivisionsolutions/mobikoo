@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiDownload, FiEye, FiSearch, FiRefreshCw } from 'react-icons/fi';
+import { FiDownload, FiEye, FiSearch, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import InspectionReportDetails from '../../components/InspectionReportDetails';
 
 const PhoneInspectionTable = () => {
   const [reports, setReports] = useState([]);
@@ -10,6 +12,8 @@ const PhoneInspectionTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [reportsPerPage] = useState(10);
+  const [reportToView, setReportToView] = useState(null);
+  const navigate = useNavigate();
 
   const fetchReports = async () => {
     setLoading(true);
@@ -64,6 +68,33 @@ console.log(response.data);
     fetchReports();
   }, []);
 
+  const handleReportDownload = async (reportId) => {
+    console.log(reportId)
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/inspection/reports/${reportId}/download`,
+        { 
+          responseType: 'blob',
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `inspection-report-${reportId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading report:', error);
+    }
+  };
+
+  const handleReportView = (report) => {
+    setReportToView(report);
+  };
+
   // Filter reports (with safety checks)
   const filteredReports = reports && Array.isArray(reports) 
     ? reports.filter(report => {
@@ -107,10 +138,10 @@ console.log(response.data);
       case 'activated':
         bgColor = 'bg-green-100 text-green-800';
         break;
-      case 'pending':
+      case 'purchased':
         bgColor = 'bg-yellow-100 text-yellow-800';
         break;
-      case 'failed':
+      case 'not-purchased':
         bgColor = 'bg-red-100 text-red-800';
         break;
       default:
@@ -126,213 +157,232 @@ console.log(response.data);
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      {/* Header and search */}
-      <div className="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4 md:mb-0">Phone Inspection Reports</h2>
-        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search reports..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            />
-            <FiSearch className="absolute left-3 top-3 text-gray-400" />
-          </div>
-          <button 
-            onClick={fetchReports}
-            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <FiRefreshCw className="mr-2" />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Loading state */}
-      {loading && (
-        <div className="p-6 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading inspection reports...</p>
-        </div>
-      )}
-
-      {/* Error state with debug info */}
-      {error && !loading && (
+      {/* Render InspectionReportDetails if a report is selected */}
+      {reportToView ? (
         <div className="p-6">
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-            <h3 className="text-red-800 font-medium">Error</h3>
-            <p className="text-red-600">{error}</p>
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => setReportToView(null)}
+              className="flex items-center text-gray-500 hover:text-gray-700"
+            >
+              <FiArrowLeft className="h-5 w-5 mr-2" />
+              Back to Reports
+            </button>
           </div>
-          
-          {responseDebug && (
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">API Response (Debug):</h3>
-              <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-64">
-                <pre className="text-xs text-gray-800 whitespace-pre-wrap">{responseDebug}</pre>
+          <InspectionReportDetails report={reportToView} />
+        </div>
+      ) : (
+        <>
+          {/* Header and search */}
+          <div className="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 md:mb-0">Phone Inspection Reports</h2>
+            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search reports..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                />
+                <FiSearch className="absolute left-3 top-3 text-gray-400" />
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                * This information can help identify the correct data structure to use
-              </p>
+              <button 
+                onClick={fetchReports}
+                className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <FiRefreshCw className="mr-2" />
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Loading state */}
+          {loading && (
+            <div className="p-6 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-600">Loading inspection reports...</p>
             </div>
           )}
-          
-          <button 
-            onClick={fetchReports}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
 
-      {/* Mock data button (for development/testing) */}
-      {error && !loading && (
-        <div className="px-6 pb-4">
-          <button 
-            onClick={() => {
-              // Sample mock data
-              const mockData = [
-                {
-                  inspectionId: "INS-10001",
-                  deviceName: "iPhone 13 Pro",
-                  customerName: "John Smith",
-                  date: "2024-03-01",
-                  shopName: "Main Street Shop",
-                  status: "Completed"
-                },
-                {
-                  inspectionId: "INS-10002",
-                  deviceName: "Samsung Galaxy S22",
-                  customerName: "Alice Johnson",
-                  date: "2024-03-02",
-                  shopName: "Downtown Store",
-                  status: "Pending"
-                }
-              ];
-              setReports(mockData);
-              setError(null);
-            }}
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
-          >
-            Load Sample Data (for testing)
-          </button>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && !error && (
-        <>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentReports.length > 0 ? (
-                  currentReports.map((report, index) => (
-                    <tr key={report.id || index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.inspectionId || `INS-${10000 + index}`}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.deviceModel || 'Unknown Device'}
-                      </td>
-                      
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.customerName || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(report.inspectionDate)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.shopName || report.shopId || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {report.grade || 'N/A'}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {report.serialNumber || 'N/A'}
-            </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={report.warrantyStatus
-} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex space-x-2">
-                          <button
-                            className="p-1 rounded-full text-blue-600 hover:bg-blue-100"
-                            title="View Report"
-                          >
-                            <FiEye size={18} />
-                          </button>
-                          <button
-                            className="p-1 rounded-full text-green-600 hover:bg-green-100"
-                            title="Download Report"
-                          >
-                            <FiDownload size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
-                      No inspection reports found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {filteredReports.length > 0 && (
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing <span className="font-medium">{indexOfFirstReport + 1}</span> to{' '}
-                <span className="font-medium">
-                  {Math.min(indexOfLastReport, filteredReports.length)}
-                </span>{' '}
-                of <span className="font-medium">{filteredReports.length}</span> reports
+          {/* Error state with debug info */}
+          {error && !loading && (
+            <div className="p-6">
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                <h3 className="text-red-800 font-medium">Error</h3>
+                <p className="text-red-600">{error}</p>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                  }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === totalPages || totalPages === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
+              
+              {responseDebug && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">API Response (Debug):</h3>
+                  <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-64">
+                    <pre className="text-xs text-gray-800 whitespace-pre-wrap">{responseDebug}</pre>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    * This information can help identify the correct data structure to use
+                  </p>
+                </div>
+              )}
+              
+              <button 
+                onClick={fetchReports}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Try Again
+              </button>
             </div>
+          )}
+
+          {/* Mock data button (for development/testing) */}
+          {error && !loading && (
+            <div className="px-6 pb-4">
+              <button 
+                onClick={() => {
+                  // Sample mock data
+                  const mockData = [
+                    {
+                      inspectionId: "INS-10001",
+                      deviceName: "iPhone 13 Pro",
+                      customerName: "John Smith",
+                      date: "2024-03-01",
+                      shopName: "Main Street Shop",
+                      status: "Completed"
+                    },
+                    {
+                      inspectionId: "INS-10002",
+                      deviceName: "Samsung Galaxy S22",
+                      customerName: "Alice Johnson",
+                      date: "2024-03-02",
+                      shopName: "Downtown Store",
+                      status: "Pending"
+                    }
+                  ];
+                  setReports(mockData);
+                  setError(null);
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Load Sample Data (for testing)
+              </button>
+            </div>
+          )}
+
+          {/* Table */}
+          {!loading && !error && (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {currentReports.length > 0 ? (
+                      currentReports.map((report, index) => (
+                        <tr key={report.id || index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {report.inspectionId || `INS-${10000 + index}`}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {report.deviceModel || 'Unknown Device'}
+                          </td>
+                          
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {report.customerName || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatDate(report.inspectionDate)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {report.shopName || report.shopId || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {report.grade || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {report.serialNumber || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <StatusBadge status={report.warrantyStatus} />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex space-x-2">
+                              <button
+                                className="p-1 rounded-full text-blue-600 hover:bg-blue-100"
+                                title="View Report"
+                                onClick={() => handleReportView(report)}
+                              >
+                                <FiEye size={18} />
+                              </button>
+                              <button
+                                className="p-1 rounded-full text-green-600 hover:bg-green-100"
+                                title="Download Report"
+                                onClick={() => handleReportDownload(report._id)}
+                              >
+                                <FiDownload size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                          No inspection reports found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {filteredReports.length > 0 && (
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{indexOfFirstReport + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(indexOfLastReport, filteredReports.length)}
+                    </span>{' '}
+                    of <span className="font-medium">{filteredReports.length}</span> reports
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1 rounded-md ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`px-3 py-1 rounded-md ${
+                        currentPage === totalPages || totalPages === 0
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </>
       )}

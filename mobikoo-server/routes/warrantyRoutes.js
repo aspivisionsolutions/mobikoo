@@ -3,7 +3,8 @@ const router = express.Router();
 const { 
     getAllWarrantyPlans,
     activateWarranty,
-    getAllIssuedWarranties
+    getAllIssuedWarranties,
+    downloadWarrantyPDF
 } = require('../controllers/warrantyController');
 const { protect, roleMiddleware } = require('../middlewares/authMiddleware');
 
@@ -16,6 +17,9 @@ router.post('/activate-warranty', protect, roleMiddleware(['shop-owner']), activ
 
 // Route to fetch all issued warranties
 router.get('/issued-warranties', getAllIssuedWarranties);
+
+// Route to download warranty PDF
+router.get('/download-warranty/:warrantyId', protect, downloadWarrantyPDF);
 
 
 
