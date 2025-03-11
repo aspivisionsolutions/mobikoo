@@ -5,7 +5,8 @@ const warrantyRoutes = require("./routes/warrantyRoutes");
 const inspectionRoutes = require("./routes/inspectionRoutes")
 const userRoutes = require("./routes/userRoutes")
 const paymentRoutes = require("./routes/paymentRoutes")
-const adminRoutes = require('./routes/adminRoutes');
+const activityLogRoutes = require('./routes/ActivityRoute');
+
 require("dotenv").config();
 const cors = require("cors");
 
@@ -23,6 +24,12 @@ app.use("/api/warranty", warrantyRoutes);
 app.use("/api/inspection", inspectionRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/payment", paymentRoutes)
-app.use('/api/admin', adminRoutes);
+
+
+
+
+app.use("/api/activity-log", activityLogRoutes);
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
