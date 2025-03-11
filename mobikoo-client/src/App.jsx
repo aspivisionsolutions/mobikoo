@@ -14,6 +14,7 @@ import InspectionReportView from './pages/InspectionReportView';
 import PhoneCheckerProfile from './pages/PhoneChecker/PhoneCheckerProfile';
 import './App.css';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import InspectionReportDetails from './components/InspectionReportDetails';
 
 const App = () => {
   return (

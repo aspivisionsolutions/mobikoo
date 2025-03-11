@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import AdminLogsTable from './AdminLogsTable'; // Import the new component
 import PhoneInspectionTable from './PhoneInspectionTable';
+import WarrantiesManagement from './WarrantiesManagement';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -33,7 +34,7 @@ const AdminDashboard = () => {
       case 'claims':
         return <div className="p-6">Claims Management Content</div>;
       case 'warranty':
-        return <div className="p-6">Warranty Management Content</div>;
+        return <WarrantiesManagement />;
       case 'logs':
         return <AdminLogsTable />; // Added the logs component here
       case 'settings':

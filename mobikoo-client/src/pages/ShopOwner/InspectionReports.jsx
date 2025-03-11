@@ -37,16 +37,14 @@ const InspectionReports = () => {
   );
 
   const handleDownload = async (reportId) => {
-    console.log(reportId)
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/inspection/reports/${reportId}/download`,
-        { 
-          responseType: 'blob',
-          headers: { Authorization: `${localStorage.getItem('token')}` }
+      const response = await axios.get(`http://localhost:5000/api/inspection/reports/${reportId}/download`, {
+        responseType: 'blob',
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
         }
-      );
-      
+      });
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;

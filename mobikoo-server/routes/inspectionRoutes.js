@@ -2,6 +2,7 @@ const express = require("express");
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
 const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner } = require("../controllers/inspectionController");
 const { getAllInspectionReports } = require('../controllers/inspectionController');
+const InspectionReport = require("../models/inspectionReport");
 
 
 
@@ -59,8 +60,16 @@ router.get("/phoneChecker/reports", protect, roleMiddleware(["phone-checker"]), 
 
 router.get("/shopOwner/reports", protect, roleMiddleware(["shop-owner"]), getInspectionReportsForShopOwner);
 
-router.get("/reports/:id/download", protect, roleMiddleware(["phone-checker"]), downloadInspectionReport);
 router.get('/admin/reports', protect, roleMiddleware(["admin"]),getAllInspectionReports);
 router.get("/reports/:id/download", protect, roleMiddleware(["phone-checker", "shop-owner","admin"]), downloadInspectionReport);
+router.get("/report/:id", protect, async ()=>{
+  try{
+    const { id }= req.params();
+    const report = await InspectionReport.findById(id)
+    res.json(report)
+  }catch(error){
+    res.status(500).send({message: "Error in fetching report..!"})
+  }
+})
 
 module.exports = router;
