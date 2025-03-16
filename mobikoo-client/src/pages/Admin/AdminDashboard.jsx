@@ -14,6 +14,7 @@ import {
 import AdminLogsTable from './AdminLogsTable'; // Import the new component
 import PhoneInspectionTable from './PhoneInspectionTable';
 import WarrantiesManagement from './WarrantiesManagement';
+import UserManagement from './UserManagement';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -28,7 +29,7 @@ const AdminDashboard = () => {
       case 'dashboard':
         return <DashboardContent />;
       case 'users':
-        return <div className="p-6">Users Management Content</div>;
+        return <UserManagement/>
         case 'phones':
           return <PhoneInspectionTable />;
       case 'claims':

@@ -4,7 +4,8 @@ const {
     getAllWarrantyPlans,
     activateWarranty,
     getAllIssuedWarranties,
-    claimWarranty
+    claimWarranty,
+    downloadWarrantyPDF
 } = require('../controllers/warrantyController');
 const { protect, roleMiddleware } = require('../middlewares/authMiddleware');
 const ActivityLog = require('../models/activityLog'); // ✅ Import the Activity Log model
@@ -26,6 +27,8 @@ router.post('/claim-warranty', protect, roleMiddleware(['customer']), claimWarra
 
 module.exports = router;
 
+// Route to download warranty PDF
+router.get('/download-warranty/:warrantyId', protect, downloadWarrantyPDF);
 
 
 
