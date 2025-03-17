@@ -22,7 +22,8 @@ router.get('/users', protect, adminOnly, async (req, res) => {
 // Get all phone checkers
 router.get('/phone-checkers', protect, adminOnly, async (req, res) => {
     try {
-        const phoneCheckers = await PhoneChecker.find().populate('userId', 'firstName lastName email');
+        const phoneCheckers = await PhoneChecker.find({ role: { $ne: 'admin' } })
+            .populate('userId', 'firstName lastName email');
         res.status(200).json(phoneCheckers);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -32,17 +33,19 @@ router.get('/phone-checkers', protect, adminOnly, async (req, res) => {
 // Get all shop owners
 router.get('/shop-owners', protect, adminOnly, async (req, res) => {
     try {
-        const shopOwners = await ShopOwner.find().populate('userId', 'firstName lastName email');
+        const shopOwners = await ShopOwner.find({ role: { $ne: 'admin' } })
+            .populate('userId', 'firstName lastName email');
         res.status(200).json(shopOwners);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
 });
 
-// Get all customers
+// Get all customers (excluding admins)
 router.get('/customers', protect, adminOnly, async (req, res) => {
     try {
-        const customers = await Customer.find().populate('shopOwner');
+        const customers = await Customer.find({ role: { $ne: 'admin' } })
+            .populate('shopOwner');
         res.status(200).json(customers);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });

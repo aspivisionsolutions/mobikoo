@@ -100,7 +100,19 @@ const UserManagement = () => {
   // Confirm delete user
   const confirmDelete = async () => {
     try {
-      await axios.delete(`/api/admin/users/${userToDelete.userId._id || userToDelete.userId}`);
+      // FIX: Safely get user ID or fallback to user's own ID
+      const userId = userToDelete?.userId?._id || 
+                    (userToDelete?.userId && typeof userToDelete.userId === 'string' ? userToDelete.userId : null) || 
+                    userToDelete?._id;
+      
+      if (!userId) {
+        console.error('Cannot delete: User ID is null or undefined');
+        setError('Failed to delete: User ID not found');
+        setIsDeleteModalOpen(false);
+        return;
+      }
+      
+      await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, getAxiosConfig());
       
       // Remove user from respective state
       switch (activeTab) {
@@ -173,7 +185,17 @@ const UserManagement = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      const userId = editingUser.userId?._id || editingUser.userId;
+      // FIX: Safely get user ID or fallback to user's own ID
+      const userId = editingUser?.userId?._id || 
+                    (editingUser?.userId && typeof editingUser.userId === 'string' ? editingUser.userId : null) || 
+                    editingUser?._id;
+      
+      if (!userId) {
+        console.error('Cannot update: User ID is null or undefined');
+        setError('Failed to update: User ID not found');
+        setIsEditModalOpen(false);
+        return;
+      }
       
       // Prepare data based on user type
       let updateData = { ...formData };
@@ -189,7 +211,7 @@ const UserManagement = () => {
         };
       }
       
-      await axios.put(`/api/admin/users/${userId}`, updateData, getAxiosConfig());
+      await axios.put(`http://localhost:5000/api/admin/users/${userId}`, updateData, getAxiosConfig());
       
       // Update user in respective state
       const updatedUser = { ...editingUser };
