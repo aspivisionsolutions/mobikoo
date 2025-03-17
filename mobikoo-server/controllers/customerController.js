@@ -48,3 +48,25 @@ exports.getCustomersForShopOwner = async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 }; 
+
+exports.getDevicesByCustomer = async (req, res) => {
+    try {
+        const { search } = req.params;
+
+        // Search by customer name or phone number
+        const customers = await Customer.find({
+            
+                 customerPhoneNumber: search ,  // Case-insensitive name search
+                 // Exact phone number match
+            
+        }).populate('deviceDetails warrantyDetails shopOwner');
+
+        if (customers.length === 0) {
+            return res.status(404).json({ message: "No customers found with the given details" });
+        }
+
+        res.status(200).json(customers);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};

@@ -29,7 +29,6 @@ const ShopOwnerProfile = () => {
       const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      console.log(response.data)
       if (response.data.shopprofile && response.data.shopprofile.length > 0) {
         const profile = response.data.shopprofile[0];
         const newFormData = {

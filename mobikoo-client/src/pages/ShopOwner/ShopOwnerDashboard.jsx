@@ -6,6 +6,7 @@ import { Link, useLocation } from 'react-router-dom';
 import InspectionReports from './InspectionReports';
 import Warranties from './Warranties';
 import CreateInspectionRequestModal from './CreateInspectionRequestModal';
+import Claims from './Claims';
 
 const ShopOwnerDashboard = () => {
   const location = useLocation();
@@ -33,8 +34,10 @@ const ShopOwnerDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/shop-owner/stats');
-      setStats(response.data);
+      const response = await axios.get('http://localhost:5000/api/stats/shop-owner', {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
+      });
+      setStats(response.data.stats);
     } catch (error) {
       console.error('Error fetching stats:', error);
       toast.error('Failed to fetch dashboard statistics');
@@ -84,7 +87,7 @@ const ShopOwnerDashboard = () => {
           <div>
             <p className="text-sm font-medium text-gray-600">Total Warranties</p>
             <p className="text-xl sm:text-2xl font-semibold text-gray-900">
-              {stats.totalWarranties}
+              {stats.totalIssuedWarranties}
             </p>
           </div>
           <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 flex items-center justify-center">
@@ -98,7 +101,7 @@ const ShopOwnerDashboard = () => {
           <div>
             <p className="text-sm font-medium text-gray-600">Total Inspections</p>
             <p className="text-xl sm:text-2xl font-semibold text-gray-900">
-              {stats.totalInspections}
+              {stats.totalInspectionReports}
             </p>
           </div>
           <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -110,9 +113,9 @@ const ShopOwnerDashboard = () => {
       <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">Total Spent</p>
+            <p className="text-sm font-medium text-gray-600">Total Claims</p>
             <p className="text-xl sm:text-2xl font-semibold text-gray-900">
-              ₹{stats.totalSpent.toLocaleString('en-IN')}
+              {stats.totalClaims}
             </p>
           </div>
           <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 flex items-center justify-center">
@@ -129,7 +132,8 @@ const ShopOwnerDashboard = () => {
         <Toaster position="top-right" />
         
         {/* Header with Stats */}
-        <div className="p-4">
+        {activeTab === 'dashboard' && (
+          <div className="p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Shop Dashboard</h1>
@@ -164,6 +168,8 @@ const ShopOwnerDashboard = () => {
           {/* Stats Cards */}
           {renderStats()}
         </div>
+        )}
+        
 
         {/* Create Inspection Request Modal */}
         {showCreateModal && (
@@ -178,6 +184,7 @@ const ShopOwnerDashboard = () => {
         <div className="px-4">
           {activeTab === 'inspections' && <InspectionReports />}
           {activeTab === 'warranties' && <Warranties />}
+          {activeTab === 'claims' && <Claims />}
         </div>
       </div>
     </div>

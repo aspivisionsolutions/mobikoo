@@ -36,7 +36,10 @@ const CustomerSchema = mongoose.Schema({
     shopOwner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ShopOwner'
-    }
+    },
+    purchaseDate: {
+        type: Date
+    },
 });
 
 // Export the Customer model

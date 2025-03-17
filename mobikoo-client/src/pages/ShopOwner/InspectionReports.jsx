@@ -37,6 +37,10 @@ const InspectionReports = () => {
   );
 
   const handleDownload = async (reportId) => {
+
+    let tempReport = reports.find(report => report._id === reportId);
+    print(tempReport);
+
     try {
       const response = await axios.get(`http://localhost:5000/api/inspection/reports/${reportId}/download`, {
         responseType: 'blob',

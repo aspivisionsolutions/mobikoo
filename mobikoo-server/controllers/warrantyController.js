@@ -56,7 +56,8 @@ exports.activateWarranty = async (req, res) => {
                 deviceModel,
                 imeiNumber,
                 grade,
-                shopOwner: req.user.userId
+                shopOwner: req.user.userId,
+                purchaseDate: new Date()
             },
             { new: true, upsert: true }
         );
@@ -90,8 +91,11 @@ exports.getAllIssuedWarranties = async (req, res) => {
     try {
         const issuedWarranties = await IssuedWarranties.find()
             .populate({
-                path: 'inspectionReport',
-                populate: { path: 'inspectorId' } // Populate inspectorId within inspectionReport
+            path: 'inspectionReport',
+            populate: [
+                { path: 'inspectorId' }, // Populate inspectorId within inspectionReport
+                { path: 'warrantyDetails' } // Populate warrantyDetails within inspectionReport
+            ]
             })
             .populate('warrantyPlanId');
         res.status(200).json({

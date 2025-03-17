@@ -1,11 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiHome, FiFileText, FiShield, FiLogOut, FiUser, FiSettings, FiMenu, FiX } from 'react-icons/fi';
+import axios from 'axios';
+import { FiHome, FiFileText, FiShield, FiLogOut, FiUser, FiSettings, FiMenu, FiX, FiAlertCircle } from 'react-icons/fi';
 
 const ShopOwnerLayout = () => {
   const navigate = useNavigate();
-  const shopName = "Shop Name"; // Replace with actual shop name from context/state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [shopDetails, setShopDetails] = useState(null);
+
+  useEffect(()=>{
+    fetchShopDetails();
+  },[])
+
+  const fetchShopDetails = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
+      });
+      
+      if (response.data.shopprofile && response.data.shopprofile.length > 0) {
+        const profile = response.data.shopprofile[0];
+        setShopDetails({
+          shopName: profile.shopDetails?.shopName,
+          address: profile.shopDetails?.address,
+          mobileNumber: profile.phoneNumber,
+          shopOwnerName: profile.userId.firstName + ' ' + profile.userId.lastName
+        });
+      } else {
+        setShopDetails(null);
+      }
+    } catch (error) {
+      console.error('Error fetching shop details:', error);
+      setShopDetails(null);
+    }
+  };
 
   const handleLogout = () => {
     // Clear auth tokens/state
@@ -68,8 +96,8 @@ const ShopOwnerLayout = () => {
                 <FiUser className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">{shopName}</h2>
-                <p className="text-xs text-gray-500">Shop Owner</p>
+                <h2 className="text-sm font-semibold text-gray-900">{shopDetails?.shopName}</h2>
+                <p className="text-xs text-gray-500">{shopDetails?.shopOwnerName}</p>
               </div>
             </div>
           </div>
@@ -84,6 +112,9 @@ const ShopOwnerLayout = () => {
             </NavItem>
             <NavItem to="/shop-owner/dashboard/warranties" icon={FiShield}>
               Warranties
+            </NavItem>
+            <NavItem to="/shop-owner/dashboard/claims" icon={FiAlertCircle}>
+              Claims
             </NavItem>
             <NavItem to="/shop-owner/profile" icon={FiSettings}>
               Shop Profile
@@ -121,4 +152,4 @@ const ShopOwnerLayout = () => {
   );
 };
 
-export default ShopOwnerLayout; 
+export default ShopOwnerLayout;

@@ -7,6 +7,8 @@ const userRoutes = require("./routes/userRoutes")
 const paymentRoutes = require("./routes/paymentRoutes")
 const activityLogRoutes = require('./routes/ActivityRoute');
 const adminRoutes = require("./routes/AdminRoute"); // Import admin routes
+const claimRoutes = require("./routes/ClaimRoutes");
+const statsRoutes = require("./routes/statsRoutes");
 
 require("dotenv").config();
 const cors = require("cors");
@@ -25,8 +27,10 @@ app.use("/api/warranty", warrantyRoutes);
 app.use("/api/inspection", inspectionRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/payment", paymentRoutes)
+app.use("/api/claim", claimRoutes)
 
 app.use("/api/admin", adminRoutes); // Mount admin routes
+app.use("/api/stats", statsRoutes)
 
 
 

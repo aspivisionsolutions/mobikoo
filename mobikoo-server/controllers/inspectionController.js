@@ -185,7 +185,10 @@ exports.getInspectionReportsForShopOwner = async (req, res) => {
     const shopOwner = await ShopOwner.findOne({ userId: req.user.userId });
     const reports = await InspectionReport.find({ shopName: shopOwner.shopDetails.shopName })
       .populate('inspectorId')
-      .populate('warrantyDetails');
+      .populate({
+        path: 'warrantyDetails',
+        populate: { path: 'warrantyPlanId' }
+      })
     res.status(200).json(reports);
   } catch (error) {
     console.error("Error fetching inspection reports for shop owner:", error);

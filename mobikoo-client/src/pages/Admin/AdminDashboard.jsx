@@ -15,10 +15,12 @@ import AdminLogsTable from './AdminLogsTable'; // Import the new component
 import PhoneInspectionTable from './PhoneInspectionTable';
 import WarrantiesManagement from './WarrantiesManagement';
 import UserManagement from './UserManagement';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const navigate = useNavigate()
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -44,6 +46,12 @@ const AdminDashboard = () => {
         return <DashboardContent />;
     }
   };
+
+  const handleLogout = () => {
+    // Handle logout here
+    localStorage.removeItem('token');
+    navigate('/login');
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -118,6 +126,7 @@ const AdminDashboard = () => {
           {/* Logout button at bottom */}
           <div className="absolute bottom-8 w-full left-0 px-4">
             <button 
+              onClick={handleLogout}
               className="flex items-center w-full px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors"
             >
               <FiLogOut className="mr-3" />

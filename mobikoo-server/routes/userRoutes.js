@@ -5,7 +5,7 @@ const ShopOwner = require('../models/shopOwner');
 const Customer = require('../models/customer');
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
 const User = require('../models/user');
-const { getAllCustomers, getCustomersForShopOwner } = require('../controllers/customerController');
+const { getAllCustomers, getCustomersForShopOwner, getDevicesByCustomer } = require('../controllers/customerController');
 
 // Existing routes...
 
@@ -111,5 +111,7 @@ router.get('/customers', protect, getAllCustomers);
 
 // New route to fetch customers for a specific shop owner
 router.get('/shop-owner/customers', protect, getCustomersForShopOwner);
+
+router.get('/devices/:search', getDevicesByCustomer);
 
 module.exports = router;
