@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
+import axios from 'axios';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { FiHome, FiClipboard, FiFileText, FiLogOut, FiUser, FiMenu, FiX } from 'react-icons/fi';
 
@@ -6,6 +7,46 @@ const PhoneCheckerLayout = () => {
   const navigate = useNavigate();
   const userName = localStorage.getItem('userName') || 'Phone Checker';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [profile, setProfile] = useState({
+      firstName: '',
+      lastName: '',
+      email: '',
+      mobileNumber: '',
+      area: '',
+      isProfileComplete: false
+    });
+
+  useEffect(() => {
+      fetchProfile();
+    }, []);
+  
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
+          headers: {
+            Authorization: `${localStorage.getItem('token')}`
+          }
+        });
+        
+        // Map the received data to our profile structure
+        const { phoneChecker } = response.data;
+        const profileData = {
+          firstName: phoneChecker.userId.firstName || '',
+          lastName: phoneChecker.userId.lastName || '',
+          email: phoneChecker.userId.email || '',
+          mobileNumber: phoneChecker.phoneNumber || '', // Map phoneNumber to mobileNumber
+          area: phoneChecker.area || '',
+          isProfileComplete: true
+        };
+        
+        setProfile(profileData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setIsLoading(false);
+      }
+    };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -71,8 +112,8 @@ const PhoneCheckerLayout = () => {
                 <FiUser className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">{userName}</h2>
-                <p className="text-xs text-gray-500">Phone Checker</p>
+                <h2 className="text-sm font-semibold text-gray-900">{profile.firstName + " " + profile.lastName}</h2>
+                <p className="text-xs text-gray-500">{profile.area}</p>
               </div>
             </div>
           </div>
@@ -84,9 +125,6 @@ const PhoneCheckerLayout = () => {
             </NavItem>
             <NavItem to="/phone-checker/profile" icon={FiUser}>
               Profile
-            </NavItem>
-            <NavItem to="/phone-checker/claims" icon={FiClipboard}>
-              Claim Requests
             </NavItem>
             <NavItem to="/phone-checker/inspections" icon={FiClipboard}>
               Inspection Requests

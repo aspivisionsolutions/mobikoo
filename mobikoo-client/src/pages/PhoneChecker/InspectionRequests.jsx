@@ -32,7 +32,6 @@ const InspectionRequests = ({ standalone = false }) => {
       const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      console.log(response.data);
       setRequests(response.data);
       setFilteredRequests(response.data); // Initially show all requests
     } catch (error) {

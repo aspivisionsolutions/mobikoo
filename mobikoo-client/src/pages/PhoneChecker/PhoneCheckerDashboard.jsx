@@ -8,15 +8,14 @@ import { InspectionReportDetails } from '../../components/InspectionReportDetail
 
 const PhoneCheckerDashboard = () => {
   const [shopOwners, setShopOwners] = useState([]);
-  const [activeTab, setActiveTab] = useState('claims');
-  const [claimRequests, setClaimRequests] = useState([]);
+  const [activeTab, setActiveTab] = useState('inspections');
   const [inspectionRequests, setInspectionRequests] = useState([]);
   const [inspectionReports, setInspectionReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
   const [salesStats, setSalesStats] = useState({
-    totalSales: 0,
-    totalInspections: 0,
-    completedInspections: 0
+    totalReports: 0,
+    totalInspectionRequests: 0,
+    totalCompletedRequests: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showInspectionForm, setShowInspectionForm] = useState(false);
@@ -71,12 +70,15 @@ const PhoneCheckerDashboard = () => {
     setIsLoading(true);
     try {
       // Fetch both types of requests
-      const [claimsResponse, inspectionsResponse] = await Promise.all([
-        axios.get('http://localhost:5000/api/claims'),
-        axios.get('http://localhost:5000/api/inspections')
+      const [inspectionsResponse] = await Promise.all([
+        axios.get('http://localhost:5000/api/inspection/phoneChecker', {
+          headers: {
+            Authorization: `${localStorage.getItem('token')}`
+          }
+        }
+        )
       ]);
 
-      setClaimRequests(claimsResponse.data);
       setInspectionRequests(inspectionsResponse.data);
     } catch (error) {
       toast.error('Failed to fetch requests');
@@ -93,7 +95,6 @@ const PhoneCheckerDashboard = () => {
           Authorization: `${localStorage.getItem('token')}`
         }
       });
-      console.log(response.data);
       setInspectionReports(response.data);
       setFilteredReports(response.data);
     } catch (error) {
@@ -104,8 +105,12 @@ const PhoneCheckerDashboard = () => {
 
   const fetchSalesStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/phone-checker/stats');
-      setSalesStats(response.data);
+      const response = await axios.get('http://localhost:5000/api/stats/phone-checker', {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+      setSalesStats(response.data.stats);
     } catch (error) {
       console.error('Error fetching sales stats:', error);
     }
@@ -113,9 +118,7 @@ const PhoneCheckerDashboard = () => {
 
   const handleStatusUpdate = async (requestId, type, newStatus) => {
     try {
-      const endpoint = type === 'claim'
-        ? `http://localhost:5000/api/claims/${requestId}/status`
-        : `http://localhost:5000/api/inspections/${requestId}/status`;
+      const endpoint = `http://localhost:5000/api/inspections/${requestId}/status`;
 
       await axios.patch(endpoint, { status: newStatus });
       toast.success(`${type} status updated successfully`);
@@ -252,8 +255,8 @@ const PhoneCheckerDashboard = () => {
             <FiTrendingUp className="h-6 w-6" />
           </div>
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-500">Total Sales</p>
-            <p className="text-lg font-semibold text-gray-900">₹{salesStats.totalSales.toLocaleString('en-IN')}</p>
+            <p className="text-sm font-medium text-gray-500">Total Reports</p>
+            <p className="text-lg font-semibold text-gray-900">{salesStats.totalReports}</p>
           </div>
         </div>
       </div>
@@ -264,7 +267,7 @@ const PhoneCheckerDashboard = () => {
           </div>
           <div className="ml-4">
             <p className="text-sm font-medium text-gray-500">Total Inspections</p>
-            <p className="text-lg font-semibold text-gray-900">{salesStats.totalInspections}</p>
+            <p className="text-lg font-semibold text-gray-900">{salesStats.totalInspectionRequests}</p>
           </div>
         </div>
       </div>
@@ -275,7 +278,7 @@ const PhoneCheckerDashboard = () => {
           </div>
           <div className="ml-4">
             <p className="text-sm font-medium text-gray-500">Completed Inspections</p>
-            <p className="text-lg font-semibold text-gray-900">{salesStats.completedInspections}</p>
+            <p className="text-lg font-semibold text-gray-900">{salesStats.totalCompletedRequests}</p>
           </div>
         </div>
       </div>
@@ -416,23 +419,12 @@ const PhoneCheckerDashboard = () => {
             onChange={(e) => setActiveTab(e.target.value)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="claims">Claim Requests</option>
             <option value="inspections">Inspection Requests</option>
             <option value="reports">Reports</option>
           </select>
         </div>
         <div className="hidden sm:block">
           <nav className="flex space-x-4 px-4 py-3" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab('claims')}
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                activeTab === 'claims'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Claim Requests
-            </button>
             <button
               onClick={() => setActiveTab('inspections')}
               className={`px-3 py-2 rounded-md text-sm font-medium ${
@@ -459,13 +451,6 @@ const PhoneCheckerDashboard = () => {
 
       {/* Content Area */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        {activeTab === 'claims' && (
-          <ClaimRequests
-            requests={claimRequests}
-            onStatusUpdate={(id, status) => handleStatusUpdate(id, 'claim', status)}
-            isLoading={isLoading}
-          />
-        )}
         {activeTab === 'inspections' && (
           <InspectionRequests
             requests={inspectionRequests}

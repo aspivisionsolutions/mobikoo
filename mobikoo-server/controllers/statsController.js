@@ -3,6 +3,9 @@ const InspectionReport = require("../models/inspectionReport");
 const IssuedWarranties = require("../models/issuedWarranties");
 const Claim = require("../models/Claims");
 
+const PhoneChecker = require("../models/phoneChecker");
+const InspectionRequest = require("../models/inspectionRequest");
+
 exports.getShopOwnerStats = async (req, res) => {
     try {
         const shopOwner = await ShopOwner.findOne({ userId: req.user.userId });
@@ -33,6 +36,44 @@ exports.getShopOwnerStats = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Error fetching shop owner stats",
+            error: error.message
+        });
+    }
+};
+
+exports.getPhoneCheckerStats = async (req, res) => {
+    try {
+        const phoneChecker = await PhoneChecker.findOne({ userId: req.user.userId });
+
+        if (!phoneChecker) {
+            return res.status(404).json({ message: "Phone checker not found" });
+        }
+
+        // Count total reports created by the phone checker
+        const totalReports = await InspectionReport.countDocuments({ inspectorId: req.user.userId });
+
+        // Count total inspection requests assigned to the phone checker
+        const totalInspectionRequests = await InspectionRequest.countDocuments({ inspectorId: req.user.userId });
+
+        // Count total completed inspection requests
+        const totalCompletedRequests = await InspectionRequest.countDocuments({ 
+            inspectorId: req.user.userId, 
+            status: 'completed' 
+        });
+
+        res.status(200).json({
+            success: true,
+            stats: {
+                totalReports,
+                totalInspectionRequests,
+                totalCompletedRequests
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching phone checker stats:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching phone checker stats",
             error: error.message
         });
     }

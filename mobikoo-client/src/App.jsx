@@ -7,7 +7,6 @@ import ShopOwnerLayout from './components/ShopOwnerLayout';
 import PhoneCheckerDashboard from './pages/PhoneChecker/PhoneCheckerDashboard';
 import ShopOwnerDashboard from './pages/ShopOwner/ShopOwnerDashboard';
 import ShopOwnerProfile from './pages/ShopOwner/ShopOwnerProfile';
-import ClaimRequests from './pages/PhoneChecker/ClaimRequests';
 import InspectionRequests from './pages/PhoneChecker/InspectionRequests';
 import PhoneReports from './pages/PhoneChecker/PhoneReports';
 import InspectionReportView from './pages/InspectionReportView';
@@ -29,7 +28,6 @@ const App = () => {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<PhoneCheckerDashboard />} />
           <Route path="profile" element={<PhoneCheckerProfile />} />
-          <Route path="claims" element={<ClaimRequests />} />
           <Route path="inspections" element={<InspectionRequests />} />
           <Route path="reports" element={<PhoneReports />} />
           <Route path="reports/:reportId" element={<InspectionReportView />} />
