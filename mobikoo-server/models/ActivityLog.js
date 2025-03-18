@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const activityLogSchema = new mongoose.Schema({
     actionType: { 
         type: String, 
-        enum: ['Warranty Purchased', 'New Claim', 'Inspection Report', 'Warranty Activated'], 
+        enum: ['Warranty Purchased', 'New Claim', 'Inspection Report', 'Warranty Activated','Claim Approved','Claim Rejected'], 
         required: true 
     },
     shopOwner: { 
@@ -25,7 +25,7 @@ const activityLogSchema = new mongoose.Schema({
     warrantyDetails: {
         planName: { type: String  },
         price: { type: Number },
-        claimStatus: { type: String, enum: ['Submitted'] } // Tracks claim progress
+        claimStatus: { type: String, enum: ['Submitted',"Approved"] } // Tracks claim progress
     },
     timestamp: { type: Date, default: Date.now }
 });

@@ -12,7 +12,8 @@ router.get('/all', claimsController.getAllClaims);
 
 router.get('/shop-owner',protect, claimsController.getClaimsByShopOwner);
 
-
+router.patch("/approve/:claimId", claimsController.approveClaim);
+router.patch("/reject/:claimId", claimsController.rejectClaim);
 
 
 // Below Routes are not working yet

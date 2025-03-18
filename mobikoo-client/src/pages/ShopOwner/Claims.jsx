@@ -14,6 +14,7 @@ const Claims = () => {
             const response = await axios.get('http://localhost:5000/api/claim/shop-owner', {
                 headers: { Authorization: `${localStorage.getItem('token')}` },
             });
+            console.log(response.data)
             setClaims(response.data);
         } catch (error) {
             console.error('Error fetching claims:', error);
@@ -125,6 +126,9 @@ const Claims = () => {
                                         Status
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Amount
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
@@ -154,6 +158,9 @@ const Claims = () => {
                                             >
                                                 {claim.claimStatus}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{claim.claimAmount}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <div className="flex space-x-2">

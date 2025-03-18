@@ -16,6 +16,7 @@ import PhoneInspectionTable from './PhoneInspectionTable';
 import WarrantiesManagement from './WarrantiesManagement';
 import UserManagement from './UserManagement';
 import { useNavigate } from 'react-router-dom';
+import ClaimsManagement from '../../components/ClaimManagement';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -35,7 +36,7 @@ const AdminDashboard = () => {
         case 'phones':
           return <PhoneInspectionTable />;
       case 'claims':
-        return <div className="p-6">Claims Management Content</div>;
+        return <ClaimsManagement/>;
       case 'warranty':
         return <WarrantiesManagement />;
       case 'logs':

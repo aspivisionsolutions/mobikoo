@@ -24,9 +24,12 @@ const ClaimsSchema = mongoose.Schema({
     photos: {
         type: [String]
     },
+    claimAmount:{
+        type:Number,
+    },
     claimStatus: {
         type: String,
-        enum: ['Submitted', 'Processing', 'Rejected', "Completed"],
+        enum: ['Submitted','Approved', 'Rejected'],
         default: 'Submitted'
     },
     claimSubmissionDate: {

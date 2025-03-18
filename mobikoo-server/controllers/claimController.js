@@ -24,6 +24,7 @@ exports.createClaim = async (req, res) => {
             warranties: customer.warrantyDetails._id,
             shopOwner: shopOwner._id,
             description: req.body.description,
+            claimAmount: req.body.claimAmount
         });
         await newClaim.save();
 
@@ -164,6 +165,85 @@ exports.getClaimsByDevice = async (req, res) => {
             });
         res.status(200).json(claims);
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+// Approve a claim request
+// Approve a claim request
+exports.approveClaim = async (req, res) => {
+    try {
+        const { claimId } = req.params;
+
+        const claim = await Claim.findById(claimId).populate({
+            path: 'shopOwner',
+            populate: { path: 'shopDetails' } // Ensure shopDetails is populated
+        })
+        .populate('customerDetails');
+        // console.log(claim.shopOwner.shopDetails.ShopName)
+        if (!claim) {
+            return res.status(404).json({ message: "Claim not found" });
+        }
+
+        claim.claimStatus = "Approved";
+        await claim.save();
+
+        // Log approval in ActivityLog
+        await ActivityLog.create({
+            actionType: "Claim Approved",
+            shopOwner: claim.shopOwner,
+            customer: claim.customerDetails,
+            phoneDetails: {
+                model: claim.customerDetails.deviceModel,
+                imeiNumber: claim.customerDetails.imeiNumber
+            },
+            warrantyDetails: {
+                planName: claim.warranties ? claim.warranties.planName : "Unknown Plan",
+                price: claim.warranties ? claim.warranties.price : 0,
+                claimStatus: "Approved"
+            }
+        });
+
+        res.status(200).json({ message: "Claim approved successfully", claim });
+    } catch (error) {
+        console.error("Error approving claim:", error.message);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Reject a claim request
+exports.rejectClaim = async (req, res) => {
+    try {
+        const { claimId } = req.params;
+
+        const claim = await Claim.findById(claimId).populate({
+            path: 'shopOwner',
+            populate: { path: 'shopDetails' }}).populate('customerDetails');;;
+        if (!claim) {
+            return res.status(404).json({ message: "Claim not found" });
+        }
+
+        claim.claimStatus = "Rejected";
+        await claim.save();
+
+        // Log rejection in ActivityLog
+        await ActivityLog.create({
+            actionType: "Claim Rejected",
+            shopOwner: claim.shopOwner,
+            customer: claim.customerDetails,
+            phoneDetails: {
+                model: claim.customerDetails.deviceModel,
+                imeiNumber: claim.customerDetails.imeiNumber
+            },
+            warrantyDetails: {
+                planName: claim.warranties ? claim.warranties.planName : "Unknown Plan",
+                price: claim.warranties ? claim.warranties.price : 0,
+                claimStatus: "Approved"
+            }
+        });
+
+        res.status(200).json({ message: "Claim rejected successfully", claim });
+    } catch (error) {
+        console.error("Error rejecting claim:", error.message);
         res.status(500).json({ error: error.message });
     }
 };

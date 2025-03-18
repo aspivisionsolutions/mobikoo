@@ -9,6 +9,7 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
     customerEmail: '',
     selectedDevice: '',
     description: '',
+    claimAmount: '',  // <-- Added claimAmount to formData
     photos: []
   });
   const [errors, setErrors] = useState({});
@@ -116,6 +117,9 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
     
     if (currentStep === 3) {
       if (!formData.description) newErrors.description = 'Description is required';
+      if (!formData.claimAmount) newErrors.claimAmount = 'Claim amount is required';  // <-- Validation for claimAmount
+      else if (isNaN(formData.claimAmount) || Number(formData.claimAmount) <= 0)
+        newErrors.claimAmount = 'Enter a valid claim amount';
       if (formData.photos.length === 0) newErrors.photos = 'At least one photo is required';
     }
     
@@ -146,6 +150,7 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
       // Convert form data to final format
       const finalData = {
         ...formData,
+        claimAmount: Number(formData.claimAmount), // Convert to number before submission
         photos: formData.photos.map(photo => photo.file)
       };
       onSubmit(finalData);
@@ -305,9 +310,23 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
                 className={`w-full px-3 py-2 border rounded-md ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
                 placeholder="Describe the issue with your device"
               ></textarea>
+
               {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
             </div>
-            
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Claim Amount (INR)
+              </label>
+              <input
+                type="number"
+                name="claimAmount"
+                value={formData.claimAmount}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md ${errors.claimAmount ? 'border-red-500' : 'border-gray-300'}`}
+                placeholder="Enter claim amount"
+              />
+              {errors.claimAmount && <p className="text-red-500 text-xs mt-1">{errors.claimAmount}</p>}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Upload Photos
