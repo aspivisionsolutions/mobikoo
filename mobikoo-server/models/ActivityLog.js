@@ -23,8 +23,8 @@ const activityLogSchema = new mongoose.Schema({
         imeiNumber: { type: String, required: true }
     },
     warrantyDetails: {
-        planName: { type: String, required: true },
-        price: { type: Number, required: true },
+        planName: { type: String  },
+        price: { type: Number },
         claimStatus: { type: String, enum: ['Submitted'] } // Tracks claim progress
     },
     timestamp: { type: Date, default: Date.now }

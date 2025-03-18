@@ -6,6 +6,7 @@ const PhoneChecker = require("../models/phoneChecker");
 const pdf = require("pdf-lib");
 const PDFDocument = require('pdfkit');
 const fs = require('fs'); // Required for file system operations
+const ActivityLog = require('../models/activityLog');
 
 exports.createInspectionRequest = async (req, res) => {
   const { area, inspectorId } = req.body;
@@ -65,6 +66,25 @@ exports.submitInspectionReport = async (req, res) => {
 
     // Save the report
     await newReport.save();
+
+    const shopOwner = await ShopOwner.findOne({ 'shopDetails.shopName': reportData.shopName });
+        try {
+            // Create an activity log
+        await ActivityLog.create({
+            actionType: 'Inspection Report',
+            shopOwner: shopOwner ? shopOwner._id : null,
+            phoneChecker: req.user.userId,
+            customer: null,
+            phoneDetails: { model: reportData.deviceModel, imeiNumber: reportData.imeiNumber },
+            warrantyDetails: {
+                planName: null,
+                price: null
+            }
+        });
+        } catch (error) {
+            console.error('Failed to create activity log:', error.message);
+        }
+
 
     res.status(201).json(newReport);
   } catch (error) {
