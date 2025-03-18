@@ -8,11 +8,11 @@ const activityLogSchema = new mongoose.Schema({
     },
     shopOwner: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'ShopOwner', 
+        ref: 'User', 
     },
     phoneChecker: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'PhoneChecker' 
+        ref: 'User' 
     },
     customer: { 
         type: mongoose.Schema.Types.ObjectId, 

@@ -87,7 +87,7 @@ router.post('/warranty/purchase', async (req, res) => {
             // Create an activity log
         await ActivityLog.create({
             actionType: 'Warranty Purchased',
-            shopOwner: shopOwner ? shopOwner._id : null,
+            shopOwner: shopOwner ? shopOwner.userId : null,
             phoneChecker: report.inspectorId._id,
             customer: null,
             phoneDetails: { model: report.deviceModel, imeiNumber: report.imeiNumber },
