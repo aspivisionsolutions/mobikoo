@@ -36,17 +36,20 @@ exports.activateWarranty = async (req, res) => {
         deviceModel,
         imeiNumber,
         grade,
-        phoneCheckerId  // For tracking the PhoneChecker
+        phoneCheckerId  
     } = req.body;
 
     try {
-        const report = await InspectionReport.findById(inspectionReportId);
+        const report = await InspectionReport.findById(inspectionReportId).populate('inspectorId').populate({
+            path: 'warrantyDetails',
+            populate: { path: 'warrantyPlanId' }
+        });;
         if (!report) return res.status(404).json({ error: 'Inspection report not found' });
 
         report.warrantyStatus = 'activated';
         await report.save();
 
-        const customerData = await Customer.findOneAndUpdate(
+        const customerData = new Customer(
             {
                 customerName,
                 customerPhoneNumber,
@@ -58,28 +61,26 @@ exports.activateWarranty = async (req, res) => {
                 grade,
                 shopOwner: req.user.userId,
                 purchaseDate: new Date()
-            },
-            { new: true, upsert: true }
+            }
         );
         if (customerEmailId) {
             customerData.customerEmailId = customerEmailId;
         }
-        const customer = await Customer.findOneAndUpdate(
-            { customerAdhaarNumber }, // Use Aadhar number to find the customer
-            customerData, // Use the constructed customerData object
-            { new: true, upsert: true } // Create a new customer if not found
-        );
-        // Log the purchase in the Activity Log
+        await customerData.save();
+
         await ActivityLog.create({
-            actionType: 'Warranty Purchased',
+            actionType: 'Warranty Activated',
             shopOwner: req.user.userId,
-            phoneChecker: phoneCheckerId,
-            customer: customer._id,
+            phoneChecker: report.inspectorId._id,
+            customer: customerData._id,
             phoneDetails: { model: deviceModel, imeiNumber },
-            warrantyDetails: report.warrantyDetails
+            warrantyDetails: {
+                planName: report.warrantyDetails.warrantyPlanId.planName,
+                price: report.warrantyDetails.warrantyPlanId.price
+            }
         });
 
-        res.status(200).json({ message: 'Warranty activated successfully', customer });
+        res.status(200).json({ message: 'Warranty activated successfully', customerData });
     } catch (error) {
         console.error('Error activating warranty:', error);
         res.status(500).json({ error: error.message });
@@ -134,7 +135,7 @@ exports.claimWarranty = async (req, res) => {
 
         // Log the warranty claim
         await ActivityLog.create({
-            actionType: 'Warranty Claimed',
+            actionType: 'New Claim',
             shopOwner: customer.shopOwner, // Shop that sold the warranty
             customer: customer._id,
             phoneDetails: {

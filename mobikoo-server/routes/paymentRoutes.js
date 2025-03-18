@@ -4,12 +4,15 @@ const router = express.Router();
 const InspectionReport = require('../models/inspectionReport'); // Import the InspectionReport model
 const IssuedWarranties = require('../models/issuedWarranties'); // Import the IssuedWarranties model
 require('dotenv').config();
-const {protect} = require('../middlewares/authMiddleware')
+const { protect } = require('../middlewares/authMiddleware')
+const ActivityLog = require('../models/activityLog');
+const ShopOwner = require('../models/shopOwner');
+const warranties = require('../models/warranties');
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID, 
-    key_secret: process.env.RAZORPAY_KEY_SECRET 
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
 // Create Order POST endpoint
@@ -25,11 +28,11 @@ router.post('/create-order', async (req, res) => {
             notes
         };
 
-        const order = await razorpay.orders.create(options); 
+        const order = await razorpay.orders.create(options);
         res.json(order);
 
     } catch (error) {
-        res.status(500).json({ error: error.message }); 
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -47,9 +50,17 @@ router.post('/warranty/purchase', async (req, res) => {
 
     try {
         // Find the inspection report by ID
-        const report = await InspectionReport.findById(reportId);
+        const report = await InspectionReport.findById(reportId).populate('inspectorId').populate({
+            path: 'warrantyDetails',
+            populate: { path: 'warrantyPlanId' }
+        });
         if (!report) {
             return res.status(404).json({ error: 'Inspection report not found' });
+        }
+
+        const plan = await warranties.findById(planId);
+        if (!plan) {
+            return res.status(404).json({ error: 'Warranty plan not found' });
         }
 
         // Create a new IssuedWarranties object
@@ -57,7 +68,8 @@ router.post('/warranty/purchase', async (req, res) => {
             inspectionReport: reportId, // Link to the inspection report
             warrantyPlanId: planId, // Store the warranty plan ID
             razorpayPaymentId: razorpayPaymentId, // Store the payment ID
-            issueDate: new Date().toISOString().split('T')[0] // Set issueDate to today's date only
+            issueDate: new Date().toISOString().split('T')[0],
+            phoneChecker: report.inspectorId._id,
         });
 
         // Save the issued warranty
@@ -68,6 +80,25 @@ router.post('/warranty/purchase', async (req, res) => {
         report.warrantyDetails = newIssuedWarranty._id; // Link the issued warranty to the report
 
         await report.save(); // Save the updated report
+
+        // Fetch the shop owner using the shop name in the issued warranty object
+        const shopOwner = await ShopOwner.findOne({ 'shopDetails.shopName': report.shopName });
+        try {
+            // Create an activity log
+        await ActivityLog.create({
+            actionType: 'Warranty Purchased',
+            shopOwner: shopOwner ? shopOwner._id : null,
+            phoneChecker: report.inspectorId._id,
+            customer: null,
+            phoneDetails: { model: report.deviceModel, imeiNumber: report.imeiNumber },
+            warrantyDetails: {
+                planName: plan.planName,
+                price: plan.price
+            }
+        });
+        } catch (error) {
+            console.error('Failed to create activity log:', error.message);
+        }
 
         res.status(200).json({ message: 'Warranty purchased successfully', report });
     } catch (error) {

@@ -3,14 +3,20 @@ const Customer = require('../models/customer');
 const IssuedWarranties = require('../models/issuedWarranties');
 const ShopOwner = require('../models/shopOwner');
 const warranties = require('../models/warranties');
+const ActivityLog = require('../models/activityLog');
 
 // Submit a new claim request
 exports.createClaim = async (req, res) => {
     try {
-        console.log(req.body);
         const customer = await Customer.findById(req.body.selectedDevice);
+        if (!customer) {
+            return res.status(404).json({ message: "Customer not found" });
+        }
 
         const shopOwner = await ShopOwner.findOne({ userId: customer.shopOwner });
+        if (!shopOwner) {
+            return res.status(404).json({ message: "Shop owner not found" });
+        }
 
         const newClaim = new Claim({
             customerDetails: customer._id,
@@ -20,8 +26,45 @@ exports.createClaim = async (req, res) => {
             description: req.body.description,
         });
         await newClaim.save();
-        res.status(201).json({ message: "Claim submitted successfully", claim: newClaim });
+
+        // Populate the newClaim object
+        const populatedClaim = await Claim.findById(newClaim._id)
+        .populate('deviceDetails customerDetails shopOwner')
+        .populate({
+            path: 'deviceDetails',
+            populate: {
+                path: 'warrantyDetails',
+                model: IssuedWarranties,
+                populate: {
+                    path: 'warrantyPlanId',
+                    model: 'WarrantyPlan'
+                }
+            }
+        });
+        try {
+            const newActivityLog = new ActivityLog({
+                actionType: 'New Claim',
+                shopOwner: shopOwner._id,
+                customer: customer._id,
+                phoneDetails: {
+                    model: populatedClaim.deviceDetails.deviceModel,
+                    imeiNumber: populatedClaim.deviceDetails.imeiNumber
+                },
+                warrantyDetails: {
+                    planName: populatedClaim.deviceDetails.warrantyDetails.warrantyPlanId ? populatedClaim.deviceDetails.warrantyDetails.warrantyPlanId.planName : 'Unknown Plan',
+                    price: populatedClaim.deviceDetails.warrantyDetails.warrantyPlanId ? populatedClaim.deviceDetails.warrantyDetails.warrantyPlanId.price : 0,
+                    claimStatus: newClaim.claimStatus
+                }
+            });
+
+            await newActivityLog.save();
+        } catch (activityLogError) {
+            console.error('Failed to create activity log:', activityLogError.message);
+        }
+
+        res.status(201).json({ message: "Claim submitted successfully", claim: populatedClaim });
     } catch (error) {
+        console.error('Error creating claim:', error.message);
         res.status(500).json({ error: error.message });
     }
 };
@@ -78,9 +121,9 @@ exports.getClaimsByCustomerPhoneNumber = async (req, res) => {
 // Fetch claim requests by shop owner ID
 exports.getClaimsByShopOwner = async (req, res) => {
     try {
-        const shopOwnerId  = req.user.userId;
+        const shopOwnerId = req.user.userId;
         console.log(shopOwnerId)
-        const shopOwner = await ShopOwner.findOne({userId: shopOwnerId})
+        const shopOwner = await ShopOwner.findOne({ userId: shopOwnerId })
         if (!shopOwner) {
             return res.status(404).json({ message: "Shop owner not found" });
         }

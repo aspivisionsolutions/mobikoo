@@ -9,17 +9,17 @@ const Claims = () => {
     const [claims, setClaims] = useState([]);
     const [selectedClaim, setSelectedClaim] = useState(null);
 
+    const fetchClaims = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/claim/shop-owner', {
+                headers: { Authorization: `${localStorage.getItem('token')}` },
+            });
+            setClaims(response.data);
+        } catch (error) {
+            console.error('Error fetching claims:', error);
+        }
+    };
     useEffect(()=>{
-        const fetchClaims = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/claim/shop-owner', {
-                    headers: { Authorization: `${localStorage.getItem('token')}` },
-                });
-                setClaims(response.data);
-            } catch (error) {
-                console.error('Error fetching claims:', error);
-            }
-        };
         fetchClaims();
     },[])
 
@@ -39,23 +39,13 @@ const Claims = () => {
             });
 
             console.log('Claim request submitted:', response.data);
+            setClaims([...claims, response.data.claim]);
 
         } catch (error) {
             console.error('Error submitting claim:', error);
             return
         }
-
-        // Add to claims list with a new ID and pending status
-        const newClaim = {
-            id: `${claims.length + 1}`,
-            imeiNumber: claimData.imeiNumber,
-            customerName: claimData.customerName,
-            customerPhone: claimData.customerPhone,
-            applyDate: new Date().toISOString().split('T')[0],
-            status: 'Pending',
-        };
-
-        setClaims([...claims, newClaim]);
+        
         setShowClaimForm(false);
     };
 
@@ -143,7 +133,7 @@ const Claims = () => {
                                 {claims.map((claim) => (
                                     <tr key={claim._id}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {claim.deviceDetails.imeiNumber}
+                                            {claim.deviceDetails?.imeiNumber}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900">{claim.customerDetails.customerName}</div>
