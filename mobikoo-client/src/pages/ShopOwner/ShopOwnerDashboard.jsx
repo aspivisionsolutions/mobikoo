@@ -7,6 +7,8 @@ import InspectionReports from './InspectionReports';
 import Warranties from './Warranties';
 import CreateInspectionRequestModal from './CreateInspectionRequestModal';
 import Claims from './Claims';
+import customersData from "../../assets/customers.json"
+import SalesChart from '../../components/SalesChart';
 
 const ShopOwnerDashboard = () => {
   const location = useLocation();
@@ -21,6 +23,7 @@ const ShopOwnerDashboard = () => {
   });
   const [shopDetails, setShopDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [customers,setCustomers] = useState(customersData)
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
@@ -31,7 +34,21 @@ const ShopOwnerDashboard = () => {
   useEffect(() => {
     setActiveTab(currentTab);
   }, [location.pathname]);
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/user/shop-owner/customers",
+          { headers: { Authorization: `${localStorage.getItem("token")}` } }
+        );
+        // setCustomers(response.data);
+      } catch (error) {
+        console.error("Error fetching customers: ", error);
+      }
+    };
 
+    fetchCustomers();
+  }, []);
   const fetchStats = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/stats/shop-owner', {
@@ -67,7 +84,7 @@ const ShopOwnerDashboard = () => {
       setShopDetails(null);
     }
   };
-
+  console.log(customers[0].customerAdhaarNumber)
   const isShopDetailsComplete = () => {
     return shopDetails && 
            shopDetails.shopName && 
@@ -167,6 +184,7 @@ const ShopOwnerDashboard = () => {
 
           {/* Stats Cards */}
           {renderStats()}
+          <SalesChart/>
         </div>
         )}
         
@@ -179,7 +197,6 @@ const ShopOwnerDashboard = () => {
             onSuccess={handleRequestSuccess}
           />
         )}
-
         {/* Content based on active tab */}
         <div className="px-4">
           {activeTab === 'inspections' && <InspectionReports />}

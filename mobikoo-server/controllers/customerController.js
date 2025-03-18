@@ -42,7 +42,6 @@ exports.getCustomersForShopOwner = async (req, res) => {
                     model: WarrantyPlan // Specify the model to populate
                 }
             });
-
         res.status(200).json(customers);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
