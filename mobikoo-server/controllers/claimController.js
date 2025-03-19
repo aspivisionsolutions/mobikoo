@@ -30,22 +30,22 @@ exports.createClaim = async (req, res) => {
 
         // Populate the newClaim object
         const populatedClaim = await Claim.findById(newClaim._id)
-        .populate('deviceDetails customerDetails shopOwner')
-        .populate({
-            path: 'deviceDetails',
-            populate: {
-                path: 'warrantyDetails',
-                model: IssuedWarranties,
+            .populate('deviceDetails customerDetails shopOwner')
+            .populate({
+                path: 'deviceDetails',
                 populate: {
-                    path: 'warrantyPlanId',
-                    model: 'WarrantyPlan'
+                    path: 'warrantyDetails',
+                    model: IssuedWarranties,
+                    populate: {
+                        path: 'warrantyPlanId',
+                        model: 'WarrantyPlan'
+                    }
                 }
-            }
-        });
+            });
         try {
             const newActivityLog = new ActivityLog({
                 actionType: 'New Claim',
-                shopOwner: shopOwner._id,
+                shopOwner: shopOwner.userId,
                 customer: customer._id,
                 phoneDetails: {
                     model: populatedClaim.deviceDetails.deviceModel,
@@ -178,7 +178,18 @@ exports.approveClaim = async (req, res) => {
             path: 'shopOwner',
             populate: { path: 'shopDetails' } // Ensure shopDetails is populated
         })
-        .populate('customerDetails');
+            .populate('customerDetails')
+            .populate({
+                path: 'deviceDetails',
+                populate: {
+                    path: 'warrantyDetails',
+                    model: IssuedWarranties,
+                    populate: {
+                        path: 'warrantyPlanId',
+                        model: 'WarrantyPlan'
+                    }
+                }
+            });
         // console.log(claim.shopOwner.shopDetails.ShopName)
         if (!claim) {
             return res.status(404).json({ message: "Claim not found" });
@@ -190,15 +201,15 @@ exports.approveClaim = async (req, res) => {
         // Log approval in ActivityLog
         await ActivityLog.create({
             actionType: "Claim Approved",
-            shopOwner: claim.shopOwner,
+            shopOwner: claim.shopOwner.userId,
             customer: claim.customerDetails,
             phoneDetails: {
                 model: claim.customerDetails.deviceModel,
                 imeiNumber: claim.customerDetails.imeiNumber
             },
             warrantyDetails: {
-                planName: claim.warranties ? claim.warranties.planName : "Unknown Plan",
-                price: claim.warranties ? claim.warranties.price : 0,
+                planName: claim.deviceDetails.warrantyDetails.warrantyPlanId ? claim.deviceDetails.warrantyDetails.warrantyPlanId.planName : 'Unknown Plan',
+                price: claim.deviceDetails.warrantyDetails.warrantyPlanId ? claim.deviceDetails.warrantyDetails.warrantyPlanId.price : 0,
                 claimStatus: "Approved"
             }
         });
@@ -217,7 +228,19 @@ exports.rejectClaim = async (req, res) => {
 
         const claim = await Claim.findById(claimId).populate({
             path: 'shopOwner',
-            populate: { path: 'shopDetails' }}).populate('customerDetails');;;
+            populate: { path: 'shopDetails' }
+        }).populate('customerDetails')
+            .populate({
+                path: 'deviceDetails',
+                populate: {
+                    path: 'warrantyDetails',
+                    model: IssuedWarranties,
+                    populate: {
+                        path: 'warrantyPlanId',
+                        model: 'WarrantyPlan'
+                    }
+                }
+            });
         if (!claim) {
             return res.status(404).json({ message: "Claim not found" });
         }
@@ -228,15 +251,15 @@ exports.rejectClaim = async (req, res) => {
         // Log rejection in ActivityLog
         await ActivityLog.create({
             actionType: "Claim Rejected",
-            shopOwner: claim.shopOwner,
+            shopOwner: claim.shopOwner.userId,
             customer: claim.customerDetails,
             phoneDetails: {
                 model: claim.customerDetails.deviceModel,
                 imeiNumber: claim.customerDetails.imeiNumber
             },
             warrantyDetails: {
-                planName: claim.warranties ? claim.warranties.planName : "Unknown Plan",
-                price: claim.warranties ? claim.warranties.price : 0,
+                planName: claim.deviceDetails.warrantyDetails.warrantyPlanId ? claim.deviceDetails.warrantyDetails.warrantyPlanId.planName : 'Unknown Plan',
+                price: claim.deviceDetails.warrantyDetails.warrantyPlanId ? claim.deviceDetails.warrantyDetails.warrantyPlanId.price : 0,
                 claimStatus: "Approved"
             }
         });

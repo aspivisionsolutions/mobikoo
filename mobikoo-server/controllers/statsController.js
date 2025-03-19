@@ -2,6 +2,7 @@ const ShopOwner = require("../models/shopOwner");
 const InspectionReport = require("../models/inspectionReport");
 const IssuedWarranties = require("../models/issuedWarranties");
 const Claim = require("../models/Claims");
+const User = require("../models/user");
 
 const PhoneChecker = require("../models/phoneChecker");
 const InspectionRequest = require("../models/inspectionRequest");
@@ -74,6 +75,39 @@ exports.getPhoneCheckerStats = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Error fetching phone checker stats",
+            error: error.message
+        });
+    }
+};
+
+exports.getAdminStats = async (req, res) => {
+    try {
+        // Count total users
+        const totalUsers = await User.countDocuments();
+
+        // Count total inspection reports
+        const totalInspections = await InspectionReport.countDocuments();
+
+        // Count total claims
+        const totalClaims = await Claim.countDocuments();
+
+        // Count total issued warranties
+        const totalWarranties = await IssuedWarranties.countDocuments();
+
+        res.status(200).json({
+            success: true,
+            stats: {
+                totalUsers,
+                totalInspections,
+                totalClaims,
+                totalWarranties
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching admin stats:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching admin stats",
             error: error.message
         });
     }

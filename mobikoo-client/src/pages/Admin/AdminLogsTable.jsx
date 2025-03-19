@@ -308,10 +308,10 @@ if (response.data.success && response.data.data) {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {log.shopOwnerName || 'N/A'}
+                          {log.shopOwnerName == "undefined undefined" ? 'N/A': log.shopOwnerName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {log.phoneCheckerName || 'N/A'}
+                          {log.phoneCheckerName == "undefined undefined" ? 'N/A' : log.phoneCheckerName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {log.customerName || 'N/A'}

@@ -221,7 +221,11 @@ exports.getAllInspectionReports = async (req, res) => {
     try {
         const reports = await InspectionReport.find()
         
-            .populate('inspectorId', 'name email')
+            .populate('inspectorId')
+            .populate({
+              path: 'warrantyDetails',
+              populate: { path: 'warrantyPlanId' }
+            })
             .sort({ createdAt: -1 });
 
         if (!reports || reports.length === 0) {

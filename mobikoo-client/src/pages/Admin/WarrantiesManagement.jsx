@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiDownload, FiEye, FiRefreshCw } from 'react-icons/fi';
+import { FiDownload, FiEye, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
 import WarrantyDetails from '../../components/WarrantyDetails';
 
 const WarrantiesManagement = () => {
@@ -91,7 +91,15 @@ const WarrantiesManagement = () => {
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden p-6">
             {viewingDetails ? (
+                <div>
+                <button 
+                  onClick={closeDetails} 
+                  className="flex items-center px-4 py-2 mb-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300"
+                >
+                  <FiArrowLeft className="mr-2" /> Back to List
+                </button>
                 <WarrantyDetails warranty={selectedWarranty} onClose={closeDetails} />
+              </div>
             ) : (
                 <>
                     <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">

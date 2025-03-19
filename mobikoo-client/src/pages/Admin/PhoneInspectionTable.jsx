@@ -25,7 +25,6 @@ const PhoneInspectionTable = () => {
 const response = await axios.get('http://localhost:5000/api/inspection/admin/reports', {
   headers: { Authorization: `${localStorage.getItem('token')}` }
 });
-console.log(response.data);
       
       // Store the raw response for debugging
       setResponseDebug(JSON.stringify(response.data, null, 2));
@@ -275,13 +274,12 @@ console.log(response.data);
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PhoneChecker</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI Number</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -291,14 +289,11 @@ console.log(response.data);
                       currentReports.map((report, index) => (
                         <tr key={report.id || index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {report.inspectionId || `INS-${10000 + index}`}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {report.deviceModel || 'Unknown Device'}
                           </td>
                           
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {report.customerName || 'N/A'}
+                            {report.inspectorId.firstName + " " + report.inspectorId.lastName || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {formatDate(report.inspectionDate)}
@@ -310,7 +305,7 @@ console.log(response.data);
                             {report.grade || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {report.serialNumber || 'N/A'}
+                            {report.imeiNumber || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <StatusBadge status={report.warrantyStatus} />

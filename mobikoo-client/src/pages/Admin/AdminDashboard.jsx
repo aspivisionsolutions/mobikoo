@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FiHome, 
   FiUsers, 
@@ -17,6 +17,7 @@ import WarrantiesManagement from './WarrantiesManagement';
 import UserManagement from './UserManagement';
 import { useNavigate } from 'react-router-dom';
 import ClaimsManagement from '../../components/ClaimManagement';
+import axios from 'axios';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -41,8 +42,6 @@ const AdminDashboard = () => {
         return <WarrantiesManagement />;
       case 'logs':
         return <AdminLogsTable />; // Added the logs component here
-      case 'settings':
-        return <div className="p-6">Settings Content</div>;
       default:
         return <DashboardContent />;
     }
@@ -116,12 +115,6 @@ const AdminDashboard = () => {
               isActive={activeMenu === 'logs'} 
               onClick={() => setActiveMenu('logs')} 
             />
-            <SidebarItem 
-              icon={<FiSettings />} 
-              text="Settings" 
-              isActive={activeMenu === 'settings'} 
-              onClick={() => setActiveMenu('settings')} 
-            />
           </div>
 
           {/* Logout button at bottom */}
@@ -188,30 +181,73 @@ const SidebarItem = ({ icon, text, isActive, onClick }) => {
 // Dashboard Content Component
 const DashboardContent = () => {
   // Sample stats for the dashboard
-  const stats = [
-    { title: 'Total Users', value: '1,243', icon: <FiUsers className="h-6 w-6" />, color: 'bg-blue-100 text-blue-600' },
-    { title: 'Phone Inspections', value: '867', icon: <FiPhone className="h-6 w-6" />, color: 'bg-green-100 text-green-600' },
-    { title: 'Active Claims', value: '28', icon: <FiClipboard className="h-6 w-6" />, color: 'bg-yellow-100 text-yellow-600' },
-    { title: 'Warranties Sold', value: '432', icon: <FiShield className="h-6 w-6" />, color: 'bg-purple-100 text-purple-600' }
-  ];
+  const [stats, setStats] = useState([]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/stats/admin', {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        }); // Update with your API endpoint
+        setStats(response.data.stats);
+      } catch (err) {
+        console.log('Error fetching stats:', err);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-lg shadow p-6">
+        
+          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className={`p-3 rounded-full ${stat.color}`}>
-                {stat.icon}
+              <div className={`p-3 rounded-full ${'bg-blue-100 text-blue-600'}`}>
+                <FiUsers className="h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                <p className="text-lg font-semibold text-gray-900">{stat.value}</p>
+                <p className="text-sm font-medium text-gray-500">Total Users</p>
+                <p className="text-lg font-semibold text-gray-900">{stats.totalUsers || 0}</p>
               </div>
             </div>
           </div>
-        ))}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className={`p-3 rounded-full bg-green-100 text-green-600`}>
+              <FiPhone className="h-6 w-6" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">{'Phone Inspections'}</p>
+                <p className="text-lg font-semibold text-gray-900">{stats.totalInspections || 0}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className={`p-3 rounded-full ${'bg-yellow-100 text-yellow-600'}`}>
+              <FiClipboard className="h-6 w-6" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Active Claims</p>
+                <p className="text-lg font-semibold text-gray-900">{stats.totalClaims || 0}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className={`p-3 rounded-full ${'bg-purple-100 text-purple-600'}`}>
+              <FiShield className="h-6 w-6" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Warranties Sold</p>
+                <p className="text-lg font-semibold text-gray-900">{stats.totalWarranties || 0}</p>
+              </div>
+            </div>
+          </div>
+      
       </div>
       
       {/* Recent Activity Section */}
@@ -242,20 +278,6 @@ const DashboardContent = () => {
               description="Claim #2345 has been approved for processing" 
               time="1 day ago" 
             />
-          </div>
-        </div>
-      </div>
-      
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b">
-          <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <QuickActionButton text="Add New User" icon={<FiUsers />} color="bg-blue-600 hover:bg-blue-700" />
-            <QuickActionButton text="Schedule Inspection" icon={<FiPhone />} color="bg-green-600 hover:bg-green-700" />
-            <QuickActionButton text="Process Claim" icon={<FiClipboard />} color="bg-yellow-600 hover:bg-yellow-700" />
           </div>
         </div>
       </div>

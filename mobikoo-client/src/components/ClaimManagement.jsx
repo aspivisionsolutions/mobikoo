@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FiRefreshCw, FiSearch } from "react-icons/fi";
+import { FiRefreshCw, FiSearch, FiArrowLeft, FiEye } from "react-icons/fi";
+import ClaimDetails from "../pages/ShopOwner/ClaimDetails";
 
 const ClaimsManagement = () => {
     const [claims, setClaims] = useState([]);
@@ -9,6 +10,8 @@ const ClaimsManagement = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const claimsPerPage = 10;
+    const [viewDetails, setViewDetails] = useState(false);
+    const [selectedClaim, setSelectedClaim] = useState(null);
 
     const fetchClaims = async () => {
         setLoading(true);
@@ -60,41 +63,60 @@ const ClaimsManagement = () => {
         const phone = String(claim.customerDetails.customerPhoneNumber);
         const imei = claim.customerDetails.imeiNumber.toLowerCase();
         const query = searchQuery.toLowerCase();
-    
+
         return name.includes(query) || phone.includes(query) || imei.includes(query);
     });
-    
+
     const indexOfLastClaim = currentPage * claimsPerPage;
     const indexOfFirstClaim = indexOfLastClaim - claimsPerPage;
     const currentClaims = filteredClaims.slice(indexOfFirstClaim, indexOfLastClaim);
     const totalPages = Math.ceil(filteredClaims.length / claimsPerPage);
 
-    return (
-        <div className="bg-white shadow-lg rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4 md:mb-0">Claim Requests</h2>
-                <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search claims..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                        <FiSearch className="absolute left-3 top-3 text-gray-400" />
-                    </div>
-                    <button 
-                        onClick={fetchClaims}
-                        className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                        <FiRefreshCw className="mr-2" />
-                        Refresh
-                    </button>
-                </div>
-            </div>
+    const closeDetails = () => {
+        setViewDetails(false);
+        setSelectedClaim(null);
+    }
 
-            {loading && <div className="p-6 text-center">Loading claims...</div>}
+    return (
+
+        <div className="bg-white shadow-lg rounded-lg">
+            {
+                viewDetails ? (
+                    <div>
+                        <button
+                            onClick={closeDetails}
+                            className="flex items-center px-4 py-2 mb-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300"
+                        >
+                            <FiArrowLeft className="mr-2" /> Back to List
+                        </button>
+                        <ClaimDetails claim={selectedClaim}/>
+                    </div >
+                ) :(
+                    <>
+                    
+                    <div className="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4 md:mb-0">Claim Requests</h2>
+                        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Search claims..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                />
+                                <FiSearch className="absolute left-3 top-3 text-gray-400" />
+                            </div>
+                            <button
+                                onClick={fetchClaims}
+                                className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <FiRefreshCw className="mr-2" />
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    {loading && <div className="p-6 text-center">Loading claims...</div>}
             {error && <div className="p-6 text-center text-red-600">{error}</div>}
 
             {!loading && !error && (
@@ -122,16 +144,24 @@ const ClaimsManagement = () => {
                                             <td className="py-3 px-6 border-b border-gray-200">{claim.customerDetails.imeiNumber}</td>
                                             <td className="py-3 px-6 border-b border-gray-200">{claim.claimAmount}</td>
                                             <td className="py-3 px-6 border-b border-gray-200">
-                                                <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                                                    claim.claimStatus === "Submitted" ? "bg-yellow-100 text-yellow-600" :
+                                                <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${claim.claimStatus === "Submitted" ? "bg-yellow-100 text-yellow-600" :
                                                     claim.claimStatus === "Approved" ? "bg-green-100 text-green-600" :
-                                                    "bg-red-100 text-red-600"
-                                                }`}>
+                                                        "bg-red-100 text-red-600"
+                                                    }`}>
                                                     {claim.claimStatus}
                                                 </span>
                                             </td>
-                                            <td className="py-3 px-6 border-b border-gray-200">
-                                                {claim.claimStatus === "Submitted" ? (
+                                            <td className="py-3 px-6 border-b border-gray-200 flex justify-start items-center gap-5">
+                                                <button
+                                                    onClick={() => {
+                                                        setViewDetails(true);
+                                                        setSelectedClaim(claim);
+                                                    }}
+                                                    className="p-1 rounded-full text-blue-600 hover:bg-blue-100" title="View Claim Details"
+                                                >
+                                                    <FiEye size={18} />
+                                                </button>
+                                                {claim.claimStatus === "Submitted" && (
                                                     <div className="flex space-x-2">
                                                         <button
                                                             onClick={() => handleApprove(claim._id)}
@@ -146,7 +176,7 @@ const ClaimsManagement = () => {
                                                             Reject
                                                         </button>
                                                     </div>
-                                                ) : "-"}
+                                                )}
                                             </td>
                                         </tr>
                                     ))
@@ -173,6 +203,10 @@ const ClaimsManagement = () => {
                     )}
                 </>
             )}
+                </>)}
+
+    
+        
         </div>
     );
 };
