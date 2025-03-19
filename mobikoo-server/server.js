@@ -9,6 +9,7 @@ const activityLogRoutes = require('./routes/ActivityRoute');
 const adminRoutes = require("./routes/AdminRoute"); // Import admin routes
 const claimRoutes = require("./routes/ClaimRoutes");
 const statsRoutes = require("./routes/statsRoutes");
+const partnerRoutes = require('./routes/partnerRoutes');
 
 require("dotenv").config();
 const cors = require("cors");
@@ -32,7 +33,7 @@ app.use("/api/claim", claimRoutes)
 app.use("/api/admin", adminRoutes); // Mount admin routes
 app.use("/api/stats", statsRoutes)
 
-
+app.use('/api/partners', partnerRoutes);
 
 
 app.use("/api/activity-log", activityLogRoutes);

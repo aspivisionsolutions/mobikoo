@@ -293,7 +293,7 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
                           </td>
                           
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {report.inspectorId.firstName + " " + report.inspectorId.lastName || 'N/A'}
+                          {report.inspectorId ? `${report.inspectorId.firstName} ${report.inspectorId.lastName}` : 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {formatDate(report.inspectionDate)}

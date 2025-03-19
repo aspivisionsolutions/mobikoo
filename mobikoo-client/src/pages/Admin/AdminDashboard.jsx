@@ -3,13 +3,13 @@ import {
   FiHome, 
   FiUsers, 
   FiPhone, 
-  FiClipboard, 
-  FiSettings, 
+  FiClipboard,  
   FiLogOut, 
   FiMenu, 
   FiX,
   FiShield,
-  FiList
+  FiList,
+  FiUsers as FiPartners
 } from 'react-icons/fi';
 import AdminLogsTable from './AdminLogsTable'; // Import the new component
 import PhoneInspectionTable from './PhoneInspectionTable';
@@ -18,6 +18,7 @@ import UserManagement from './UserManagement';
 import { useNavigate } from 'react-router-dom';
 import ClaimsManagement from '../../components/ClaimManagement';
 import axios from 'axios';
+import PartnerManagement from './PartnerDashboard';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -42,6 +43,9 @@ const AdminDashboard = () => {
         return <WarrantiesManagement />;
       case 'logs':
         return <AdminLogsTable />; // Added the logs component here
+      case 'partners':
+        return <PartnerManagement/>;
+          
       default:
         return <DashboardContent />;
     }
@@ -116,6 +120,12 @@ const AdminDashboard = () => {
               onClick={() => setActiveMenu('logs')} 
             />
           </div>
+          <SidebarItem 
+              icon={<FiPartners />} 
+              text="Partners" 
+              isActive={activeMenu === 'partners'} 
+              onClick={() => setActiveMenu('partners')} 
+            />
 
           {/* Logout button at bottom */}
           <div className="absolute bottom-8 w-full left-0 px-4">
@@ -142,6 +152,7 @@ const AdminDashboard = () => {
               {activeMenu === 'warranty' && 'Warranty Management'}
               {activeMenu === 'logs' && 'Activity Logs'} {/* Added new title */}
               {activeMenu === 'settings' && 'Settings'}
+              {activeMenu === 'partners' && 'Partners Management'}
             </h2>
           </div>
         </div>
