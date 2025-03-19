@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const claimsController = require('../controllers/claimController');
 const { protect } = require('../middlewares/authMiddleware');
+const upload = require('../multer');
 
 // Route to submit a new claim request
-router.post('/submit', claimsController.createClaim);
+router.post('/submit',upload.array('photos', 10), claimsController.createClaim);
 
 // Route to fetch all claim requests
 router.get('/all', claimsController.getAllClaims);

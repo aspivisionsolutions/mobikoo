@@ -3,8 +3,7 @@ const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
 const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner } = require("../controllers/inspectionController");
 const { getAllInspectionReports } = require('../controllers/inspectionController');
 const InspectionReport = require("../models/inspectionReport");
-
-
+const upload = require('../multer');
 
 
 const router = express.Router();
@@ -45,6 +44,7 @@ router.post(
   "/submitReport",
   protect,
   roleMiddleware(["phone-checker"]),
+  upload.array('photos', 10),
   submitInspectionReport // Use the controller function here
 );
 

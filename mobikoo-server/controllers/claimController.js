@@ -4,10 +4,17 @@ const IssuedWarranties = require('../models/issuedWarranties');
 const ShopOwner = require('../models/shopOwner');
 const warranties = require('../models/warranties');
 const ActivityLog = require('../models/activityLog');
+const cloudinary = require('../cloudinary');
+const multer = require('../multer');
 
 // Submit a new claim request
 exports.createClaim = async (req, res) => {
     try {
+
+        const imageUploadPromises = req.files.map(file => cloudinary.uploader.upload(file.path));
+        const imageUploadResults = await Promise.all(imageUploadPromises);
+        const imageUrls = imageUploadResults.map(result => result.secure_url);
+
         const customer = await Customer.findById(req.body.selectedDevice);
         if (!customer) {
             return res.status(404).json({ message: "Customer not found" });
@@ -24,6 +31,7 @@ exports.createClaim = async (req, res) => {
             warranties: customer.warrantyDetails._id,
             shopOwner: shopOwner._id,
             description: req.body.description,
+            photos: imageUrls,
             claimAmount: req.body.claimAmount
         });
         await newClaim.save();

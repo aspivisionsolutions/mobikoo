@@ -7,16 +7,18 @@ const pdf = require("pdf-lib");
 const PDFDocument = require('pdfkit');
 const fs = require('fs'); // Required for file system operations
 const ActivityLog = require('../models/activityLog');
+const cloudinary = require('../cloudinary');
+const multer = require('../multer');
 
 exports.createInspectionRequest = async (req, res) => {
   const { area, inspectorId } = req.body;
   try {
-    const shopOwner = await ShopOwner.findOne({userId: req.user.userId})
+    const shopOwner = await ShopOwner.findOne({ userId: req.user.userId })
     const newInspectionRequest = new InspectionRequest({
       shopOwnerId: shopOwner._id,
       inspectorId,
-      status: "pending", 
-      area, 
+      status: "pending",
+      area,
     });
     const savedRequest = await newInspectionRequest.save();
     res.status(201).json(savedRequest);
@@ -42,7 +44,7 @@ exports.getInspectionRequestsForPhoneChecker = async (req, res) => {
 exports.getInspectionRequestsByShopOwner = async (req, res) => {
   try {
 
-    const shopOwner = await ShopOwner.findOne({userId: req.user.userId})
+    const shopOwner = await ShopOwner.findOne({ userId: req.user.userId })
 
     const inspectionRequests = await InspectionRequest.find({ shopOwnerId: shopOwner._id }).populate('inspectorId');
     res.status(200).json(inspectionRequests);
@@ -54,36 +56,43 @@ exports.getInspectionRequestsByShopOwner = async (req, res) => {
 
 // New function to submit an inspection report
 exports.submitInspectionReport = async (req, res) => {
-  const { reportData } = req.body;
-  console.log(reportData);
+  console.log(req.body.photos)
+  const reportData = req.body;
+
+  console.log("Received reportData:", reportData);
   try {
+    // Upload images to Cloudinary
+    const imageUploadPromises = req.files.map(file => cloudinary.uploader.upload(file.path));
+    const imageUploadResults = await Promise.all(imageUploadPromises);
+    const imageUrls = imageUploadResults.map(result => result.secure_url);
+
     // Create a new inspection report
     const newReport = new InspectionReport({
       ...reportData,
+      photos: imageUrls,
       inspectionDate: new Date(),
       inspectorId: req.user.userId,
     });
 
-    // Save the report
     await newReport.save();
 
     const shopOwner = await ShopOwner.findOne({ 'shopDetails.shopName': reportData.shopName });
-        try {
-            // Create an activity log
-        await ActivityLog.create({
-            actionType: 'Inspection Report',
-            shopOwner: shopOwner ? shopOwner._id : null,
-            phoneChecker: req.user.userId,
-            customer: null,
-            phoneDetails: { model: reportData.deviceModel, imeiNumber: reportData.imeiNumber },
-            warrantyDetails: {
-                planName: null,
-                price: null
-            }
-        });
-        } catch (error) {
-            console.error('Failed to create activity log:', error.message);
+    try {
+      // Create an activity log
+      await ActivityLog.create({
+        actionType: 'Inspection Report',
+        shopOwner: shopOwner ? shopOwner._id : null,
+        phoneChecker: req.user.userId,
+        customer: null,
+        phoneDetails: { model: reportData.deviceModel, imeiNumber: reportData.imeiNumber },
+        warrantyDetails: {
+          planName: null,
+          price: null
         }
+      });
+    } catch (error) {
+      console.error('Failed to create activity log:', error.message);
+    }
 
 
     res.status(201).json(newReport);
@@ -95,8 +104,8 @@ exports.submitInspectionReport = async (req, res) => {
 
 // New controller function to update the status of an inspection request
 exports.updateInspectionStatus = async (req, res) => {
-  const { id } = req.params; 
-  const { status } = req.body; 
+  const { id } = req.params;
+  const { status } = req.body;
 
   try {
     const updatedRequest = await InspectionRequest.findByIdAndUpdate(id, { status }, { new: true });
@@ -218,24 +227,24 @@ exports.getInspectionReportsForShopOwner = async (req, res) => {
 
 
 exports.getAllInspectionReports = async (req, res) => {
-    try {
-        const reports = await InspectionReport.find()
-        
-            .populate('inspectorId')
-            .populate({
-              path: 'warrantyDetails',
-              populate: { path: 'warrantyPlanId' }
-            })
-            .sort({ createdAt: -1 });
+  try {
+    const reports = await InspectionReport.find()
 
-        if (!reports || reports.length === 0) {
-            return res.status(404).json({ message: "No inspection reports found" });
-        }
+      .populate('inspectorId')
+      .populate({
+        path: 'warrantyDetails',
+        populate: { path: 'warrantyPlanId' }
+      })
+      .sort({ createdAt: -1 });
 
-        res.status(200).json({ reports });
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching inspection reports", details: error.message });
+    if (!reports || reports.length === 0) {
+      return res.status(404).json({ message: "No inspection reports found" });
     }
+
+    res.status(200).json({ reports });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching inspection reports", details: error.message });
+  }
 };
 
 

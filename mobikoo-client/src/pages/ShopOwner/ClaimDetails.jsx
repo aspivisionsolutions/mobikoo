@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiUser, FiPhone, FiMail, FiHash, FiShield, FiCheckCircle, FiHome, FiFileText, FiArrowLeft, FiSmartphone, FiBattery } from 'react-icons/fi';
+import { FiUser, FiPhone, FiMail, FiHash, FiShield, FiCheckCircle, FiHome, FiFileText, FiArrowLeft, FiSmartphone, FiBattery, FiImage } from 'react-icons/fi';
 
 const ClaimDetails = ({ claim }) => {
   const navigate = useNavigate();
@@ -59,6 +59,19 @@ const ClaimDetails = ({ claim }) => {
         <DetailRow icon={FiHome} label="Shop Name" value={claim.shopOwner.shopDetails.shopName} />
         <DetailRow icon={FiFileText} label="Shop Address" value={claim.shopOwner.shopDetails.address} />
         <DetailRow icon={FiPhone} label="Shop Phone" value={claim.shopOwner.phoneNumber} />
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Claim Photos</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {claim.photos && claim.photos.length > 0 ? (
+            claim.photos.map((photo, index) => (
+              <img key={index} src={photo} alt={`Claim Photo ${index + 1}`} className="rounded-lg shadow w-full h-48 object-cover" />
+            ))
+          ) : (
+            <p className="text-sm text-gray-500">No photos available</p>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">

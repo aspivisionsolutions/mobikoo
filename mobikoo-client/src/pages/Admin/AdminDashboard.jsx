@@ -285,7 +285,6 @@ const DashboardContent = () => {
   );
 };
 
-// Activity Item Component
 const ActivityItem = ({ title, description, time }) => {
   return (
     <div className="flex items-start border-b border-gray-100 pb-4">

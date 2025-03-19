@@ -37,7 +37,8 @@ const PhoneCheckerDashboard = () => {
     photos: [],
     comments: '',
     digitalSignature: false,
-    grade: ''
+    grade: '',
+    photoPreviews: []
   });
   const [reportToView, setReportToView] = useState(null);
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
@@ -153,21 +154,27 @@ const PhoneCheckerDashboard = () => {
       photos: [],
       comments: '',
       digitalSignature: false,
-      grade: ''
+      grade: '',
+      photoPreviews: []
     });
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, type, checked, files } = e.target;
+
     if (type === 'file') {
+      const newFiles = Array.from(files);
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+
       setFormData(prev => ({
         ...prev,
-        [name]: Array.from(files)
+        [name]: prev[name] ? [...prev[name], ...newFiles] : newFiles, // Append new files
+        photoPreviews: prev.photoPreviews ? [...prev.photoPreviews, ...newPreviews] : newPreviews // Append new previews
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value
+        [name]: type === 'checkbox' ? checked : e.target.value
       }));
     }
   };
@@ -183,21 +190,28 @@ const PhoneCheckerDashboard = () => {
       return;
     }
 
+    const formDataToSend = new FormData();
+    Object.keys(formData).forEach(key => {
+      if (key === 'photos' && Array.isArray(formData.photos)) {
+        formData.photos.forEach(photo => {
+          if (photo instanceof File) {
+            formDataToSend.append('photos', photo);
+          } else {
+            console.warn("Skipping non-File photo:", photo);
+          }
+        });
+      } else if (key !== 'photoPreviews') {
+        formDataToSend.append(key, formData[key]);
+      }
+    });
+
+    console.log("FormDataToSend entries:", [...formDataToSend.entries()]);
+    console.log(formData)
     try {
-      //   const formDataToSend = new FormData();
-      //   Object.keys(formData).forEach(key => {
-      //     if (key === 'photos') {
-      //       formData.photos.forEach(photo => {
-      //         formDataToSend.append('photos', photo);
-      //       });
-      //     } else {
-      //       formDataToSend.append(key, formData[key]);
-      //     }
-      //   });
-      // console.log(formDataToSend)
-      await axios.post('http://localhost:5000/api/inspection/submitReport', { reportData: formData }, {
+      await axios.post('http://localhost:5000/api/inspection/submitReport', formDataToSend, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
+
         },
       });
 
@@ -298,7 +312,7 @@ const PhoneCheckerDashboard = () => {
       const response = await axios.get('http://localhost:5000/api/warranty/plans', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      
+
       let plan = null;
       if (report.grade === 'A') {
         plan = response.data.data[0]; // Basic Protection Plan
@@ -319,54 +333,54 @@ const PhoneCheckerDashboard = () => {
 
   const handleWarrantyPurchaseConfirm = async () => {
     try {
-        // Create order with Razorpay
-        const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
-            amount: warrantyPlan.price, // Amount in INR
-            receipt: reportForWarranty._id,
-            notes: {}, // Ensure this is set in your environment
-        });
+      // Create order with Razorpay
+      const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
+        amount: warrantyPlan.price, // Amount in INR
+        receipt: reportForWarranty._id,
+        notes: {}, // Ensure this is set in your environment
+      });
 
-        const options = {
-            key: "rzp_test_wrWBdn4mFAZoo8", // Updated to use the prefixed variable
-            amount: orderResponse.data.amount, // Amount in paise
-            currency: orderResponse.data.currency,
-            name: 'Warranty Purchase',
-            description: 'Purchase of warranty plan',
-            order_id: orderResponse.data.id, // Order ID returned from Razorpay
-            handler: async function (response) {
-                // Handle successful payment
-                await axios.post(`http://localhost:5000/api/payment/warranty/purchase`, {
-                    reportId: reportForWarranty._id,
-                    deviceModel: reportForWarranty.deviceModel,
-                    imeiNumber: reportForWarranty.imeiNumber,
-                    grade: reportForWarranty.grade,
-                    planId: warrantyPlan._id,
-                    razorpayPaymentId: response.razorpay_payment_id // Include payment ID
-                }, {
-                    headers: { Authorization: `${localStorage.getItem('token')}` }
-                });
+      const options = {
+        key: "rzp_test_wrWBdn4mFAZoo8", // Updated to use the prefixed variable
+        amount: orderResponse.data.amount, // Amount in paise
+        currency: orderResponse.data.currency,
+        name: 'Warranty Purchase',
+        description: 'Purchase of warranty plan',
+        order_id: orderResponse.data.id, // Order ID returned from Razorpay
+        handler: async function (response) {
+          // Handle successful payment
+          await axios.post(`http://localhost:5000/api/payment/warranty/purchase`, {
+            reportId: reportForWarranty._id,
+            deviceModel: reportForWarranty.deviceModel,
+            imeiNumber: reportForWarranty.imeiNumber,
+            grade: reportForWarranty.grade,
+            planId: warrantyPlan._id,
+            razorpayPaymentId: response.razorpay_payment_id // Include payment ID
+          }, {
+            headers: { Authorization: `${localStorage.getItem('token')}` }
+          });
 
-                toast.success('Warranty purchased successfully');
-                setShowWarrantyModal(false);
-                setWarrantyPlan(null);
-                setReportForWarranty(null);
-                fetchReports();
-            },
-            prefill: {
-                name: 'Customer Name', 
-                email: 'customer@example.com', 
-                contact: '9999999999' 
-            },
-            theme: {
-                color: '#F37254' 
-            }
-        };
+          toast.success('Warranty purchased successfully');
+          setShowWarrantyModal(false);
+          setWarrantyPlan(null);
+          setReportForWarranty(null);
+          fetchReports();
+        },
+        prefill: {
+          name: 'Customer Name',
+          email: 'customer@example.com',
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#F37254'
+        }
+      };
 
-        const rzp = new window.Razorpay(options);
-        rzp.open(); 
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
-        console.error('Error purchasing warranty:', error);
-        toast.error(error.response?.data?.message || 'Failed to purchase warranty');
+      console.error('Error purchasing warranty:', error);
+      toast.error(error.response?.data?.message || 'Failed to purchase warranty');
     }
   };
 
@@ -427,21 +441,19 @@ const PhoneCheckerDashboard = () => {
           <nav className="flex space-x-4 px-4 py-3" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('inspections')}
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                activeTab === 'inspections'
+              className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'inspections'
                   ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               Inspection Requests
             </button>
             <button
               onClick={() => setActiveTab('reports')}
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                activeTab === 'reports'
+              className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'reports'
                   ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               Reports
             </button>
@@ -517,9 +529,9 @@ const PhoneCheckerDashboard = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${report.grade === 'A' ? 'bg-green-100 text-green-800' : 
-                              report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-red-100 text-red-800'}`}
+                            ${report.grade === 'A' ? 'bg-green-100 text-green-800' :
+                              report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'}`}
                           >
                             Grade {report.grade}
                           </span>
@@ -574,9 +586,9 @@ const PhoneCheckerDashboard = () => {
                           <p className="text-sm text-gray-500">{report.imeiNumber}</p>
                         </div>
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${report.grade === 'A' ? 'bg-green-100 text-green-800' : 
-                            report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' : 
-                            'bg-red-100 text-red-800'}`}
+                          ${report.grade === 'A' ? 'bg-green-100 text-green-800' :
+                            report.grade === 'B' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'}`}
                         >
                           Grade {report.grade}
                         </span>
@@ -827,6 +839,13 @@ const PhoneCheckerDashboard = () => {
                     file:bg-blue-50 file:text-blue-700
                     hover:file:bg-blue-100"
                 />
+                <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {formData.photoPreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img src={preview} alt={`Preview ${index}`} className="w-full h-auto rounded-md" />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Additional Observations */}
@@ -972,4 +991,4 @@ const PhoneCheckerDashboard = () => {
   );
 };
 
-export default PhoneCheckerDashboard; 
+export default PhoneCheckerDashboard;

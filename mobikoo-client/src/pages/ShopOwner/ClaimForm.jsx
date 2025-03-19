@@ -69,23 +69,18 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    const newPhotos = [...formData.photos];
-    
-    files.forEach(file => {
-      // Create URL for preview
-      const fileUrl = URL.createObjectURL(file);
-      newPhotos.push({
-        file,
-        preview: fileUrl,
-        name: file.name
-      });
-    });
-    
-    setFormData({
-      ...formData,
-      photos: newPhotos
-    });
+    const newPhotos = files.map(file => ({
+      file,  // Store the file object
+      preview: URL.createObjectURL(file),
+      name: file.name,
+    }));
+  
+    setFormData(prevData => ({
+      ...prevData,
+      photos: [...prevData.photos, ...newPhotos], // Append new images
+    }));
   };
+  
 
   const removePhoto = (index) => {
     const newPhotos = [...formData.photos];
@@ -141,20 +136,26 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
     setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateStep()) {
-      // Get the selected device details
-      const selectedDeviceDetails = customerDevices.find(device => device.id === formData.selectedDevice);
-      
-      // Convert form data to final format
-      const finalData = {
-        ...formData,
-        claimAmount: Number(formData.claimAmount), // Convert to number before submission
-        photos: formData.photos.map(photo => photo.file)
-      };
-      onSubmit(finalData);
-    }
+    if (!validateStep()) return;
+  
+    const formDataToSend = new FormData();
+  
+    // Append text fields
+    formDataToSend.append('customerName', formData.customerName);
+    formDataToSend.append('customerPhone', formData.customerPhone);
+    formDataToSend.append('customerEmail', formData.customerEmail);
+    formDataToSend.append('selectedDevice', formData.selectedDevice);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('claimAmount', formData.claimAmount);
+  
+    // Append images (one by one)
+    formData.photos.forEach((photo, index) => {
+      formDataToSend.append(`photos`, photo.file); 
+    });
+  
+    onSubmit(formDataToSend);
   };
 
   // Reset device selection when going back to step 1
