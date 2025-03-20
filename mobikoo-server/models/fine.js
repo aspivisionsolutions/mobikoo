@@ -5,7 +5,8 @@ const fineSchema = new mongoose.Schema({
     inspectorId:{type: mongoose.Schema.Types.ObjectId, ref:"User", required:true},
     inspectionId:{type:mongoose.Schema.Types.ObjectId, ref:"InspectionReport",required:true,unique:true},
     fineAmount:{type:Number,required:true},
-    comment:{type:String,required:true}
+    comment:{type:String,required:true},
+    status: { type: String, default: "Unpaid" } 
 })
 
 const Fine = mongoose.model("fine",fineSchema)

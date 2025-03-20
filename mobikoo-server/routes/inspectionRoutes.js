@@ -75,12 +75,26 @@ router.get("/report/:id", protect, async ()=>{
 
 router.post("/fine",protect,roleMiddleware(["admin"]),addFine)
 router.patch("/fine/:reportId",protect,roleMiddleware(["admin"],updateFineStatus))
-router.get("/fines", protect, async (req,res)=>{
-  try{
-    const fines = await Fine.find({}).populate('inspectionId').populate('inspectorId');
-    res.json(fines)
-  }catch(error){
-    res.status(500).send({message: "Error in fetching fines..!"})
+
+router.get("/admin/fines", protect, roleMiddleware(["admin"]), async (req, res) => {
+  try {
+    const fines = await Fine.find({})
+      .populate({ path: 'inspectorId', select: 'name' }) // Get Phone Checker Name
+      .populate({ path: 'inspectionId', select: 'deviceModel' }); // Get Phone Model
+
+    const formattedFines = fines.map(fine => ({
+      phoneChecker: fine.inspectorId ? fine.inspectorId.name : "Unknown",
+      model: fine.inspectionId ? fine.inspectionId.deviceModel : "Unknown",
+      amount: fine.fineAmount,
+      isPaid: fine.status === "Paid",
+      status: fine.status
+    }));
+
+    res.status(200).json({ fines: formattedFines });
+  } catch (error) {
+    console.error("Error fetching fine details:", error);
+    res.status(500).json({ message: "Error fetching fine details", error });
   }
-})
+});
+
 module.exports = router;

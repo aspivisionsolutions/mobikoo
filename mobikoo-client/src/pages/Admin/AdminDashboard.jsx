@@ -9,6 +9,7 @@ import {
   FiX,
   FiShield,
   FiList,
+  FiDollarSign ,
   FiUsers as FiPartners
 } from 'react-icons/fi';
 import AdminLogsTable from './AdminLogsTable'; // Import the new component
@@ -19,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import ClaimsManagement from '../../components/ClaimManagement';
 import axios from 'axios';
 import PartnerManagement from './PartnerDashboard';
+import AdminFinesPanel from './AdminFinesPanel';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -45,7 +47,8 @@ const AdminDashboard = () => {
         return <AdminLogsTable />; // Added the logs component here
       case 'partners':
         return <PartnerManagement/>;
-          
+        case 'fines':
+          return <AdminFinesPanel/>; 
       default:
         return <DashboardContent />;
     }
@@ -126,6 +129,12 @@ const AdminDashboard = () => {
               isActive={activeMenu === 'partners'} 
               onClick={() => setActiveMenu('partners')} 
             />
+            <SidebarItem 
+              icon={<FiDollarSign />} 
+              text="Fines Management" 
+              isActive={activeMenu === 'fines'} 
+              onClick={() => setActiveMenu('fines')} 
+            />
 
           {/* Logout button at bottom */}
           <div className="absolute bottom-8 w-full left-0 px-4">
@@ -153,6 +162,7 @@ const AdminDashboard = () => {
               {activeMenu === 'logs' && 'Activity Logs'} {/* Added new title */}
               {activeMenu === 'settings' && 'Settings'}
               {activeMenu === 'partners' && 'Partners Management'}
+              {activeMenu === 'fines' && 'Fine Management'}
             </h2>
           </div>
         </div>

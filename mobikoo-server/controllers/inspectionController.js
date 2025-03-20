@@ -30,28 +30,53 @@ exports.createInspectionRequest = async (req, res) => {
   }
 };
 exports.addFine = async (req, res) => {
-  const { reportId, fineAmount, comment, inspectorId } = req.body; // Get ID from body
-  console.log(reportId)
+  const { reportId, fineAmount, comment, inspectorId } = req.body;
+  console.log(reportId);
   try {
-    const inspectionRequest = await InspectionReport.findById(reportId); // Use reportId from body
+    const inspectionRequest = await InspectionReport.findById(reportId).populate('inspectorId'); 
     if (!inspectionRequest) {
       return res.status(404).json({ message: "Inspection request not found" });
     }
-    console.log(inspectionRequest)
+
+    console.log(inspectionRequest);
+
+    // Create and save the fine
     const fineReq = new Fine({
       fineAmount: fineAmount,
-      comment:comment,
+      comment: comment,
       inspectorId: inspectorId,
-      inspectionId:reportId
-    })
-    
+      inspectionId: reportId,
+      status: "Unpaid" // Default status
+    });
+
     await fineReq.save();
-    res.status(200).json({ message: "Fine added successfully", inspectionRequest });
+
+    // Fetch and format fine details after saving
+    const fineDetails = await Fine.findById(fineReq._id)
+      .populate({
+        path: 'inspectorId',
+        select: 'name' // Fetch Phone Checker name
+      })
+      .populate({
+        path: 'inspectionId',
+        select: 'deviceModel' // Fetch phone model
+      });
+
+    const formattedFine = {
+      phoneChecker: fineDetails.inspectorId ? fineDetails.inspectorId.name : "Unknown",
+      model: fineDetails.inspectionId ? fineDetails.inspectionId.deviceModel : "Unknown",
+      amount: fineDetails.fineAmount,
+      isPaid: fineDetails.status === "Paid",
+      status: fineDetails.status
+    };
+
+    res.status(200).json({ message: "Fine added successfully", fine: formattedFine });
   } catch (error) {
     console.error("Error adding fine:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 exports.updateFineStatus = async (req, res) => {
   try {
