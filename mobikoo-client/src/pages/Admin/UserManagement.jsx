@@ -350,7 +350,7 @@ const UserManagement = () => {
                 </>
               )}
              
-              <th className="py-3 px-4 text-left">Actions</th>
+              {/* <th className="py-3 px-4 text-left">Actions</th> */}
             </tr>
           </thead>
           <tbody>
@@ -390,7 +390,7 @@ const UserManagement = () => {
                   </>
                 )}
              
-                <td className="py-3 px-4">
+                {/* <td className="py-3 px-4">
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEditClick(user)}
@@ -405,7 +405,7 @@ const UserManagement = () => {
                       <FiTrash2 />
                     </button>
                   </div>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>
