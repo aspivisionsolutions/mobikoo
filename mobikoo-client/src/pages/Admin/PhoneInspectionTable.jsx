@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiDownload, FiEye, FiSearch, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
+import { ImHammer2 } from "react-icons/im";
 import { useNavigate } from 'react-router-dom';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 
@@ -13,8 +14,67 @@ const PhoneInspectionTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [reportsPerPage] = useState(10);
   const [reportToView, setReportToView] = useState(null);
-  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [fineAmount, setFineAmount] = useState("");
+  const [comment, setComment] = useState("");
+  const [selectedReport, setSelectedReport] = useState(null);
 
+  const openModal = (report) => {
+    console.log(report)
+    setSelectedReport(report); // Store the selected report
+    setShowModal(true);
+  };
+  const updateFineStatus = async (reportId) => {
+    console.log("Updating fine status for report ID:", reportId); // Debugging log
+    try {
+      await axios.patch(
+        `http://localhost:5000/api/inspection/fine/${reportId}`,
+        { fineStatus: "Fined" },
+        { headers: { Authorization: `${localStorage.getItem("token")}` } }
+      );
+    } catch (error) {
+      console.error("Error updating fine status:", error);
+    }
+  };
+  const handleFine = async () => {
+    if (!fineAmount) {
+      alert("Please enter a fine amount!");
+      return;
+    }
+
+    if (!selectedReport) {
+      alert("No report selected!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post("http://localhost:5000/api/inspection/fine", {
+        fineAmount,
+        comment,
+        reportId: selectedReport._id,
+        inspectorId: selectedReport.inspectorId,
+      },{
+        headers:{Authorization:`${localStorage.getItem("token")}`}
+      });
+
+      if (response.status === 200) {
+        alert("Fine issued successfully!");
+        setShowModal(false);
+        setFineAmount("");
+        setComment("");
+
+        // Call PATCH request to update fineStatus
+        await updateFineStatus(selectedReport._id);
+      }
+    } catch (error) {
+      console.error("Error issuing fine:", error);
+      alert("Failed to issue fine.");
+    } finally {
+      setLoading(false);
+      setSelectedReport(null);
+    }
+  };
   const fetchReports = async () => {
     setLoading(true);
     setError(null);
@@ -89,7 +149,12 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
       console.error('Error downloading report:', error);
     }
   };
-
+  const handleSubmit = () => {
+    handleFine({ fineAmount, comment }); // Pass data to parent function
+    setShowModal(false); // Close modal after submitting
+    setFineAmount(""); // Reset fields
+    setComment("");
+  };
   const handleReportView = (report) => {
     setReportToView(report);
   };
@@ -326,6 +391,13 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
                               >
                                 <FiDownload size={18} />
                               </button>
+                              <button
+                                className="p-1 rounded-full text-red-600 hover:bg-red-100"
+                                title="Fine Inspector"
+                                onClick={() => openModal(report)}
+                              >
+                                <ImHammer2 size={18} />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -380,6 +452,47 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
             </>
           )}
         </>
+      )}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white p-5 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-bold mb-3">Issue Fine</h2>
+
+            {/* Fine Amount Input */}
+            <input
+              type="number"
+              placeholder="Enter Fine Amount"
+              className="w-full border p-2 rounded mb-3"
+              value={fineAmount}
+              onChange={(e) => setFineAmount(e.target.value)}
+            />
+
+            {/* Comment Input */}
+            <textarea
+              placeholder="Enter Comment"
+              className="w-full border p-2 rounded mb-3"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            ></textarea>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={handleFine}
+                disabled={loading}
+              >
+                {loading ? "Submitting..." : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 const express = require("express");
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
-const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner } = require("../controllers/inspectionController");
+const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner, addFine, updateFineStatus } = require("../controllers/inspectionController");
 const { getAllInspectionReports } = require('../controllers/inspectionController');
 const InspectionReport = require("../models/inspectionReport");
 const upload = require('../multer');
@@ -72,4 +72,6 @@ router.get("/report/:id", protect, async ()=>{
   }
 })
 
+router.post("/fine",protect,roleMiddleware(["admin"]),addFine)
+router.patch("/fine/:reportId",protect,roleMiddleware(["admin"],updateFineStatus))
 module.exports = router;

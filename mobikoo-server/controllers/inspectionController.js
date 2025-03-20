@@ -9,6 +9,7 @@ const fs = require('fs'); // Required for file system operations
 const ActivityLog = require('../models/activityLog');
 const cloudinary = require('../cloudinary');
 const multer = require('../multer');
+const Fine = require("../models/fine");
 
 exports.createInspectionRequest = async (req, res) => {
   const { area, inspectorId } = req.body;
@@ -26,6 +27,53 @@ exports.createInspectionRequest = async (req, res) => {
     // Log the error to understand what went wrong
     console.error("Error creating inspection request:", error);
     res.status(500).json({ message: "Error creating inspection request", error });
+  }
+};
+exports.addFine = async (req, res) => {
+  const { reportId, fineAmount, comment, inspectorId } = req.body; // Get ID from body
+  console.log(reportId)
+  try {
+    const inspectionRequest = await InspectionReport.findById(reportId); // Use reportId from body
+    if (!inspectionRequest) {
+      return res.status(404).json({ message: "Inspection request not found" });
+    }
+    console.log(inspectionRequest)
+    const fineReq = new Fine({
+      fineAmount: fineAmount,
+      comment:comment,
+      inspectorId: inspectorId,
+      inspectionId:reportId
+    })
+    
+    await fineReq.save();
+    res.status(200).json({ message: "Fine added successfully", inspectionRequest });
+  } catch (error) {
+    console.error("Error adding fine:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.updateFineStatus = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    console.log(reportId)
+    if (!reportId) {
+      return res.status(400).json({ message: "Report ID is required" });
+    }
+    // Find and update the fineStatus in a single operation
+    const updatedReport = await InspectionReport.findByIdAndUpdate(
+      reportId,
+      { $set: { fineStatus: "Fined" } }, // Use $set to explicitly update fineStatus
+      { new: true } // Returns the updated document
+    );
+    if (!updatedReport) {
+      console.log("Report Not Found")
+      return res.status(404).json({ message: "Report not found" });
+    }
+    res.status(200).json({ message: "Fine status updated successfully", report: updatedReport });
+  } catch (error) {
+    console.error("Error updating fine status:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
