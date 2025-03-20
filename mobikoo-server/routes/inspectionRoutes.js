@@ -4,6 +4,7 @@ const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspec
 const { getAllInspectionReports } = require('../controllers/inspectionController');
 const InspectionReport = require("../models/inspectionReport");
 const upload = require('../multer');
+const Fine = require("../models/fine");
 
 
 const router = express.Router();
@@ -74,4 +75,12 @@ router.get("/report/:id", protect, async ()=>{
 
 router.post("/fine",protect,roleMiddleware(["admin"]),addFine)
 router.patch("/fine/:reportId",protect,roleMiddleware(["admin"],updateFineStatus))
+router.get("/fines", protect, async (req,res)=>{
+  try{
+    const fines = await Fine.find({}).populate('inspectionId').populate('inspectorId');
+    res.json(fines)
+  }catch(error){
+    res.status(500).send({message: "Error in fetching fines..!"})
+  }
+})
 module.exports = router;

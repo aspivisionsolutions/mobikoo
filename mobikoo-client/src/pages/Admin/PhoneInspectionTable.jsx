@@ -4,6 +4,7 @@ import { FiDownload, FiEye, FiSearch, FiRefreshCw, FiArrowLeft } from 'react-ico
 import { ImHammer2 } from "react-icons/im";
 import { useNavigate } from 'react-router-dom';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
+import {toast, Toaster} from 'react-hot-toast';
 
 const PhoneInspectionTable = () => {
   const [reports, setReports] = useState([]);
@@ -27,12 +28,13 @@ const PhoneInspectionTable = () => {
   const updateFineStatus = async (reportId) => {
     console.log("Updating fine status for report ID:", reportId); // Debugging log
     try {
-      await axios.patch(
-        `http://localhost:5000/api/inspection/fine/${reportId}`,
+      await axios.post(
+        `http://localhost:5000/fine/${reportId}`,
         { fineStatus: "Fined" },
         { headers: { Authorization: `${localStorage.getItem("token")}` } }
       );
     } catch (error) {
+      toast.error("Failed to update fine status");
       console.error("Error updating fine status:", error);
     }
   };
@@ -59,13 +61,21 @@ const PhoneInspectionTable = () => {
       });
 
       if (response.status === 200) {
-        alert("Fine issued successfully!");
+        toast.success("Fine issued successfully!");
         setShowModal(false);
         setFineAmount("");
         setComment("");
+        await updateFineStatus(selectedReport._id);
 
         // Call PATCH request to update fineStatus
-        await updateFineStatus(selectedReport._id);
+
+        setReports((prevReports) =>
+          prevReports.map((report) =>
+            report._id === selectedReport._id
+              ? { ...report, fineStatus: "Fined" }
+              : report
+          )
+        );
       }
     } catch (error) {
       console.error("Error issuing fine:", error);
@@ -168,7 +178,10 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
         const id = (report.inspectionId || '').toLowerCase();
         const status = (report.status || '').toLowerCase();
         const term = searchTerm.toLowerCase();
-        return device.includes(term) || customer.includes(term) || id.includes(term) || status.includes(term);
+        const imei = (report.imeiNumber || '').toLowerCase();
+        const shop = (report.shopName || '').toLowerCase();
+        const inspector = (report.inspectorId.firstName + " " + report.inspectorId.lastName || '').toLowerCase();
+        return device.includes(term) || customer.includes(term) || id.includes(term) || status.includes(term) || imei.includes(term) || shop.includes(term) || inspector.includes(term);
       })
     : [];
 
@@ -221,6 +234,7 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
+      <Toaster position="top-right" />
       {/* Render InspectionReportDetails if a report is selected */}
       {reportToView ? (
         <div className="p-6">
@@ -391,13 +405,15 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
                               >
                                 <FiDownload size={18} />
                               </button>
-                              <button
-                                className="p-1 rounded-full text-red-600 hover:bg-red-100"
-                                title="Fine Inspector"
-                                onClick={() => openModal(report)}
-                              >
-                                <ImHammer2 size={18} />
-                              </button>
+                              {report.fineStatus !== "Fined" && (
+                                <button
+                                  className="p-1 rounded-full text-red-600 hover:bg-red-100"
+                                  title="Issue Fine"
+                                  onClick={() => openModal(report)}
+                                >
+                                  <ImHammer2 size={18} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

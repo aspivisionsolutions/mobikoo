@@ -56,7 +56,7 @@ exports.addFine = async (req, res) => {
 exports.updateFineStatus = async (req, res) => {
   try {
     const { reportId } = req.params;
-    console.log(reportId)
+    console.log(reportId, "reportId")
     if (!reportId) {
       return res.status(400).json({ message: "Report ID is required" });
     }

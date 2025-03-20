@@ -10,6 +10,8 @@ const adminRoutes = require("./routes/AdminRoute"); // Import admin routes
 const claimRoutes = require("./routes/ClaimRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const partnerRoutes = require('./routes/partnerRoutes');
+const {protect,roleMiddleware} = require('./middlewares/authMiddleware');
+const {updateFineStatus} = require('./controllers/inspectionController');
 
 require("dotenv").config();
 const cors = require("cors");
@@ -37,6 +39,8 @@ app.use('/api/partners', partnerRoutes);
 
 
 app.use("/api/activity-log", activityLogRoutes);
+
+app.post("/fine/:reportId",protect,roleMiddleware(["admin"]), updateFineStatus);
 
 
 const PORT = process.env.PORT || 5000;
