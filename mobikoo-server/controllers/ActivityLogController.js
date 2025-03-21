@@ -32,7 +32,7 @@ exports.getActivityLogs = async (req, res) => {
             phoneCheckerName: log.phoneChecker?.firstName + " " + log.phoneChecker?.lastName || 'N/A',
             customerName: log.customer?.customerName || 'N/A',
             imeiNumber: log.phoneDetails?.imeiNumber,
-            planName: log.warrantyDetails?.planName,
+            planDuration: log.warrantyDetails?.duration,
             planPrice: log.warrantyDetails?.price,
             claimStatus: log.warrantyDetails?.claimStatus || 'N/A',
             timestamp: log.timestamp

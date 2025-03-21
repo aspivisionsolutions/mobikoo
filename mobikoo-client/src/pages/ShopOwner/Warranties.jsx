@@ -56,7 +56,7 @@ const Warranties = () => {
       const filterDate = new Date(filters.expiryDate);
       result = result.filter(warranty => {
         const issueDate = new Date(warranty.issueDate);
-        const durationMonths = warranty.warrantyPlanId.durationMonths;
+        const durationMonths = warranty.warrantyPlanId?.durationMonths || warranty.warrantyPlanId?.warranty_months;
         const expiryDate = new Date(issueDate);
         expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
         return expiryDate.toDateString() === filterDate.toDateString();
@@ -133,7 +133,7 @@ const Warranties = () => {
 
   const renderRow = (warranty, index, viewType) => {
     const issueDate = new Date(warranty.issueDate);
-    const durationMonths = warranty.warrantyPlanId.durationMonths;
+    const durationMonths = warranty.warrantyPlanId?.warranty_months || warranty.warrantyPlanId?.durationMonths;
     const expiryDate = new Date(issueDate.setMonth(issueDate.getMonth() + durationMonths));
 
     if (viewType === 'desktop') {

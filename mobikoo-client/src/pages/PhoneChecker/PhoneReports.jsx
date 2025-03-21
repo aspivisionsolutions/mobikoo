@@ -19,15 +19,19 @@ const PhoneReports = ({ standalone = false }) => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedReports, setSelectedReports] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [devicePrice, setDevicePrice] = useState('');
+  const [availablePlans, setAvailablePlans] = useState([]);
+  const [showDevicePriceModal, setShowDevicePriceModal] = useState(false);
+  const [devicePrices, setDevicePrices] = useState({});
 
   useEffect(() => {
     fetchReports();
     fetchWarrantyPlans()
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     calculateTotalAmount();
-  },[selectedReports])
+  }, [selectedReports, devicePrices, availablePlans]);
 
   const fetchReports = async () => {
     setIsLoading(true);
@@ -89,45 +93,40 @@ const PhoneReports = ({ standalone = false }) => {
     setReportToView(null);
   };
 
-  const fetchWarrantyPlans = async () =>{
-    try{
+  const fetchWarrantyPlans = async () => {
+    try {
       const response = await axios.get('http://localhost:5000/api/warranty/plans', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       // console.log(response.data.data)
       setWarrantyPlans(response.data.data)
-    }catch(error){
+    } catch (error) {
       console.error('Error fetching warranty plans:', error);
       toast.error('Failed to fetch warranty plans');
     }
   }
 
-  const handlePurchaseWarranty = async (report) => {
-    try {
-
-      let plan = null;
-      if (report.grade === 'A') {
-        plan = warrantyPlans[0]; // Basic Protection Plan
-      } else if (report.grade === 'B') {
-        plan = warrantyPlans[1]; // Premium Protection Plan
-      } else if (report.grade === 'C') {
-        plan = warrantyPlans[2]; // Ultimate Protection Plan
-      }
-
-      setWarrantyPlan(plan);
-      setReportForWarranty(report);
-      setShowWarrantyModal(true);
-    } catch (error) {
-      console.error('Error purchasing warranty plan:', error);
-      toast.error('Failed to purchase warranty plan');
-    }
+  const handlePurchaseWarranty = (report) => {
+    setReportForWarranty(report);
+    setShowDevicePriceModal(true);
   };
 
-  const handleWarrantyPurchaseConfirm = async () => {
+  const handleShowWarrantyPlans = () => {
+    const plans = warrantyPlans.filter(plan =>
+      plan.lower_limit <= devicePrice &&
+      plan.upper_limit >= devicePrice &&
+      plan.grade === reportForWarranty.grade
+    );
+    setAvailablePlans(plans);
+    setShowDevicePriceModal(false);
+    setShowWarrantyModal(true);
+  };
+
+  const handleWarrantyPurchaseConfirm = async (plan) => {
     try {
       // Create order with Razorpay
       const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
-        amount: warrantyPlan.price, // Amount in INR
+        amount: plan.price, // Amount in INR
         receipt: reportForWarranty._id,
         notes: {}, // Ensure this is set in your environment
       });
@@ -146,7 +145,7 @@ const PhoneReports = ({ standalone = false }) => {
             deviceModel: reportForWarranty.deviceModel,
             imeiNumber: reportForWarranty.imeiNumber,
             grade: reportForWarranty.grade,
-            planId: warrantyPlan._id,
+            planId: plan._id,
             razorpayPaymentId: response.razorpay_payment_id // Include payment ID
           }, {
             headers: { Authorization: `${localStorage.getItem('token')}` }
@@ -183,8 +182,8 @@ const PhoneReports = ({ standalone = false }) => {
   };
   // console.log(selectedReports)
   const handleSelectReport = (reportId) => {
-    setSelectedReports(prev => 
-      prev.map(report => 
+    setSelectedReports(prev =>
+      prev.map(report =>
         report._id === reportId ? { ...report, selected: !report.selected } : report
       )
     );    // console.log(selectedReports)
@@ -192,17 +191,35 @@ const PhoneReports = ({ standalone = false }) => {
 
   const calculateTotalAmount = () => {
     const total = selectedReports.reduce((sum, report) => {
-      let plan = null;
-      if (report.grade === 'A') {
-        plan = warrantyPlans[0]; // Basic Protection Plan
-      } else if (report.grade === 'B') {
-        plan = warrantyPlans[1]; // Premium Protection Plan
-      } else if (report.grade === 'C') {
-        plan = warrantyPlans[2]; // Ultimate Protection Plan
-      }
-      return report.selected ? sum + plan.price : sum;
+      const plans = availablePlans[report._id];
+      const selectedPlan = plans ? plans.find(plan => plan.selected) : null;
+      return report.selected && selectedPlan ? sum + selectedPlan.price : sum;
     }, 0);
     setTotalAmount(total);
+  };
+
+  const handleDevicePriceChange = (reportId, price) => {
+    setDevicePrices(prev => ({ ...prev, [reportId]: price }));
+  };
+
+  const handleShowPlansForReport = (reportId) => {
+    const price = devicePrices[reportId];
+    const report = selectedReports.find(report => report._id === reportId);
+    const plans = warrantyPlans.filter(plan =>
+      plan.lower_limit <= price &&
+      plan.upper_limit >= price &&
+      plan.grade === report.grade
+    );
+    setAvailablePlans(prev => ({ ...prev, [reportId]: plans }));
+  };
+
+  const handleSelectPlanForReport = (reportId, planId) => {
+    setAvailablePlans(prev => ({
+      ...prev,
+      [reportId]: prev[reportId].map(plan =>
+        plan._id === planId ? { ...plan, selected: true } : { ...plan, selected: false }
+      )
+    }));
   };
 
   const handlePurchaseBulkWarranty = async () => {
@@ -213,18 +230,12 @@ const PhoneReports = ({ standalone = false }) => {
     }
 
     const purchaseDetails = selectedReports
-        .filter(report => report.selected)
-        .map(report => {
-            let planId = null;
-            if (report.grade === 'A') {
-                planId = warrantyPlans[0]._id; // Basic Protection Plan
-            } else if (report.grade === 'B') {
-                planId = warrantyPlans[1]._id; // Premium Protection Plan
-            } else if (report.grade === 'C') {
-                planId = warrantyPlans[2]._id; // Ultimate Protection Plan
-            }
-            return { reportId: report._id, planId };
-        });
+      .filter(report => report.selected)
+      .map(report => {
+        const plans = availablePlans[report._id];
+        const selectedPlan = plans ? plans.find(plan => plan.selected) : null;
+        return { reportId: report._id, planId: selectedPlan._id };
+      });
 
     try {
       const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
@@ -323,21 +334,74 @@ const PhoneReports = ({ standalone = false }) => {
       {/* Bulk Purchase Modal */}
       {showBulkModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-lg bg-white">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Select Reports for Warranty Purchase</h2>
             <div className="max-h-60 overflow-y-auto">
               {selectedReports.map(report => (
-                <div key={report._id} className="flex items-center mb-2">
-                  <input
-                    type="checkbox"
-                    checked={report.selected}
-                    onChange={() => {
-                      handleSelectReport(report._id);
-                    }}
-                  />
-                  <label className="ml-2">
-                    {report.deviceModel} - {report.imeiNumber} (Grade: {report.grade})
-                  </label>
+                <div key={report._id} className="mb-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={report.selected}
+                      onChange={() => handleSelectReport(report._id)}
+                      className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                    />
+                    <label className="ml-2 text-sm text-gray-700">
+                      {report.deviceModel} - {report.imeiNumber} (Grade: {report.grade})
+                    </label>
+                  </div>
+                  {report.selected && (
+                    <div className="mt-2 ml-6">
+                      <input
+                        type="number"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white 
+                    placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 
+                    focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        placeholder="Enter device price"
+                        value={devicePrices[report._id] || ''}
+                        onChange={(e) => handleDevicePriceChange(report._id, e.target.value)}
+                      />
+                      <button
+                        onClick={() => handleShowPlansForReport(report._id)}
+                        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                      >
+                        Show Plans
+                      </button>
+                      {availablePlans[report._id] && availablePlans[report._id].length > 0 && (
+                        <div className="mt-2">
+                          {availablePlans[report._id].some(plan => plan.selected) ? (
+                            availablePlans[report._id].filter(plan => plan.selected).map(plan => (
+                              <div key={plan._id} className="bg-white rounded-lg p-4 border border-gray-300 mb-2">
+                                <div className="flex justify-between items-center">
+                                  <div className="text-right">
+                                    <div className="text-2xl font-bold text-blue-600">₹{plan.price}</div>
+                                    <div className="text-sm text-gray-500">{plan.warranty_months} Months</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            availablePlans[report._id].map(plan => (
+                              <div key={plan._id} className="bg-white rounded-lg p-4 border border-gray-300 mb-2">
+                                <div className="flex justify-between items-center">
+                                  <div className="text-right">
+                                    <div className="text-2xl font-bold text-blue-600">₹{plan.price}</div>
+                                    <div className="text-sm text-gray-500">{plan.warranty_months} Months</div>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleSelectPlanForReport(report._id, plan._id)}
+                                  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                                >
+                                  Select Plan
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -462,12 +526,43 @@ const PhoneReports = ({ standalone = false }) => {
         </table>
       </div>
 
+      {showDevicePriceModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Enter Device Price</h2>
+            <input
+              type="number"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white 
+                 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 
+                 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="Enter device price"
+              value={devicePrice}
+              onChange={(e) => setDevicePrice(e.target.value)}
+            />
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDevicePriceModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleShowWarrantyPlans}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Warranty Plans Modal */}
-      {showWarrantyModal && warrantyPlan && (
+      {showWarrantyModal && availablePlans.length > 0 && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Warranty Plan</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Select Warranty Plan</h2>
               <button
                 onClick={() => {
                   setShowWarrantyModal(false);
@@ -480,59 +575,28 @@ const PhoneReports = ({ standalone = false }) => {
               </button>
             </div>
 
-            <div className="bg-gradient-to-br from-white to-blue-50 rounded-lg p-6 border border-blue-100 shadow-sm">
-              {/* Price Section */}
-              <div className="text-center mb-6">
-                <div className="inline-block bg-blue-600 text-white text-2xl font-bold px-6 py-3 rounded-full">
-                  ₹{warrantyPlan.price}
-                </div>
-              </div>
-
-              {/* Plan Details */}
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{warrantyPlan.planName}</h3>
-                  <p className="text-gray-600">{warrantyPlan.coverageDetails}</p>
-                </div>
-
-                {/* Duration and Coverage */}
-                <div className="bg-white rounded-lg p-4">
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Duration:</h4>
-                    <div className="flex items-center text-gray-600">
-                      <FiCheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                      <span>{warrantyPlan.durationMonths} Months Coverage</span>
+            <div className="space-y-4">
+              {availablePlans.map(plan => (
+                <div key={plan._id} className="bg-white rounded-lg p-4 border border-gray-300">
+                  <div className="flex justify-between items-center">
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600">₹{plan.price}</div>
+                      <div className="text-sm text-gray-500">{plan.warranty_months} Months</div>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Coverage Details:</h4>
-                    <div className="flex items-start">
-                      <FiCheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5" />
-                      <span className="text-gray-600">{warrantyPlan.coverageDetails}</span>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => {
+                      setWarrantyPlan(() => { console.log(plan, "selecteing plan"); return plan });
+                      setTimeout(() => {
+                        handleWarrantyPurchaseConfirm(plan);
+                      }, 100);
+                    }}
+                    className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                  >
+                    Select Plan
+                  </button>
                 </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowWarrantyModal(false);
-                  setWarrantyPlan(null);
-                  setReportForWarranty(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleWarrantyPurchaseConfirm}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                Purchase Now
-              </button>
+              ))}
             </div>
           </div>
         </div>

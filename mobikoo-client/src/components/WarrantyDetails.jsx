@@ -73,7 +73,6 @@ const WarrantyDetails = ({ warranty, onClose }) => {
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">{warranty.inspectionReport.deviceModel}</h2>
-            <p className="text-sm text-gray-500 mt-1">Warranty Plan: {warranty.warrantyPlanId.planName}</p>
             <p className="text-sm text-gray-500 mt-1">Issued on: {formatDate(warranty.issueDate || warranty.inspectionReport.inspectionDate)}</p>
           </div>
           <div className="flex flex-col gap-2 items-end">
@@ -97,10 +96,8 @@ const WarrantyDetails = ({ warranty, onClose }) => {
       </Section>
 
       <Section title="Warranty Information">
-        <DetailRow icon={FiShield} label="Plan Name" value={warranty.warrantyPlanId.planName} />
-        <DetailRow icon={FiClock} label="Duration" value={`${warranty.warrantyPlanId.durationMonths} months`} />
+        <DetailRow icon={FiClock} label="Duration" value={`${warranty.warrantyPlanId.warranty_months} months`} />
         <DetailRow icon={FiCalendar} label="Issue Date" value={formatDate(warranty.issueDate || warranty.inspectionReport.inspectionDate)} />
-        <DetailRow icon={FiFileText} label="Coverage Details" value={warranty.warrantyPlanId.coverageDetails} />
         <DetailRow icon={FiDollarSign} label="Plan Price" value={formatCurrency(warranty.warrantyPlanId.price)} />
         <DetailRow 
           icon={FiCheckCircle} 

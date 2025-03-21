@@ -26,7 +26,7 @@ const WarrantyDetails = ({ warranty }) => {
 
     // Calculate expiry date
     const issueDate = new Date(warranty.issueDate);
-    const durationMonths = warranty.warrantyPlanId.durationMonths;
+    const durationMonths = warranty.warrantyPlanId.warranty_months;
     const expiryDate = new Date(issueDate.setMonth(issueDate.getMonth() + durationMonths));
 
     const DetailRow = ({ icon: Icon, label, value }) => (
@@ -88,19 +88,9 @@ const WarrantyDetails = ({ warranty }) => {
             <div className="bg-white rounded-lg shadow p-6 mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Plan Details</h3>
                 <DetailRow
-                    icon={FiShield}
-                    label="Plan Name"
-                    value={warranty.warrantyPlanId.planName}
-                />
-                <DetailRow
                     icon={FiCalendar}
                     label="Duration"
-                    value={`${warranty.warrantyPlanId.durationMonths} months`}
-                />
-                <DetailRow
-                    icon={FiFileText}
-                    label="Coverage"
-                    value={warranty.warrantyPlanId.coverageDetails}
+                    value={`${warranty.warrantyPlanId.warranty_months} months`}
                 />
                 <DetailRow
                     icon={FiDollarSign}

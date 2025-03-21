@@ -122,7 +122,7 @@ const WarrantiesManagement = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI Number</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PhoneChecker Name</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warranty Plan Name</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warranty Duration</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warranty Status</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
@@ -135,7 +135,7 @@ const WarrantiesManagement = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.imeiNumber}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.inspectorId.firstName} {warranty.inspectionReport.inspectorId.lastName}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.grade}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.warrantyPlanId.planName}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.warrantyPlanId?.warranty_months || "N/A"} months</td>
                                                 <td className={`px-6 py-4 whitespace-nowrap text-sm`}>
                                                     <StatusBadge status={warranty.inspectionReport.warrantyStatus} />
                                                 </td>

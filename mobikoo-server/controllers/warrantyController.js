@@ -75,7 +75,7 @@ exports.activateWarranty = async (req, res) => {
             customer: customerData._id,
             phoneDetails: { model: deviceModel, imeiNumber },
             warrantyDetails: {
-                planName: report.warrantyDetails.warrantyPlanId.planName,
+                duration: report.warrantyDetails.warrantyPlanId.warranty_months,
                 price: report.warrantyDetails.warrantyPlanId.price
             }
         });
@@ -143,7 +143,7 @@ exports.claimWarranty = async (req, res) => {
                 imeiNumber: customer.imeiNumber
             },
             warrantyDetails: {
-                planName: warrantyPlan ? warrantyPlan.name : 'Unknown Plan',
+                duration: warrantyPlan ? warrantyPlan.warranty_months : 'Unknown Plan',
                 price: warrantyPlan ? warrantyPlan.price : 0,
                 claimStatus: 'Pending'  // Initial status for claims
             }
@@ -201,10 +201,8 @@ exports.downloadWarrantyPDF = async (req, res) => {
     doc.text(`Comments: ${warranty.inspectionReport.comments}`);
     doc.text(`Digital Signature: ${warranty.inspectionReport.digitalSignature ? 'Yes' : 'No'}`);
     doc.text(`Grade: ${warranty.inspectionReport.grade}`);
-    doc.text(`Warranty Plan: ${warranty.warrantyPlanId.planName}`);
-    doc.text(`Duration (Months): ${warranty.warrantyPlanId.durationMonths}`);
-    doc.text(`Coverage Details: ${warranty.warrantyPlanId.coverageDetails}`);
-    doc.text(`Price: ${warranty.warrantyPlanId.price}`);
+    doc.text(`Warranty Duration (Months): ${warranty.warrantyPlanId?.warranty_months} || "N/A"`);
+    doc.text(`Warranty Price: ${warranty.warrantyPlanId.price}`);
     // Add more warranty details as needed
 
     // Finalize the PDF and send it

@@ -320,7 +320,6 @@ if (response.data.success && response.data.data) {
                           {log.imeiNumber || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {log.planName || 'N/A'}
                           {log.planPrice && <span className="text-gray-500 ml-1">${log.planPrice}</span>}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

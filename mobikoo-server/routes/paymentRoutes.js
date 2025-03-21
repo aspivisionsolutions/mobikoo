@@ -118,7 +118,7 @@ router.post('/warranty/purchase', async (req, res) => {
             customer: null,
             phoneDetails: { model: report.deviceModel, imeiNumber: report.imeiNumber },
             warrantyDetails: {
-                planName: plan.planName,
+                duration: plan.warranty_months,
                 price: plan.price
             }
         });
@@ -157,6 +157,7 @@ router.post('/warranty/bulk-purchase', protect, async (req, res) => {
                     warrantyPlanId: purchaseDetail.planId, // Store the corresponding planId
                     razorpayPaymentId: razorpayPaymentId,
                     issueDate: new Date().toISOString().split('T')[0],
+                    phoneChecker: report.inspectorId._id,
                 });
 
                 // Save the issued warranty

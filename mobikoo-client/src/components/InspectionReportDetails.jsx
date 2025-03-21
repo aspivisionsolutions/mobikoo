@@ -140,25 +140,16 @@ export const InspectionReportDetails = ({ report }) => {
       {/* Warranty Details (if available) */}
       {hasWarranty && (
         <Section title="Warranty Information">
-          <DetailRow 
-            icon={FiShield} 
-            label="Plan Name" 
-            value={report.warrantyDetails.warrantyPlanId?.planName || 'N/A'} 
-          />
+          
           <DetailRow 
             icon={FiClock} 
             label="Duration" 
-            value={`${report.warrantyDetails.warrantyPlanId?.durationMonths || 'N/A'} months`} 
+            value={`${report.warrantyDetails.warrantyPlanId?.warranty_months || 'N/A'} months`} 
           />
           <DetailRow 
             icon={FiCalendar} 
             label="Issue Date" 
             value={report.warrantyDetails.issueDate ? formatSimpleDate(report.warrantyDetails.issueDate) : 'N/A'} 
-          />
-          <DetailRow 
-            icon={FiFileText} 
-            label="Coverage Details" 
-            value={report.warrantyDetails.warrantyPlanId?.coverageDetails || 'N/A'} 
           />
           <DetailRow 
             icon={FiDollarSign} 
