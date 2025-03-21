@@ -114,7 +114,7 @@ const PhoneReports = ({ standalone = false }) => {
   const handleShowWarrantyPlans = () => {
     const plans = warrantyPlans.filter(plan =>
       plan.lower_limit <= devicePrice &&
-      plan.upper_limit >= devicePrice &&
+      (plan.upper_limit === null || plan.upper_limit >= devicePrice) &&
       plan.grade === reportForWarranty.grade
     );
     setAvailablePlans(plans);
@@ -207,7 +207,7 @@ const PhoneReports = ({ standalone = false }) => {
     const report = selectedReports.find(report => report._id === reportId);
     const plans = warrantyPlans.filter(plan =>
       plan.lower_limit <= price &&
-      plan.upper_limit >= price &&
+      (plan.upper_limit === null || plan.upper_limit >= price) &&
       plan.grade === report.grade
     );
     setAvailablePlans(prev => ({ ...prev, [reportId]: plans }));
