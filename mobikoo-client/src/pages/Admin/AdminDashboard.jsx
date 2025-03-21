@@ -9,10 +9,10 @@ import {
   FiX,
   FiShield,
   FiList,
-  FiDollarSign ,
+  FiDollarSign,
   FiUsers as FiPartners
 } from 'react-icons/fi';
-import AdminLogsTable from './AdminLogsTable'; // Import the new component
+import AdminLogsTable from './AdminLogsTable';
 import PhoneInspectionTable from './PhoneInspectionTable';
 import WarrantiesManagement from './WarrantiesManagement';
 import UserManagement from './UserManagement';
@@ -26,7 +26,15 @@ import SalesGraph from './SalesGraph';
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState('dashboard');
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  // Close sidebar on mobile when selecting a menu item
+  const handleMenuSelect = (menu) => {
+    setActiveMenu(menu);
+    if (window.innerWidth < 1024) { // lg breakpoint in Tailwind
+      setIsSidebarOpen(false);
+    }
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -37,33 +45,32 @@ const AdminDashboard = () => {
       case 'dashboard':
         return <DashboardContent />;
       case 'users':
-        return <UserManagement/>
-        case 'phones':
-          return <PhoneInspectionTable />;
+        return <UserManagement />;
+      case 'phones':
+        return <PhoneInspectionTable />;
       case 'claims':
-        return <ClaimsManagement/>;
+        return <ClaimsManagement />;
       case 'warranty':
         return <WarrantiesManagement />;
       case 'logs':
-        return <AdminLogsTable />; // Added the logs component here
+        return <AdminLogsTable />;
       case 'partners':
-        return <PartnerManagement/>;
-        case 'fines':
-          return <AdminFinesPanel/>; 
+        return <PartnerManagement />;
+      case 'fines':
+        return <AdminFinesPanel />; 
       default:
         return <DashboardContent />;
     }
   };
 
   const handleLogout = () => {
-    // Handle logout here
     localStorage.removeItem('token');
     navigate('/login');
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Mobile Sidebar Toggle */}
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      {/* Mobile Sidebar Toggle Button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={toggleSidebar}
@@ -73,69 +80,70 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {/* Sidebar */}
-      <div className={`${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } fixed lg:relative lg:translate-x-0 z-40 transition-transform duration-300 ease-in-out h-full bg-white shadow-lg w-64 flex-shrink-0`}>
-        
+      {/* Sidebar - Slide from left without darkening background */}
+      <div 
+        className={`
+          fixed lg:static z-40 h-full bg-white shadow-lg w-64 transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
         {/* Sidebar Header */}
         <div className="h-16 flex items-center justify-center border-b">
           <h1 className="text-xl font-semibold text-gray-800">Admin Dashboard</h1>
         </div>
 
         {/* Sidebar Menu */}
-        <nav className="mt-6 px-4">
+        <nav className="mt-6 px-4 pb-20 h-full overflow-y-auto">
           <div className="space-y-2">
             <SidebarItem 
               icon={<FiHome />} 
               text="Dashboard" 
               isActive={activeMenu === 'dashboard'} 
-              onClick={() => setActiveMenu('dashboard')} 
+              onClick={() => handleMenuSelect('dashboard')} 
             />
             <SidebarItem 
               icon={<FiUsers />} 
               text="Users Management" 
               isActive={activeMenu === 'users'} 
-              onClick={() => setActiveMenu('users')} 
+              onClick={() => handleMenuSelect('users')} 
             />
             <SidebarItem 
               icon={<FiPhone />} 
               text="Phone Inspections" 
               isActive={activeMenu === 'phones'} 
-              onClick={() => setActiveMenu('phones')} 
+              onClick={() => handleMenuSelect('phones')} 
             />
             <SidebarItem 
               icon={<FiClipboard />} 
               text="Claims Management" 
               isActive={activeMenu === 'claims'} 
-              onClick={() => setActiveMenu('claims')} 
+              onClick={() => handleMenuSelect('claims')} 
             />
             <SidebarItem 
               icon={<FiShield />} 
               text="Warranty Management" 
               isActive={activeMenu === 'warranty'} 
-              onClick={() => setActiveMenu('warranty')} 
+              onClick={() => handleMenuSelect('warranty')} 
             />
-            {/* New Activity Logs menu item */}
             <SidebarItem 
               icon={<FiList />} 
               text="Activity Logs" 
               isActive={activeMenu === 'logs'} 
-              onClick={() => setActiveMenu('logs')} 
+              onClick={() => handleMenuSelect('logs')} 
             />
-          </div>
-          <SidebarItem 
+            <SidebarItem 
               icon={<FiPartners />} 
               text="Partners" 
               isActive={activeMenu === 'partners'} 
-              onClick={() => setActiveMenu('partners')} 
+              onClick={() => handleMenuSelect('partners')} 
             />
             <SidebarItem 
               icon={<FiDollarSign />} 
               text="Fines Management" 
               isActive={activeMenu === 'fines'} 
-              onClick={() => setActiveMenu('fines')} 
+              onClick={() => handleMenuSelect('fines')} 
             />
+          </div>
 
           {/* Logout button at bottom */}
           <div className="absolute bottom-8 w-full left-0 px-4">
@@ -150,35 +158,26 @@ const AdminDashboard = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
         <div className="bg-white shadow-sm">
           <div className="h-16 flex items-center px-6">
-            <h2 className="text-lg font-medium text-gray-900">
+            <h2 className="text-lg font-medium text-gray-900 ml-0 lg:ml-0">
               {activeMenu === 'dashboard' && 'Dashboard Overview'}
               {activeMenu === 'users' && 'Users Management'}
               {activeMenu === 'phones' && 'Phone Inspections'}
               {activeMenu === 'claims' && 'Claims Management'}
               {activeMenu === 'warranty' && 'Warranty Management'}
-              {activeMenu === 'logs' && 'Activity Logs'} {/* Added new title */}
-              {activeMenu === 'settings' && 'Settings'}
+              {activeMenu === 'logs' && 'Activity Logs'}
               {activeMenu === 'partners' && 'Partners Management'}
               {activeMenu === 'fines' && 'Fine Management'}
             </h2>
           </div>
         </div>
-        <div className="p-6">
+        <div className="flex-1 overflow-auto p-6">
           {renderContent()}
         </div>
       </div>
-
-      {/* Overlay for mobile */}
-      {isSidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={toggleSidebar}
-        ></div>
-      )}
     </div>
   );
 };
@@ -202,7 +201,6 @@ const SidebarItem = ({ icon, text, isActive, onClick }) => {
 
 // Dashboard Content Component
 const DashboardContent = () => {
-  // Sample stats for the dashboard
   const [stats, setStats] = useState([]);
 
   useEffect(() => {
@@ -210,7 +208,7 @@ const DashboardContent = () => {
       try {
         const response = await axios.get('http://localhost:5000/api/stats/admin', {
           headers: { Authorization: `${localStorage.getItem('token')}` }
-        }); // Update with your API endpoint
+        });
         setStats(response.data.stats);
       } catch (err) {
         console.log('Error fetching stats:', err);
@@ -224,58 +222,98 @@ const DashboardContent = () => {
     <div>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className={`p-3 rounded-full ${'bg-blue-100 text-blue-600'}`}>
-                <FiUsers className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Users</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.totalUsers || 0}</p>
-              </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+              <FiUsers className="h-6 w-6" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Users</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.totalUsers || 0}</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className={`p-3 rounded-full bg-green-100 text-green-600`}>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-green-100 text-green-600">
               <FiPhone className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">{'Phone Inspections'}</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.totalInspections || 0}</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Phone Inspections</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.totalInspections || 0}</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className={`p-3 rounded-full ${'bg-yellow-100 text-yellow-600'}`}>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
               <FiClipboard className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Active Claims</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.totalClaims || 0}</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Active Claims</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.totalClaims || 0}</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className={`p-3 rounded-full ${'bg-purple-100 text-purple-600'}`}>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-purple-100 text-purple-600">
               <FiShield className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Warranties Sold</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.totalWarranties || 0}</p>
-              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Warranties Sold</p>
+              <p className="text-lg font-semibold text-gray-900">{stats.totalWarranties || 0}</p>
             </div>
           </div>
+        </div>
+      </div>
       
+      {/* Recent Activity Section */}
+      <div className="bg-white rounded-lg shadow mb-8">
+        <div className="px-6 py-4 border-b">
+          <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
+        </div>
+        <div className="p-6">
+          <div className="space-y-4">
+            <ActivityItem 
+              title="New user registered" 
+              description="John Doe created a new account" 
+              time="2 hours ago" 
+            />
+            <ActivityItem 
+              title="Phone inspection completed" 
+              description="Samsung Galaxy S21 inspection report submitted by Shop #1234" 
+              time="3 hours ago" 
+            />
+            <ActivityItem 
+              title="Warranty purchased" 
+              description="Premium protection plan purchased for iPhone 14" 
+              time="5 hours ago" 
+            />
+            <ActivityItem 
+              title="Claim approved" 
+              description="Claim #2345 has been approved for processing" 
+              time="1 day ago" 
+            />
+          </div>
+        </div>
       </div>
       <SalesGraph/>
     </div>
   );
 };
 
+const ActivityItem = ({ title, description, time }) => {
+  return (
+    <div className="flex items-start border-b border-gray-100 pb-4">
+      <div className="w-full">
+        <h4 className="text-sm font-medium text-gray-900">{title}</h4>
+        <p className="text-sm text-gray-500 mt-1">{description}</p>
+        <p className="text-xs text-gray-400 mt-1">{time}</p>
+      </div>
+    </div>
+  );
+};
 
 // Quick Action Button Component
 const QuickActionButton = ({ text, icon, color }) => {

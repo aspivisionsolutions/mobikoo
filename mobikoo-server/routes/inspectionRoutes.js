@@ -79,17 +79,19 @@ router.patch("/fine/:reportId",protect,roleMiddleware(["admin"],updateFineStatus
 router.get("/admin/fines", protect, roleMiddleware(["admin"]), async (req, res) => {
   try {
     const fines = await Fine.find({})
-      .populate({ path: 'inspectorId', select: 'name' }) // Get Phone Checker Name
+    .populate({ path: 'inspectorId', model: 'User', select: 'firstName' }) // Get Phone Checker Name
       .populate({ path: 'inspectionId', select: 'deviceModel' }); // Get Phone Model
-
+      console.log("Fetched fines from DB:", fines); 
     const formattedFines = fines.map(fine => ({
-      phoneChecker: fine.inspectorId ? fine.inspectorId.name : "Unknown",
+      
+      phoneChecker: fine.inspectorId ? fine.inspectorId.firstName : "Unknown",
       model: fine.inspectionId ? fine.inspectionId.deviceModel : "Unknown",
       amount: fine.fineAmount,
       isPaid: fine.status === "Paid",
-      status: fine.status
+      status: fine.status,
+     comment: fine.comment || "No comment"
     }));
-
+    console.log("Formatted Fines:", formattedFines); 
     res.status(200).json({ fines: formattedFines });
   } catch (error) {
     console.error("Error fetching fine details:", error);

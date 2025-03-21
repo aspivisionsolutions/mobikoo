@@ -62,6 +62,10 @@ exports.addFine = async (req, res) => {
         select: 'deviceModel' // Fetch phone model
       });
 
+      if (!fineDetails.inspectionId) {
+        console.error("⚠️ Fine created but inspectionId is NULL!");
+      }
+
     const formattedFine = {
       phoneChecker: fineDetails.inspectorId ? fineDetails.inspectorId.name : "Unknown",
       model: fineDetails.inspectionId ? fineDetails.inspectionId.deviceModel : "Unknown",
@@ -69,7 +73,7 @@ exports.addFine = async (req, res) => {
       isPaid: fineDetails.status === "Paid",
       status: fineDetails.status
     };
-
+  
     res.status(200).json({ message: "Fine added successfully", fine: formattedFine });
   } catch (error) {
     console.error("Error adding fine:", error);

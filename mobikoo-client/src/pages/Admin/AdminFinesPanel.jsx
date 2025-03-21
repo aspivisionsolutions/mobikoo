@@ -14,7 +14,7 @@ const AdminFinesPanel = () => {
 
   useEffect(() => {
     fetchFines();
-  }, [currentPage, sortField, sortDirection, filterKeyword]);
+  }, []);
 
   const fetchFines = async () => {
     setLoading(true);
@@ -29,9 +29,18 @@ const AdminFinesPanel = () => {
           keyword: filterKeyword
         }
       });
+      console.log("Fetched fines from frontend:", response.data);
+      // Add direct debug to see what we're getting
+      console.log("Setting fines to:", Array.isArray(response.data) ? response.data : Array.isArray(response.data.fines) ? response.data.fines : []);
       
-      if (response.data.success && response.data.fines) {
+      // Try different ways to get the data - one of these should work
+      if (Array.isArray(response.data)) {
+        setFines(response.data);
+      } else if (response.data && Array.isArray(response.data.fines)) {
         setFines(response.data.fines);
+      } else if (response.data && typeof response.data === 'object') {
+        // If data is directly in the response object
+        setFines([response.data]);
       } else {
         setFines([]);
       }
@@ -44,6 +53,11 @@ const AdminFinesPanel = () => {
       setLoading(false);
     }
   };
+
+  // Add debug logging to see what's actually in the state
+  useEffect(() => {
+    console.log("Current fines state:", fines);
+  }, [fines]);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -58,34 +72,19 @@ const AdminFinesPanel = () => {
     fetchFines();
   };
 
+  // Simple, direct filter function that looks at all string values
   const filteredFines = fines.filter(fine => {
     if (!filterKeyword) return true;
     
     const keyword = filterKeyword.toLowerCase();
-    return (
-      (fine.phoneChecker?.toLowerCase().includes(keyword)) ||
-      (fine.model?.toLowerCase().includes(keyword)) ||
-      (fine.amount?.toString().includes(keyword)) ||
-      (fine.status?.toLowerCase().includes(keyword))
-    );
+    // Convert the entire fine object to a string and check if it contains the keyword
+    return JSON.stringify(fine).toLowerCase().includes(keyword);
   });
-
+  
   const sortedFines = [...filteredFines].sort((a, b) => {
-    let aValue, bValue;
-    
-    switch (sortField) {
-      case 'amount':
-        aValue = parseFloat(a.amount) || 0;
-        bValue = parseFloat(b.amount) || 0;
-        break;
-      case 'timestamp':
-        aValue = new Date(a.timestamp || 0);
-        bValue = new Date(b.timestamp || 0);
-        break;
-      default:
-        aValue = a[sortField] || '';
-        bValue = b[sortField] || '';
-    }
+    // Simplified sorting that works with most field types
+    const aValue = a[sortField] || '';
+    const bValue = b[sortField] || '';
     
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
@@ -102,17 +101,16 @@ const AdminFinesPanel = () => {
     let csvContent = "data:text/csv;charset=utf-8,";
     
     // Add CSV Headers
-    csvContent += "Phone Checker,Phone Model,Fine Amount,Paid Status,Status,Timestamp\n";
+    csvContent += "Phone Checker,Phone Model,Fine Amount,Status,Comments\n";
     
     // Add data rows
     filteredFines.forEach(fine => {
       const row = [
-        fine.phoneChecker || 'N/A',
-        fine.model || 'Unknown',
-        `₹${fine.amount}`,
-        fine.isPaid ? 'Paid' : 'Unpaid',
+        fine.inspectorId?.name || fine.inspectorId?._id || 'N/A',
+        fine.inspectionId?.deviceModel || 'Unknown',
+        `₹${fine.fineAmount}`,
         fine.status || 'N/A',
-        fine.timestamp || 'N/A'
+        (fine.comment || '').replace(/,/g, ';') // Replace commas in comments to prevent CSV issues
       ];
       csvContent += row.join(",") + "\n";
     });
@@ -129,7 +127,7 @@ const AdminFinesPanel = () => {
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="flex justify-between items-center px-6 py-4 border-b">
+      <div className="flex justify-between items-center px-4 sm:px-6 py-4 border-b">
         <h3 className="text-lg font-medium text-gray-900">Fine Management</h3>
         <div className="flex space-x-2">
           <button 
@@ -149,7 +147,8 @@ const AdminFinesPanel = () => {
         </div>
       </div>
       
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
+        
         {/* Filter Input */}
         <div className="mb-4 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -181,185 +180,136 @@ const AdminFinesPanel = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort('phoneChecker')}
-                    >
-                      <div className="flex items-center">
-                        Phone Checker
-                        {sortField === 'phoneChecker' && (
-                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort('model')}
-                    >
-                      <div className="flex items-center">
-                        Phone Model
-                        {sortField === 'model' && (
-                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort('amount')}
-                    >
-                      <div className="flex items-center">
-                        Fine Amount
-                        {sortField === 'amount' && (
-                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort('isPaid')}
-                    >
-                      <div className="flex items-center">
-                        Paid Status
-                        {sortField === 'isPaid' && (
-                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort('status')}
-                    >
-                      <div className="flex items-center">
-                        Status
-                        {sortField === 'status' && (
-                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentItems.length > 0 ? (
-                    currentItems.map((fine, index) => (
-                      <tr key={fine._id || index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {fine.phoneChecker || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {fine.model || 'Unknown'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ₹{fine.amount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            fine.isPaid 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {fine.isPaid ? 'Paid' : 'Unpaid'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            fine.status === 'Resolved' 
-                              ? 'bg-green-100 text-green-800' 
-                              : fine.status === 'Pending' 
-                                ? 'bg-yellow-100 text-yellow-800' 
-                                : fine.status === 'Disputed' 
-                                  ? 'bg-orange-100 text-orange-800' 
-                                  : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {fine.status || 'N/A'}
-                          </span>
-                        </td>
+            {/* Render basic data table */}
+            <div className="overflow-x-auto -mx-4 sm:-mx-6">
+              <div className="inline-block min-w-full align-middle">
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th 
+                          className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                          onClick={() => handleSort('inspectorId.name')}
+                        >
+                          Phone Checker
+                        </th>
+                        <th 
+                          className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                          onClick={() => handleSort('inspectionId.deviceModel')}
+                        >
+                          Phone Model
+                        </th>
+                        <th 
+                          className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                          onClick={() => handleSort('fineAmount')}
+                        >
+                          Fine Amount
+                        </th>
+                        <th 
+                          className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                          onClick={() => handleSort('status')}
+                        >
+                          Status
+                        </th>
+                        <th 
+      className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+
+    >
+      Comments
+    </th>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
-                        No fines found matching your criteria
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {currentItems.length > 0 ? (
+                        currentItems.map((fine, index) => (
+                          <tr key={fine._id || index} className="hover:bg-gray-50">
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                           {fine.phoneChecker || 'N/A'}
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              { fine.model || 'Unknown'}
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              ₹{fine.fineAmount || fine.amount || 0}
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                fine.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {fine.status || 'N/A'}
+                              </span>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                       {fine.comment || 'No comments'}
+                          </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="px-3 sm:px-6 py-4 text-center text-sm text-gray-500">
+                            No fines found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
             
             {/* Pagination Controls */}
-            {sortedFines.length > 0 && (
-              <div className="flex items-center justify-between mt-4 px-4 py-3 border-t border-gray-200 sm:px-6">
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
-                      <span className="font-medium">{Math.min(indexOfLastItem, sortedFines.length)}</span> of{' '}
-                      <span className="font-medium">{sortedFines.length}</span> results
-                    </p>
-                  </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 text-sm font-medium ${
-                          currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span>Previous</span>
-                      </button>
-                      
-                      {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
-                        let pageNumber;
-                        
-                        if (totalPages <= 5) {
-                          pageNumber = idx + 1;
-                        } else if (currentPage <= 3) {
-                          pageNumber = idx + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNumber = totalPages - 4 + idx;
-                        } else {
-                          pageNumber = currentPage - 2 + idx;
-                        }
-                        
-                        return (
-                          <button
-                            key={pageNumber}
-                            onClick={() => setCurrentPage(pageNumber)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                              currentPage === pageNumber
-                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {pageNumber}
-                          </button>
-                        );
-                      })}
-                      
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 text-sm font-medium ${
-                          currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span>Next</span>
-                      </button>
-                    </nav>
-                  </div>
-                </div>
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-4">
+                <nav className="inline-flex rounded-md shadow">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${
+                      currentPage === 1 
+                        ? 'bg-gray-100 text-gray-400 cursor-default' 
+                        : 'bg-white text-gray-500 hover:bg-gray-50'
+                    } text-sm font-medium`}
+                  >
+                    Previous
+                  </button>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`relative inline-flex items-center px-4 py-2 border ${
+                        currentPage === i + 1
+                          ? 'bg-blue-50 border-blue-500 text-blue-600 z-10'
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                      } text-sm font-medium`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-default'
+                        : 'bg-white text-gray-500 hover:bg-gray-50'
+                    } text-sm font-medium`}
+                  >
+                    Next
+                  </button>
+                </nav>
               </div>
             )}
+            
+            {/* Summary Statistics */}
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 px-4 py-3 border-t border-gray-200">
+              <div className="flex items-center mb-2 sm:mb-0">
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{Math.min(filteredFines.length, indexOfFirstItem + 1)}</span> to{' '}
+                  <span className="font-medium">{Math.min(filteredFines.length, indexOfLastItem)}</span> of{' '}
+                  <span className="font-medium">{filteredFines.length}</span> results
+                </p>
+              </div>
+            </div>
           </>
         )}
       </div>
