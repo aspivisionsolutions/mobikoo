@@ -269,60 +269,12 @@ const DashboardContent = () => {
       </div>
       
       {/* Recent Activity Section */}
-      <div className="bg-white rounded-lg shadow mb-8">
-        <div className="px-6 py-4 border-b">
-          <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
-        </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            <ActivityItem 
-              title="New user registered" 
-              description="John Doe created a new account" 
-              time="2 hours ago" 
-            />
-            <ActivityItem 
-              title="Phone inspection completed" 
-              description="Samsung Galaxy S21 inspection report submitted by Shop #1234" 
-              time="3 hours ago" 
-            />
-            <ActivityItem 
-              title="Warranty purchased" 
-              description="Premium protection plan purchased for iPhone 14" 
-              time="5 hours ago" 
-            />
-            <ActivityItem 
-              title="Claim approved" 
-              description="Claim #2345 has been approved for processing" 
-              time="1 day ago" 
-            />
-          </div>
-        </div>
-      </div>
       <SalesGraph/>
     </div>
   );
 };
 
-const ActivityItem = ({ title, description, time }) => {
-  return (
-    <div className="flex items-start border-b border-gray-100 pb-4">
-      <div className="w-full">
-        <h4 className="text-sm font-medium text-gray-900">{title}</h4>
-        <p className="text-sm text-gray-500 mt-1">{description}</p>
-        <p className="text-xs text-gray-400 mt-1">{time}</p>
-      </div>
-    </div>
-  );
-};
 
-// Quick Action Button Component
-const QuickActionButton = ({ text, icon, color }) => {
-  return (
-    <button className={`flex items-center justify-center px-4 py-3 rounded-md text-white ${color} transition-colors`}>
-      <span className="mr-2">{icon}</span>
-      <span>{text}</span>
-    </button>
-  );
-};
+
 
 export default AdminDashboard;
