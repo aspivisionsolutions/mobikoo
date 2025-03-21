@@ -185,7 +185,7 @@ exports.submitInspectionReport = async (req, res) => {
       // Create an activity log
       await ActivityLog.create({
         actionType: 'Inspection Report',
-        shopOwner: shopOwner ? shopOwner._id : null,
+        shopOwner: shopOwner ? shopOwner.userId : null,
         phoneChecker: req.user.userId,
         customer: null,
         phoneDetails: { model: reportData.deviceModel, imeiNumber: reportData.imeiNumber },
