@@ -61,10 +61,10 @@ const PhoneCheckerLayout = () => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center px-4 py-3 text-sm font-medium transition-colors ${
+        `flex rounded items-center px-4 py-3 text-sm font-medium transition-colors ${
           isActive
             ? 'bg-blue-50 text-blue-700'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            : 'text-white hover:bg-gray-50 hover:text-gray-900'
         }`
       }
       onClick={() => setIsMobileMenuOpen(false)}
@@ -96,14 +96,10 @@ const PhoneCheckerLayout = () => {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 text-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo Section */}
-          <div className="p-4 border-b">
-            <span className="text-xl font-semibold text-gray-900">MobiKoo</span>
-          </div>
 
           {/* Profile Section */}
           <div className="p-4 border-b">
@@ -112,14 +108,14 @@ const PhoneCheckerLayout = () => {
                 <FiUser className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">{profile.firstName + " " + profile.lastName}</h2>
-                <p className="text-xs text-gray-500">{profile.area}</p>
+                <h2 className="text-sm font-semibold text-white">{profile.firstName + " " + profile.lastName}</h2>
+                <p className="text-xs text-gray-200">{profile.area}</p>
               </div>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <div className="flex-1 py-4 overflow-y-auto">
+          <div className="flex-1 py-4 overflow-y-auto px-3 space-y-1">
             <NavItem to="/phone-checker/dashboard" icon={FiHome}>
               Dashboard
             </NavItem>
@@ -141,7 +137,7 @@ const PhoneCheckerLayout = () => {
           <div className="border-t">
             <button
               onClick={handleLogout}
-              className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center w-full px-4 py-3 text-sm font-medium text-white hover:bg-red-50 hover:text-gray-800 cursor-pointer transition-colors"
             >
               <FiLogOut className="mr-3 h-5 w-5" />
               Logout

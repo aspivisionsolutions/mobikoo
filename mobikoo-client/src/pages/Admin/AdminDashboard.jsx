@@ -83,13 +83,13 @@ const AdminDashboard = () => {
       {/* Sidebar - Slide from left without darkening background */}
       <div 
         className={`
-          fixed lg:static z-40 h-full bg-white shadow-lg w-64 transition-transform duration-300 ease-in-out
+          fixed lg:static z-40 h-full bg-blue-800 shadow-lg w-64 transition-transform duration-300 ease-in-out
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
         {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-center border-b">
-          <h1 className="text-xl font-semibold text-gray-800">Admin Dashboard</h1>
+        <div className="h-16 flex items-center justify-center border-b border-b-white">
+          <h1 className="text-xl font-semibold text-white">Admin Dashboard</h1>
         </div>
 
         {/* Sidebar Menu */}
@@ -149,7 +149,7 @@ const AdminDashboard = () => {
           <div className="absolute bottom-8 w-full left-0 px-4">
             <button 
               onClick={handleLogout}
-              className="flex items-center w-full px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors"
+              className="flex items-center w-full px-4 py-2 text-white hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors"
             >
               <FiLogOut className="mr-3" />
               <span>Logout</span>
@@ -189,8 +189,8 @@ const SidebarItem = ({ icon, text, isActive, onClick }) => {
       onClick={onClick}
       className={`flex items-center w-full px-4 py-2 rounded-md transition-colors ${
         isActive
-          ? 'bg-blue-100 text-blue-700'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          ? 'bg-blue-100 text-gray-900'
+          : 'text-white hover:bg-gray-100 hover:text-gray-900'
       }`}
     >
       <span className="mr-3">{icon}</span>
