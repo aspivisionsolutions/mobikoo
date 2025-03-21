@@ -110,10 +110,21 @@ exports.payFine = async (req, res) => {
   try {
     const { fineId } = req.params;
 
-    const updatedFine = await Fine.findByIdAndUpdate(fineId, { status: 'Paid' }, { new: true });
+    const updatedFine = await Fine.findByIdAndUpdate(fineId, { status: 'Paid' }, { new: true }).populate('inspectorId').populate('inspectionId');
     if (!updatedFine) {
       return res.status(404).json({ message: "Fine not found" });
     }
+
+    // Create an activity log entry
+    await ActivityLog.create({
+      actionType: 'Fine Paid',
+      phoneChecker: updatedFine.inspectorId._id,
+      phoneDetails: {
+        model: updatedFine.inspectionId.deviceModel,
+        imeiNumber: updatedFine.inspectionId.imeiNumber
+      },
+      timestamp: new Date()
+    });
 
     res.status(200).json({ message: "Fine paid successfully", fine: updatedFine });
   } catch (error) {

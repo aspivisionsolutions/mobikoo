@@ -57,14 +57,47 @@ const PhoneCheckerFinesPanel = () => {
 
   const handlePayFine = async (fineId) => {
     try {
-      await axios.patch(`http://localhost:5000/api/inspection/payFine/${fineId}`, { status: 'Paid' }, {
+      // Create Razorpay order for the fine
+      const orderResponse = await axios.post('http://localhost:5000/api/payment/create-fine-order', {
+        fineId
+      }, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      toast.success('Fine paid successfully!');
-      fetchFines();
+
+      const options = {
+        key: "rzp_test_wrWBdn4mFAZoo8", // Razorpay test key
+        amount: orderResponse.data.amount, // Amount in paise
+        currency: orderResponse.data.currency,
+        name: 'Fine Payment',
+        description: 'Payment for fine',
+        order_id: orderResponse.data.id, // Order ID returned from Razorpay
+        handler: async function (response) {
+          // Handle successful payment
+          await axios.patch(`http://localhost:5000/api/inspection/payFine/${fineId}`, {
+            status: 'Paid',
+            razorpayPaymentId: response.razorpay_payment_id // Include payment ID
+          }, {
+            headers: { Authorization: `${localStorage.getItem('token')}` }
+          });
+
+          toast.success('Fine paid successfully!');
+          fetchFines();
+        },
+        prefill: {
+          name: 'Phone Checker',
+          email: 'checker@example.com',
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#F37254'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
-      toast.error('Failed to pay fine.');
-      console.error('Error paying fine:', error);
+      toast.error('Failed to initiate fine payment.');
+      console.error('Error initiating fine payment:', error);
     }
   };
 

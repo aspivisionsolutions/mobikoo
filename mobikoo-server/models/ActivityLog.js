@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const activityLogSchema = new mongoose.Schema({
     actionType: { 
         type: String, 
-        enum: ['Warranty Purchased', 'New Claim', 'Inspection Report', 'Warranty Activated','Claim Approved','Claim Rejected'], 
+        enum: ['Warranty Purchased', 'New Claim', 'Inspection Report', 'Warranty Activated','Claim Approved','Claim Rejected', 'Fine Paid'], 
         required: true 
     },
     shopOwner: { 

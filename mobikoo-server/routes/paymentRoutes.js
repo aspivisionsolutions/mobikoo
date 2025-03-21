@@ -8,6 +8,7 @@ const { protect } = require('../middlewares/authMiddleware')
 const ActivityLog = require('../models/activityLog');
 const ShopOwner = require('../models/shopOwner');
 const warranties = require('../models/warranties');
+const Fine = require('../models/fine');
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -28,6 +29,31 @@ router.post('/create-order', async (req, res) => {
             notes
         };
 
+        const order = await razorpay.orders.create(options);
+        res.json(order);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/create-fine-order', protect, async (req, res) => {
+    try {
+        const { fineId } = req.body;
+
+        // Find the fine by ID
+        const fine = await Fine.findById(fineId);
+        if (!fine) {
+            return res.status(404).json({ error: 'Fine not found' });
+        }
+        console.log('Fine:', fine);
+        const options = {
+            amount: fine.fineAmount * 100, // Amount in paise
+            currency: process.env.CURRENCY,
+            receipt: fine._id.toString(),
+            notes: { fineId: fine._id.toString() }
+        };
+        console.log('Options:', options);
         const order = await razorpay.orders.create(options);
         res.json(order);
 
