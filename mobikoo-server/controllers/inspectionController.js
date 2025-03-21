@@ -106,6 +106,22 @@ exports.updateFineStatus = async (req, res) => {
   }
 };
 
+exports.payFine = async (req, res) => {
+  try {
+    const { fineId } = req.params;
+
+    const updatedFine = await Fine.findByIdAndUpdate(fineId, { status: 'Paid' }, { new: true });
+    if (!updatedFine) {
+      return res.status(404).json({ message: "Fine not found" });
+    }
+
+    res.status(200).json({ message: "Fine paid successfully", fine: updatedFine });
+  } catch (error) {
+    console.error("Error paying fine:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // New function to get all inspection requests for a phone checker
 exports.getInspectionRequestsForPhoneChecker = async (req, res) => {
   try {

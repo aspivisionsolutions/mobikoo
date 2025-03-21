@@ -14,6 +14,7 @@ import PhoneCheckerProfile from './pages/PhoneChecker/PhoneCheckerProfile';
 import './App.css';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import InspectionReportDetails from './components/InspectionReportDetails';
+import PhoneCheckerFinesPanel from './pages/PhoneChecker/Fines';
 
 const App = () => {
   return (
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="profile" element={<PhoneCheckerProfile />} />
           <Route path="inspections" element={<InspectionRequests />} />
           <Route path="reports" element={<PhoneReports />} />
+          <Route path="fines" element={<PhoneCheckerFinesPanel />} />
           <Route path="reports/:reportId" element={<InspectionReportView />} />
           <Route path="schedule" element={<div>Schedule Page (Coming Soon)</div>} />
           <Route path="settings" element={<div>Settings Page (Coming Soon)</div>} />

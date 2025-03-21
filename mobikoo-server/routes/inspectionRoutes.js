@@ -1,6 +1,6 @@
 const express = require("express");
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
-const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner, addFine, updateFineStatus } = require("../controllers/inspectionController");
+const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner, addFine, updateFineStatus, payFine } = require("../controllers/inspectionController");
 const { getAllInspectionReports } = require('../controllers/inspectionController');
 const InspectionReport = require("../models/inspectionReport");
 const upload = require('../multer');
@@ -79,12 +79,12 @@ router.patch("/fine/:reportId",protect,roleMiddleware(["admin"],updateFineStatus
 router.get("/admin/fines", protect, roleMiddleware(["admin"]), async (req, res) => {
   try {
     const fines = await Fine.find({})
-    .populate({ path: 'inspectorId', model: 'User', select: 'firstName' }) // Get Phone Checker Name
+    .populate({ path: 'inspectorId', model: 'User', select: 'firstName lastName' }) // Get Phone Checker Name
       .populate({ path: 'inspectionId', select: 'deviceModel' }); // Get Phone Model
       console.log("Fetched fines from DB:", fines); 
     const formattedFines = fines.map(fine => ({
       
-      phoneChecker: fine.inspectorId ? fine.inspectorId.firstName : "Unknown",
+      phoneChecker: fine.inspectorId ? fine.inspectorId.firstName + " " + fine.inspectorId.lastName : "Unknown",
       model: fine.inspectionId ? fine.inspectionId.deviceModel : "Unknown",
       amount: fine.fineAmount,
       isPaid: fine.status === "Paid",
@@ -98,5 +98,29 @@ router.get("/admin/fines", protect, roleMiddleware(["admin"]), async (req, res) 
     res.status(500).json({ message: "Error fetching fine details", error });
   }
 });
+
+router.get("/phoneChecker/fines", protect, roleMiddleware(["phone-checker"]), async (req, res) => {
+  try {
+    console.log("Fetching fines for phone checker:", req.user.userId);
+    const fines = await Fine.find({ inspectorId: req.user.userId })
+      .populate({ path: 'inspectionId', select: 'deviceModel' }); // Get Phone Model
+    console.log("Fetched fines from DB:", fines); 
+    const formattedFines = fines.map(fine => ({
+      _id: fine._id,
+      model: fine.inspectionId ? fine.inspectionId.deviceModel : "Unknown",
+      amount: fine.fineAmount,
+      isPaid: fine.status === "Paid",
+      status: fine.status,
+      comment: fine.comment || "No comment"
+    }));
+    console.log("Formatted Fines:", formattedFines); 
+    res.status(200).json({ fines: formattedFines });
+  } catch (error) {
+    console.error("Error fetching fine details:", error);
+    res.status(500).json({ message: "Error fetching fine details", error });
+  }
+});
+
+router.patch("/payFine/:fineId", protect, roleMiddleware(["phone-checker"]), payFine);
 
 module.exports = router;

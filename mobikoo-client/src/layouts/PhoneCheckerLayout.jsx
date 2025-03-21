@@ -132,6 +132,9 @@ const PhoneCheckerLayout = () => {
             <NavItem to="/phone-checker/reports" icon={FiFileText}>
               Reports
             </NavItem>
+            <NavItem to="/phone-checker/fines" icon={FiFileText}>
+              Fines
+            </NavItem>
           </div>
 
           {/* Logout Button */}
