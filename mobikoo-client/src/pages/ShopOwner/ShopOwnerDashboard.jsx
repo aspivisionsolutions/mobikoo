@@ -84,7 +84,6 @@ const ShopOwnerDashboard = () => {
       setShopDetails(null);
     }
   };
-  console.log(customers[0].customerAdhaarNumber)
   const isShopDetailsComplete = () => {
     return shopDetails && 
            shopDetails.shopName && 

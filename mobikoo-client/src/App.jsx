@@ -11,6 +11,7 @@ import InspectionRequests from './pages/PhoneChecker/InspectionRequests';
 import PhoneReports from './pages/PhoneChecker/PhoneReports';
 import InspectionReportView from './pages/InspectionReportView';
 import PhoneCheckerProfile from './pages/PhoneChecker/PhoneCheckerProfile';
+import LandingPage from './pages/LandingPage';
 import './App.css';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import InspectionReportDetails from './components/InspectionReportDetails';
@@ -20,7 +21,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
         
