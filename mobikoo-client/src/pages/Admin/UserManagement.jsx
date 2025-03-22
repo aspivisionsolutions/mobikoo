@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiAlertCircle, FiSearch } from 'react-icons/fi';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const UserManagement = () => {
   // State variables
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('customers');
   const [customers, setCustomers] = useState([]);
   const [phoneCheckers, setPhoneCheckers] = useState([]);
@@ -416,6 +418,9 @@ const UserManagement = () => {
 
   return (
     <div className="bg-white rounded-lg shadow">
+      <div className='w-full flex justify-between items-center'>
+      <button onClick={()=>navigate("/admin/signup/createUser")} className='m-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'>Create User</button>
+      </div>
       {/* Tabs */}
       <div className="border-b">
         <nav className="flex">

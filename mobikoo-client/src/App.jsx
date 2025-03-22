@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, replace } from 'react-router-dom';
 import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
 import PhoneCheckerLayout from './layouts/PhoneCheckerLayout';
@@ -22,7 +22,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/admin/signup/createUser" element={localStorage.getItem("userRole") === 'admin' ? <SignupPage /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         
         {/* Phone Checker Routes */}
