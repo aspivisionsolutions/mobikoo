@@ -239,79 +239,304 @@ exports.getInspectionReportsForPhoneChecker = async (req, res) => {
 
 exports.downloadInspectionReport = async (req, res) => {
   const { id } = req.params;
-  console.log(id)
   try {
     const report = await InspectionReport.findById(id).populate({
       path: 'warrantyDetails',
       populate: { path: 'warrantyPlanId' }
-    });
-    console.log(report)
+    }).populate('inspectorId');
+    
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    // Create a PDF document
-    const doc = new PDFDocument();
+    // Create a PDF document with better page setup
+    const doc = new PDFDocument({
+      margin: 50,
+      size: 'A4',
+      bufferPages: true,
+      autoFirstPage: true,
+      info: {
+        Title: `Inspection Report - ${id}`,
+        Author: 'Your Company Name'
+      }
+    });
+    
     let buffers = [];
-
+    
     // Capture the PDF data in a buffer
     doc.on('data', buffers.push.bind(buffers));
     doc.on('end', () => {
       const pdfBuffer = Buffer.concat(buffers);
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="inspection-report-${id}.pdf"`);
+
       res.status(200).send(pdfBuffer);
     });
-
-    // Add content to the PDF dynamically
-    doc.fontSize(25).text('Inspection Report', { align: 'center' });
-    doc.moveDown();
-
-    // Iterate over the report object and add each field to the PDF
-    for (const [key, value] of Object.entries(report.toObject())) {
-      // Format the key to be more readable
-      const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
-      doc.fontSize(12).text(`${formattedKey}: ${value}`);
-    }
-
-    // Add warranty details if available
-    if (report.warrantyDetails) {
-      doc.moveDown();
-      doc.fontSize(14).text('Warranty Details:', { underline: true });
-      const { warrantyPlanId, razorpayPaymentId } = report.warrantyDetails;
-
-      // Add warranty plan details if populated
-      if (warrantyPlanId) {
-        const planDetails = warrantyPlanId.toObject();
-        doc.fontSize(12).text(`Warranty Plan ID: ${planDetails._id}`);
-        doc.fontSize(12).text(`Plan Name: ${planDetails.planName}`);
+    
+    // Helper function to format dates nicely
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+    
+    // Helper function for adding section headers
+    const addSectionHeader = (title) => {
+      doc.moveDown(0.5);
+      doc.fillColor('#1e5180')
+         .fontSize(16)
+         .font('Helvetica-Bold')
+         .text(title, { underline: false });
+      doc.moveDown(0.5);
+      // Add a horizontal line
+      doc.strokeColor('#1e5180')
+         .lineWidth(1)
+         .moveTo(50, doc.y)
+         .lineTo(doc.page.width - 50, doc.y)
+         .stroke();
+      doc.moveDown(0.5);
+      doc.fillColor('black').fontSize(12).font('Helvetica');
+    };
+    
+    // Helper function to add a field with label and value
+    const addField = (label, value, options = {}) => {
+      const displayValue = value || 'N/A';
+      
+      if (options.highlight) {
+        doc.font('Helvetica-Bold');
       }
-      doc.fontSize(12).text(`Payment ID: ${razorpayPaymentId}`);
+      
+      // If in two-column mode
+      if (options.column) {
+        const position = doc.x;
+        doc.text(label + ':', { continued: true, width: 180 });
+        doc.text(displayValue.toString(), { link: options.link });
+        return;
+      }
+      
+      doc.text(label + ':', { continued: true });
+      doc.font('Helvetica').text(' ' + displayValue.toString(), { link: options.link });
+      
+      if (options.moveDown !== false) {
+        doc.moveDown(0.5);
+      }
+    };
+    
+    // Add a logo if you have one
+    /*
+    try {
+      doc.image('path/to/your/logo.png', 50, 45, { width: 150 });
+    } catch (error) {
+      console.error('Error loading logo:', error);
     }
-
-    // Check for photos and add them to the PDF
-    if (report.photos && report.photos.length > 0) {
-      doc.moveDown();
-      doc.fontSize(14).text('Photos:', { underline: true });
-      for (const photo of report.photos) {
-        // Assuming photo is a URL or a path to the image
-        try {
-          // Add the image to the PDF
-          doc.addPage(); // Add a new page for each photo
-          doc.image(photo, { fit: [500, 400], align: 'center', valign: 'center' }); // Adjust size and position as needed
-        } catch (error) {
-          console.error(`Error adding image ${photo}:`, error);
-          doc.text(`Error loading image: ${photo}`); // Fallback text if image fails to load
+    */
+    
+    // Add header with report title and ID
+    doc.fontSize(24)
+       .font('Helvetica-Bold')
+       .fillColor('#1e5180')
+       .text('INSPECTION REPORT', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(14)
+       .fillColor('#666666')
+       .text(`Report ID: ${id}`, { align: 'center' });
+    doc.moveDown(1);
+    
+    // Extract and organize the report data
+    const reportObj = report.toObject();
+    
+    // Determine inspection date
+    const inspectionDate = reportObj.inspectionDate || reportObj.createdAt;
+    
+    // Basic information section
+    addSectionHeader('Basic Information');
+    doc.font('Helvetica');
+    
+    // Two column layout for basic info
+    const startY = doc.y;
+    const leftColX = 50;
+    const rightColX = 300;
+    
+    // Left column
+    doc.x = leftColX;
+    doc.y = startY;
+    addField('Inspection Date', formatDate(inspectionDate));
+    addField('Inspector Name', reportObj.inspectorId.firstName || reportObj.createdBy);
+    if (reportObj.customerName) {
+      addField('Customer Name', reportObj.customerName);
+    }
+    if (reportObj.contactInfo) {
+      addField('Contact Info', reportObj.contactInfo);
+    }
+    
+    // Right column
+    doc.x = rightColX;
+    doc.y = startY;
+    if (reportObj.vehicleInfo) {
+      addField('Vehicle Make', reportObj.vehicleInfo.make);
+      addField('Vehicle Model', reportObj.vehicleInfo.model);
+      addField('Vehicle Year', reportObj.vehicleInfo.year);
+      addField('VIN', reportObj.vehicleInfo.vin);
+    } else if (reportObj.propertyInfo) {
+      addField('Property Type', reportObj.propertyInfo.type);
+      addField('Property Address', reportObj.propertyInfo.address);
+    }
+    
+    // Reset position for next section
+    doc.x = 50;
+    doc.y = Math.max(doc.y, startY + 120);
+    
+    // Inspection Details Section
+    addSectionHeader('Inspection Details');
+    
+    // Filter out metadata and internal fields
+    const detailsToSkip = ['id', '_v', 'createdAt', 'updatedAt', 'warrantyDetails', 'photos', 
+                          'inspectorName', 'customerName', 'contactInfo', 'vehicleInfo', 'propertyInfo'];
+    
+    // Process remaining fields
+    for (const [key, value] of Object.entries(reportObj)) {
+      if (!detailsToSkip.includes(key) && typeof value !== 'object') {
+        // Format the key to be more readable
+        const formattedKey = key
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase());
+        
+        addField(formattedKey, value);
+      }
+    }
+    
+    // Add inspection findings/categories if they exist
+    if (reportObj.findings || reportObj.categories) {
+      addSectionHeader('Inspection Findings');
+      
+      const findings = reportObj.findings || reportObj.categories || [];
+      
+      if (Array.isArray(findings)) {
+        findings.forEach((finding, index) => {
+          doc.font('Helvetica-Bold')
+             .text(`Finding ${index + 1}:`, { underline: true });
+          doc.font('Helvetica');
+          
+          if (typeof finding === 'object') {
+            for (const [key, value] of Object.entries(finding)) {
+              if (key !== '_id') {
+                const formattedKey = key
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, str => str.toUpperCase());
+                
+                addField(formattedKey, value);
+              }
+            }
+          } else {
+            doc.text(finding);
+          }
+          doc.moveDown();
+        });
+      } else if (typeof findings === 'object') {
+        for (const [category, items] of Object.entries(findings)) {
+          doc.font('Helvetica-Bold')
+             .text(category, { underline: true });
+          doc.font('Helvetica');
+          
+          if (Array.isArray(items)) {
+            items.forEach(item => {
+              doc.text(`${item}`);
+            });
+          } else if (typeof items === 'object') {
+            for (const [key, value] of Object.entries(items)) {
+              const formattedKey = key
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase());
+              
+              addField(formattedKey, value);
+            }
+          }
+          doc.moveDown();
         }
       }
     }
-
+    
+    // Add warranty details if available
+    if (report.warrantyDetails) {
+      addSectionHeader('Warranty Information');
+      
+      const { warrantyPlanId, razorpayPaymentId } = report.warrantyDetails;
+      
+      // Add warranty plan details if populated
+      if (warrantyPlanId) {
+        const planDetails = warrantyPlanId.toObject();
+        addField('Plan Name', planDetails.planName, { highlight: true });
+        addField('Plan ID', planDetails._id);
+        
+        if (planDetails.coverage) {
+          addField('Coverage', planDetails.coverage);
+        }
+        
+        if (planDetails.duration) {
+          addField('Duration', `${planDetails.duration} ${planDetails.durationUnit || 'days'}`);
+        }
+        
+        if (planDetails.price) {
+          addField('Price', `₹${planDetails.price.toLocaleString()}`);
+        }
+      }
+      
+      addField('Payment ID', razorpayPaymentId);
+      
+      if (report.warrantyDetails.startDate) {
+        addField('Warranty Start Date', formatDate(report.warrantyDetails.startDate));
+      }
+      
+      if (report.warrantyDetails.endDate) {
+        addField('Warranty End Date', formatDate(report.warrantyDetails.endDate));
+      }
+    }
+    
+    // Add summary/notes section if available
+    if (reportObj.summary || reportObj.notes || reportObj.conclusion) {
+      addSectionHeader('Summary & Notes');
+      doc.text(reportObj.summary || reportObj.notes || reportObj.conclusion);
+      doc.moveDown();
+    }
+    
+    
+    
+    // Add footer with page numbers
+    let pageCount = doc.bufferedPageRange().count;
+    for (let i = 0; i < pageCount; i++) {
+      doc.switchToPage(i);
+      
+      // Add page number
+      doc.fontSize(10)
+         .fillColor('#999999')
+         .text(
+           `Page ${i + 1} of ${pageCount}`,
+           50,
+           doc.page.height - 50,
+           { align: 'center' }
+         );
+      
+      // Add company info in footer
+      doc.fontSize(10)
+         .fillColor('#999999')
+         .text(
+           'Your Company Name | contact@company.com | +1-234-567-8901',
+           50,
+           doc.page.height - 35,
+           { align: 'center' }
+         );
+    }
+    
     doc.end(); // Finalize the PDF and end the stream
   } catch (error) {
     console.error("Error downloading inspection report:", error);
-    res.status(500).json({ message: "Error downloading inspection report", error });
+    res.status(500).json({ message: "Error downloading inspection report", error: error.message });
   }
-}
+};
 
 exports.getInspectionReportsForShopOwner = async (req, res) => {
   try {

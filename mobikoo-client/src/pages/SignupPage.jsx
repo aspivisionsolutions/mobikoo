@@ -272,13 +272,6 @@ const SignupPage = () => {
               {isLoading ? 'Creating account...' : 'Sign up'}
             </button>
 
-            <div className="text-center text-sm">
-              <span className="text-gray-600">Already have an account?</span>
-              {' '}
-              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign in instead
-              </Link>
-            </div>
           </div>
         </form>
       </div>

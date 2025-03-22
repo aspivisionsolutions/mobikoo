@@ -183,14 +183,6 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* Sign Up Link */}
-          <div className="text-center text-sm">
-            <span className="text-gray-600">Don't have an account?</span>
-            {' '}
-            <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              Create one now
-            </a>
-          </div>
         </form>
       </div>
     </div>
