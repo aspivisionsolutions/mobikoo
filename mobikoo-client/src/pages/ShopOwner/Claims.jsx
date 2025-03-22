@@ -8,6 +8,7 @@ const Claims = () => {
     const [showClaimForm, setShowClaimForm] = useState(false);
     const [claims, setClaims] = useState([]);
     const [selectedClaim, setSelectedClaim] = useState(null);
+    const [isSubmitting , setIsSubmitting] = useState(false);
 
     const fetchClaims = async () => {
         try {
@@ -41,6 +42,7 @@ const Claims = () => {
 
             console.log('Claim request submitted:', response.data);
             setClaims([...claims, response.data.claim]);
+            setIsSubmitting(false);
 
         } catch (error) {
             console.error('Error submitting claim:', error);
@@ -94,7 +96,7 @@ const Claims = () => {
     return (
         <div className="bg-white rounded-lg shadow">
             {showClaimForm ? (
-                <ClaimForm onSubmit={handleClaimSubmit} onCancel={handleCloseForm} />
+                <ClaimForm onSubmit={handleClaimSubmit} onCancel={handleCloseForm} isSubmitting={isSubmitting} setIsSubmitting={setIsSubmitting} />
             ) : (
                 <>
                     <div className="p-6 border-b border-gray-200">

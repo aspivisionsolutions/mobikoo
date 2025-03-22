@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiArrowLeft, FiArrowRight, FiCheck, FiUpload, FiX } from 'react-icons/fi';
 
-const ClaimForm = ({ onSubmit, onCancel }) => {
+const ClaimForm = ({ onSubmit, onCancel, isSubmitting, setIsSubmitting }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     customerName: '',
@@ -139,7 +139,9 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateStep()) return;
-  
+    
+    setIsSubmitting(true);
+
     const formDataToSend = new FormData();
   
     // Append text fields
@@ -415,6 +417,7 @@ const ClaimForm = ({ onSubmit, onCancel }) => {
           ) : (
             <button
               type="submit"
+              disabled={isSubmitting}
               className="flex items-center px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
             >
               Submit Claim

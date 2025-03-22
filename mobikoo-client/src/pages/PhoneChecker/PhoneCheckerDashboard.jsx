@@ -45,6 +45,7 @@ const PhoneCheckerDashboard = () => {
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
   const [warrantyPlan, setWarrantyPlan] = useState(null);
   const [reportForWarranty, setReportForWarranty] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add state for submission status
 
   useEffect(() => {
     fetchRequests();
@@ -191,6 +192,8 @@ const PhoneCheckerDashboard = () => {
       return;
     }
 
+    setIsSubmitting(true); // Set submission status to true
+
     const formDataToSend = new FormData();
     Object.keys(formData).forEach(key => {
       if (key === 'photos' && Array.isArray(formData.photos)) {
@@ -207,12 +210,11 @@ const PhoneCheckerDashboard = () => {
     });
 
     console.log("FormDataToSend entries:", [...formDataToSend.entries()]);
-    console.log(formData)
+    console.log(formData);
     try {
       await axios.post('http://localhost:5000/api/inspection/submitReport', formDataToSend, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
-
         },
       });
 
@@ -222,6 +224,8 @@ const PhoneCheckerDashboard = () => {
     } catch (error) {
       toast.error('Failed to submit inspection');
       console.error('Error submitting inspection:', error);
+    } finally {
+      setIsSubmitting(false); // Reset submission status
     }
   };
 
@@ -708,6 +712,7 @@ const PhoneCheckerDashboard = () => {
                 </button>
                 <button
                   type="submit"
+                  disabled={isSubmitting} // Disable the button when submitting
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   Submit Inspection
