@@ -1,37 +1,59 @@
 import React, { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
-import customers from "../assets/customers.json"; // Import JSON file
+import axios from "axios";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 const SalesChart = () => {
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    const countWarrantiesByMonth = () => {
-      const monthlyData = {};
+    const fetchCustomers = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/user/shop-owner/customers",
+          {
+            headers: { Authorization: `${localStorage.getItem("token")}` },
+          }
+        );
+        const customers = response.data; // API response
+        const monthlyData = {};
 
-      customers.forEach((customer) => {
-        const issueDate = new Date(customer.warrantyDetails.issueDate);
-        const month = issueDate.toLocaleString("default", { month: "short", year: "numeric" });
+        customers.forEach((customer) => {
+          const issueDate = new Date(customer.warrantyDetails.issueDate);
+          const month = issueDate.toLocaleString("default", {
+            month: "short",
+            year: "numeric",
+          });
 
-        if (!monthlyData[month]) {
-          monthlyData[month] = 0;
-        }
-        monthlyData[month]++;
-      });
+          if (!monthlyData[month]) {
+            monthlyData[month] = 0;
+          }
+          monthlyData[month]++;
+        });
 
-      const formattedData = Object.entries(monthlyData)
-        .map(([month, count]) => ({
-          month,
-          count,
-          timestamp: Date.parse(`01 ${month}`), // Convert month string to timestamp for sorting
-        }))
-        .sort((a, b) => a.timestamp - b.timestamp) // Sort months chronologically
-        .map(({ month, count }) => ({ month, count })); // Remove timestamp after sorting
+        const formattedData = Object.entries(monthlyData)
+          .map(([month, count]) => ({
+            month,
+            count,
+            timestamp: Date.parse(`01 ${month}`), // Convert month string to timestamp for sorting
+          }))
+          .sort((a, b) => a.timestamp - b.timestamp) // Sort months chronologically
+          .map(({ month, count }) => ({ month, count })); // Remove timestamp after sorting
 
-      setChartData(formattedData);
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error fetching customers: ", error);
+      }
     };
 
-    countWarrantiesByMonth();
+    fetchCustomers();
   }, []);
 
   return (
