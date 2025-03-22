@@ -22,7 +22,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/admin/signup/createUser" element={localStorage.getItem("userRole") === 'admin' ? <SignupPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/signup/createUser" element={ <SignupPage /> } />
         <Route path="/login" element={<LoginPage />} />
         
         {/* Phone Checker Routes */}
