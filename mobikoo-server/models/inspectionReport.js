@@ -21,7 +21,7 @@ const inspectionReportSchema = new mongoose.Schema({
     digitalSignature: { type: Boolean, required: true },
     grade: { type: String, required: true },
     fineStatus:{type:String,default:"Not-Fined",enum:["Fined","Not-Fined"]},
-    warrantyStatus:{type:String,default:"not-purchased",enum:["not-purchased","purchased","activated"]},
+    warrantyStatus:{type:String,default:"not-purchased",enum:["not-purchased","purchased","processing","activated"]},
     warrantyDetails: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'IssuedWarranties'

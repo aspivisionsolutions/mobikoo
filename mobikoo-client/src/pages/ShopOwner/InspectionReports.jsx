@@ -229,6 +229,12 @@ const InspectionReports = () => {
                             <FiShield className="h-5 w-5 mr-1" />
                             Activated
                           </span>
+                        ) : 
+                           report.warrantyStatus === 'processing' ? (
+                          <span className="px-3 py-1.5 text-yellow-600 flex items-center border border-yellow-600 rounded-md bg-yellow-50">
+                            <FiShield className="h-5 w-5 mr-1" />
+                            Processing
+                          </span>
                         ) : (
                           <span className="px-3 py-1.5 text-red-600 flex items-center border border-red-600 rounded-md bg-red-50">
                             <FiShield className="h-5 w-5 mr-1" />

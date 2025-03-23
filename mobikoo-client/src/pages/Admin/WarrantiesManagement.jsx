@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiDownload, FiEye, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
+import { FiDownload, FiEye, FiRefreshCw, FiArrowLeft, FiCheckSquare } from 'react-icons/fi';
 import WarrantyDetails from '../../components/WarrantyDetails';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const WarrantiesManagement = () => {
     const [warranties, setWarranties] = useState([]);
@@ -9,16 +10,15 @@ const WarrantiesManagement = () => {
     const [error, setError] = useState(null);
     const [selectedWarranty, setSelectedWarranty] = useState(null);
     const [viewingDetails, setViewingDetails] = useState(false);
+    const navigate = useNavigate(); // Initialize useNavigate
 
     const fetchWarranties = async () => {
         setLoading(true);
         setError(null);
-
         try {
             const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
                 headers: { Authorization: `${localStorage.getItem('token')}` }
             });
-            console.log(response.data)
             setWarranties(response.data.data);
         } catch (error) {
             console.error('Error fetching warranties:', error);
@@ -34,23 +34,37 @@ const WarrantiesManagement = () => {
 
     const handleWarrantyDownload = async (warrantyId) => {
         try {
-            console.log(warrantyId)
-            const response = await axios.get(`http://localhost:5000/api/warranty/download-warranty/${warrantyId}`, {
-                responseType: 'blob', // Important for downloading files
+            const response = await axios.get(`http://localhost:5000/warranty/download-warranty/${warrantyId}`, {
+                responseType: 'blob',
                 headers: { Authorization: `${localStorage.getItem('token')}` }
             });
-
-            // Create a URL for the PDF file
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `warranty_${warrantyId}.pdf`); // Set the file name
+            link.setAttribute('download', `warranty_${warrantyId}.pdf`);
             document.body.appendChild(link);
             link.click();
             link.remove();
         } catch (error) {
             console.error('Error downloading warranty:', error);
             alert('Failed to download warranty. Please try again later.');
+        }
+    };
+
+    const handleActivateWarranty = async (warranty) => {
+        console.log(warranty._id)
+        try {
+            const response = await axios.put(`http://localhost:5000/api/warranty/confirm/${warranty._id}`, {
+                headers: { Authorization: `${localStorage.getItem('token')}` }
+            });
+            if (response.status === 200) {
+                alert('Warranty activated successfully!');
+                fetchWarranties();
+            } else {
+                alert(`Failed to activate warranty: ${response.data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error activating warranty:', error);
         }
     };
 
@@ -66,40 +80,38 @@ const WarrantiesManagement = () => {
 
     const StatusBadge = ({ status }) => {
         let bgColor = '';
-        
-        switch((status || '').toLowerCase()) {
-          case 'activated':
-            bgColor = 'bg-green-100 text-green-800';
-            break;
-          case 'purchased':
-            bgColor = 'bg-yellow-100 text-yellow-800';
-            break;
-          case 'not-purchased':
-            bgColor = 'bg-red-100 text-red-800';
-            break;
-          default:
-            bgColor = 'bg-gray-100 text-gray-800';
+        switch ((status || '').toLowerCase()) {
+            case 'activated':
+                bgColor = 'bg-green-100 text-green-800';
+                break;
+            case 'purchased':
+                bgColor = 'bg-yellow-100 text-yellow-800';
+                break;
+            case 'not-purchased':
+                bgColor = 'bg-red-100 text-red-800';
+                break;
+            case 'processing':
+                bgColor = 'bg-blue-100 text-blue-800';
+                break;
+            default:
+                bgColor = 'bg-gray-100 text-gray-800';
         }
-        
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor}`}>
-            {status || 'Unknown'}
-          </span>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor}`}>
+                {status || 'Unknown'}
+            </span>
         );
-      };
+    };
 
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden p-6">
             {viewingDetails ? (
                 <div>
-                <button 
-                  onClick={closeDetails} 
-                  className="flex items-center px-4 py-2 mb-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300"
-                >
-                  <FiArrowLeft className="mr-2" /> Back to List
-                </button>
-                <WarrantyDetails warranty={selectedWarranty} onClose={closeDetails} />
-              </div>
+                    <button onClick={closeDetails} className="flex items-center px-4 py-2 mb-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300">
+                        <FiArrowLeft className="mr-2" /> Back to List
+                    </button>
+                    <WarrantyDetails warranty={selectedWarranty} onClose={closeDetails} />
+                </div>
             ) : (
                 <>
                     <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -109,10 +121,8 @@ const WarrantiesManagement = () => {
                             Refresh
                         </button>
                     </div>
-
                     {loading && <div className="p-6 text-center">Loading issued warranties...</div>}
                     {error && <div className="p-6 text-center text-red-600">{error}</div>}
-
                     {!loading && !error && (
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
@@ -130,13 +140,13 @@ const WarrantiesManagement = () => {
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {warranties.length > 0 ? (
                                         warranties.map((warranty) => (
-                                            <tr key={warranty.id} className="hover:bg-gray-50">
+                                            <tr key={warranty._id} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.deviceModel}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.imeiNumber}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.inspectorId.firstName} {warranty.inspectionReport.inspectorId.lastName}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.grade}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.warrantyPlanId?.warranty_months || "N/A"} months</td>
-                                                <td className={`px-6 py-4 whitespace-nowrap text-sm`}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                     <StatusBadge status={warranty.inspectionReport.warrantyStatus} />
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -147,13 +157,18 @@ const WarrantiesManagement = () => {
                                                         <button className="p-1 rounded-full text-green-600 hover:bg-green-100" title="Download Warranty" onClick={() => handleWarrantyDownload(warranty._id)}>
                                                             <FiDownload size={18} />
                                                         </button>
+                                                        {warranty.inspectionReport.warrantyStatus.toLowerCase() === 'processing' && (
+                                                            <button className="p-1 rounded-full text-green-600 hover:bg-green-100" title="Activate Warranty" onClick={() => handleActivateWarranty(warranty)}>
+                                                                <FiCheckSquare size={18} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">No issued warranties found</td>
+                                            <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">No issued warranties found</td>
                                         </tr>
                                     )}
                                 </tbody>

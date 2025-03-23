@@ -5,8 +5,10 @@ const {
     activateWarranty,
     getAllIssuedWarranties,
     claimWarranty,
-    downloadWarrantyPDF
+    downloadWarrantyPDF,
+    confirmWarranty
 } = require('../controllers/warrantyController');
+
 const { protect, roleMiddleware } = require('../middlewares/authMiddleware');
 const ActivityLog = require('../models/activityLog'); // ✅ Import the Activity Log model
 
@@ -18,17 +20,16 @@ router.get('/plans', getAllWarrantyPlans);
 
 // Route to activate warranty
 router.post('/activate-warranty', protect, roleMiddleware(['shop-owner']), activateWarranty);
-
 // Route to fetch all issued warranties
 router.get('/issued-warranties', getAllIssuedWarranties);
-
 router.post('/claim-warranty', protect, roleMiddleware(['customer']), claimWarranty);
 
+router.put('/confirm/:warrantyId',confirmWarranty);
+router.get('/download-warranty/:warrantyId', protect, downloadWarrantyPDF);
 
 module.exports = router;
 
 // Route to download warranty PDF
-router.get('/download-warranty/:warrantyId', protect, downloadWarrantyPDF);
 
 
 

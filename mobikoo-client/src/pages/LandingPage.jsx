@@ -25,6 +25,8 @@ export function LandingPage() {
   const cardCRef = useRef(null);
   const cardDRef = useRef(null);
   const cardERef = useRef(null);
+  const gridRef = useRef(null);
+  const featuresSectionRef = useRef(null);
 
   useEffect(() => {
     const cardA = cardARef.current;
@@ -32,30 +34,110 @@ export function LandingPage() {
     const cardC = cardCRef.current;
     const cardD = cardDRef.current;
     const cardE = cardERef.current;
+    const grid = gridRef.current;
+    const featuresSection = featuresSectionRef.current;
 
-    if (cardA && cardB && cardC && cardD && cardE) {
-      // Card D animation
-      gsap.to(cardD, {
-        yPercent: -100, // Move up by 100% of its height
+    if (cardA && cardB && cardC && cardD && cardE && grid && featuresSection) {
+      // Set initial state for cards D and E
+      gsap.set([cardD, cardE], { yPercent: 100, opacity: 0 });
+
+      // Animate cards D and E together
+      ScrollTrigger.batch([cardD, cardE], {
+        start: "top bottom-=100", // Start when the top of the first card hits the bottom of the viewport
+        onEnter: (batch) => {
+          gsap.to(batch, {
+            yPercent: 0, // Slide up to their normal position
+            opacity: 1, // Fade in
+            duration: 0.8,
+            ease: "power2.out",
+            stagger: 0.2, // Stagger the animation slightly
+          });
+        },
+        onLeaveBack: (batch) => {
+          gsap.to(batch, {
+            yPercent: 100, // Slide down below the viewport
+            opacity: 0, // Fade out
+            duration: 0.8,
+            ease: "power2.in",
+            stagger: 0.2,
+          });
+        },
+        // markers: true,
+      });
+    }
+  }, []);
+
+
+  const seamlessSectionRef = useRef(null);
+  const firstRowRef = useRef(null);
+  const secondRowRef = useRef(null);
+
+  useEffect(() => {
+    // ... (rest of your useEffect code - card animations, etc.)
+    const seamlessSection = seamlessSectionRef.current;
+    const firstRow = firstRowRef.current;
+    const secondRow = secondRowRef.current;
+
+    if (seamlessSection && firstRow && secondRow) {
+      gsap.to(firstRow, {
+        xPercent: 10,
         scrollTrigger: {
-          trigger: cardD,
-          start: 'top bottom', // Start when the top of cardD hits the bottom of the viewport
-          end: 'bottom top', // End when the bottom of cardD hits the top of the viewport
-          scrub: true, // Smoothly animate while scrolling
-          // markers: true, // For debugging
+          trigger: seamlessSection,
+          start: 'top center',
+          end: 'bottom center',
+          scrub: 1.5,
+          // markers: true,
         },
       });
 
-      // Card E animation
-      gsap.to(cardE, {
-        yPercent: -100, // Move up by 100% of its height
+      gsap.to(secondRow, {
+        xPercent: -10,
         scrollTrigger: {
-          trigger: cardE,
-          start: 'top bottom',
-          end: 'bottom top',
-          scrub: true,
+          trigger: seamlessSection,
+          start: 'top center',
+          end: 'bottom center',
+          scrub: 1.5,
           // markers: true,
         },
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const cardA = cardARef.current;
+    const cardB = cardBRef.current;
+    const cardC = cardCRef.current;
+    const cardD = cardDRef.current;
+    const cardE = cardERef.current;
+    const grid = gridRef.current;
+    const featuresSection = featuresSectionRef.current;
+
+    if (cardA && cardB && cardC && cardD && cardE && grid && featuresSection) {
+      // Set initial state for cards D and E
+      gsap.set([cardD, cardE], { yPercent: 100, opacity: 0 });
+
+      // Animate cards D and E together
+      ScrollTrigger.batch([cardD, cardE], {
+        start: "top bottom-=100", // Start when the top of the first card hits the bottom of the viewport
+        onEnter: (batch) => {
+          gsap.to(batch, {
+            yPercent: 0, // Slide up to their normal position
+            opacity: 1, // Fade in
+            duration: 0.8,
+            ease: "power2.out",
+            stagger: 0.2, // Stagger the animation slightly
+          });
+        },
+        onLeaveBack: (batch) => {
+          gsap.to(batch, {
+            yPercent: 100, // Slide down below the viewport
+            opacity: 0, // Fade out
+            duration: 0.8,
+            ease: "power2.in",
+            stagger: 0.2,
+          });
+        },
+        // markers: true,
       });
     }
   }, []);
@@ -190,60 +272,67 @@ export function LandingPage() {
         </div>
       </main>
 
-      <section className='px-6 py-16 bg-black'>
+     <section ref={featuresSectionRef} className='px-6 mt-20 py-16 bg-black'>
         <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
           {/* Feature Card A */}
           <div
             ref={cardARef}
             className='md:col-span-2 bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl overflow-hidden relative p-6 h-96'
           >
+            <div className='absolute inset-0 z-0 opacity-20'>
+              <img
+                src='/featureone.jpg' // Path to your image in the public folder
+                alt='Feature A'
+                className='w-full h-full object-cover'
+              />
+            </div>
             {/* ... (Card A content) */}
             <div className='absolute top-6 left-6 text-4xl font-light text-gray-400'>
-                A
-              </div>
+              A
+            </div>
 
-              <div className='mt-12'>
-                <h3 className='text-xl font-bold mb-2 underline'>
-                  Affordable Plans
-                </h3>
-                <p className='text-gray-300'>
-                  offers budget-friendly insurance options to ensure that
-                  everyone can afford comprehensive mobile protection.
-                </p>
-              </div>
+            <div className='mt-12'>
+              <h3 className='text-xl font-bold mb-2 underline'>
+                Affordable Plans
+              </h3>
+              <p className='font-extrabold z-10 text-white'>
+                offers budget-friendly insurance options to ensure that everyone
+                can afford comprehensive mobile protection.
+              </p>
+            </div>
 
-              <div className='absolute bottom-6 left-6'>
-                <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
-                  <Activity className='h-6 w-6 text-white' />
-                </div>
+            <div className='absolute bottom-6 left-6'>
+              <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
+                <Activity className='h-6 w-6 text-white' />
               </div>
+            </div>
 
-              <div className='absolute inset-0 z-0 opacity-20'>
-                <div className='w-full h-full bg-black'></div>
-                <div className='absolute inset-0 flex items-center justify-center'>
-                  <svg
-                    width='200'
-                    height='200'
-                    viewBox='0 0 200 200'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='opacity-30'
-                  >
-                    <path
-                      d='M80 40 L120 40 L120 160 L80 160 Z'
-                      stroke='white'
-                      strokeWidth='2'
-                    />
-                    <path d='M50 70 L150 70' stroke='white' strokeWidth='2' />
-                    <path d='M50 140 L150 140' stroke='white' strokeWidth='2' />
-                    <path
-                      d='M90 170 L110 170 L110 180 L90 180 Z'
-                      stroke='white'
-                      strokeWidth='2'
-                    />
-                  </svg>
-                </div>
+            <div className='absolute inset-0 z-0 opacity-10'>
+              <div className='w-full h-full bg-black'></div>
+              <div className='absolute inset-0 flex items-center justify-center'>
+                <svg
+                  width='200'
+                  height='200'
+                  viewBox='0 0 200 200'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='opacity-30'
+                >
+                  <path
+                    d='M80 40 L120 40 L120 160 L80 160 Z'
+                    stroke='white'
+                    strokeWidth='2'
+                  />
+                  <path d='M50 70 L150 70' stroke='white' strokeWidth='2' />
+                  <path d='M50 140 L150 140' stroke='white' strokeWidth='2' />
+                  <path
+                    d='M90 170 L110 170 L110 180 L90 180 Z'
+                    stroke='white'
+                    strokeWidth='2'
+                  />
+                </svg>
               </div>
+            </div>
           </div>
 
           {/* Feature Card B */}
@@ -251,44 +340,51 @@ export function LandingPage() {
             ref={cardBRef}
             className='bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl overflow-hidden relative p-6 h-96'
           >
+             <div className='absolute inset-0 z-0 opacity-20'>
+              <img
+                src='/featuretwo.jpg' // Path to your image in the public folder
+                alt='Feature A'
+                className='w-full h-full object-cover'
+              />
+            </div>
             {/* ... (Card B content) */}
             <div className='absolute top-6 left-6 text-4xl font-light text-gray-400'>
-                B
-              </div>
+              B
+            </div>
 
-              <div className='mt-12'>
-                <h3 className='text-xl font-bold mb-2 underline'>
-                  Easy Claims Process
-                </h3>
-                <p className='text-gray-300'>
-                  We have designed a straightforward and efficient claims
-                  process to make it easy for customers to get their issues
-                  resolved quickly.
-                </p>
-              </div>
+            <div className='mt-12'>
+              <h3 className='text-xl font-bold mb-2 underline'>
+                Easy Claims Process
+              </h3>
+              <p className='font-bold text-white'>
+                We have designed a straightforward and efficient claims process
+                to make it easy for customers to get their issues resolved
+                quickly.
+              </p>
+            </div>
 
-              <div className='absolute bottom-6 left-6'>
-                <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
-                  <svg
-                    className='h-6 w-6 text-white'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                  >
-                    <rect
-                      x='4'
-                      y='4'
-                      width='16'
-                      height='16'
-                      rx='2'
-                      stroke='currentColor'
-                      strokeWidth='2'
-                    />
-                    <circle cx='8' cy='8' r='1' fill='currentColor' />
-                    <circle cx='16' cy='8' r='1' fill='currentColor' />
-                  </svg>
-                </div>
+            <div className='absolute bottom-6 left-6'>
+              <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
+                <svg
+                  className='h-6 w-6 text-white'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  <rect
+                    x='4'
+                    y='4'
+                    width='16'
+                    height='16'
+                    rx='2'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                  />
+                  <circle cx='8' cy='8' r='1' fill='currentColor' />
+                  <circle cx='16' cy='8' r='1' fill='currentColor' />
+                </svg>
               </div>
+            </div>
           </div>
 
           {/* Feature Card C */}
@@ -296,82 +392,95 @@ export function LandingPage() {
             ref={cardCRef}
             className='bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl overflow-hidden relative p-6 h-96'
           >
+             <div className='absolute inset-0 z-0 opacity-20'>
+              <img
+                src='/featurethree.jpg' // Path to your image in the public folder
+                alt='Feature A'
+                className='w-full h-full object-cover'
+              />
+            </div>
             {/* ... (Card C content) */}
             <div className='absolute top-6 left-6 text-4xl font-light text-gray-400'>
-                C
-              </div>
+              C
+            </div>
 
-              <div className='mt-12'>
-                <h3 className='text-xl font-bold mb-2 underline'>
-                  Fast Activation
-                </h3>
-                <p className='text-gray-300'>
-                  Insurance coverage activates within 48 hours of purchase,
-                  ensuring that your mobile is protected quickly.
-                </p>
-              </div>
+            <div className='mt-12'>
+              <h3 className='text-xl font-bold mb-2 underline'>
+                Fast Activation
+              </h3>
+              <p className='font-bold text-white'>
+                Insurance coverage activates within 48 hours of purchase,
+                ensuring that your mobile is protected quickly.
+              </p>
+            </div>
 
-              <div className='absolute bottom-6 left-6'>
-                <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
-                  <ArrowDownRight className='h-6 w-6 text-white' />
-                </div>
+            <div className='absolute bottom-6 left-6'>
+              <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
+                <ArrowDownRight className='h-6 w-6 text-white' />
               </div>
+            </div>
           </div>
         </div>
 
         {/* Bottom Row (Partial) */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+        <div ref={gridRef} className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
           {/* Feature Card D (Partial) */}
           <div
             ref={cardDRef}
             className='md:col-span-1 bg-gradient-to-br from-gray-900 to-gray-800 rounded-t-3xl overflow-hidden relative p-6 h-96'
           >
+             <div className='absolute inset-0 z-0 opacity-20'>
+              <img
+                src='/featurefour.jpg' // Path to your image in the public folder
+                alt='Feature A'
+                className='w-full h-full object-cover'
+              />
+            </div>
             {/* ... (Card D content) */}
             <div className='absolute top-6 left-6 text-4xl font-light text-gray-400'>
-                D
-              </div>
-              <div className='mt-12'>
-                <h3 className='text-xl font-bold mb-2 underline'>
-                  Affordable Plans
-                </h3>
-                <p className='text-gray-300'>
-                  offers budget-friendly insurance options to ensure that
-                  everyone can afford comprehensive mobile protection.
-                </p>
-              </div>
+              D
+            </div>
+            <div className='mt-12'>
+              <h3 className='text-xl font-bold mb-2 underline'>
+                Transparent Terms
+              </h3>
+              <p className='text-white font-bold'>
+                Our insurance terms and conditions are clear and easy to understand, with no hidden clauses.
+              </p>
+            </div>
 
-              <div className='absolute bottom-6 left-6'>
-                <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
-                  <Activity className='h-6 w-6 text-white' />
-                </div>
+            <div className='absolute bottom-6 left-6'>
+              <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
+                <Activity className='h-6 w-6 text-white' />
               </div>
+            </div>
 
-              <div className='absolute inset-0 z-0 opacity-20'>
-                <div className='w-full h-full bg-black'></div>
-                <div className='absolute inset-0 flex items-center justify-center'>
-                  <svg
-                    width='200'
-                    height='200'
-                    viewBox='0 0 200 200'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='opacity-30'
-                  >
-                    <path
-                      d='M80 40 L120 40 L120 160 L80 160 Z'
-                      stroke='white'
-                      strokeWidth='2'
-                    />
-                    <path d='M50 70 L150 70' stroke='white' strokeWidth='2' />
-                    <path d='M50 140 L150 140' stroke='white' strokeWidth='2' />
-                    <path
-                      d='M90 170 L110 170 L110 180 L90 180 Z'
-                      stroke='white'
-                      strokeWidth='2'
-                    />
-                  </svg>
-                </div>
+            <div className='absolute inset-0 z-0 opacity-10'>
+              <div className='w-full h-full bg-black'></div>
+              <div className='absolute inset-0 flex items-center justify-center'>
+                <svg
+                  width='200'
+                  height='200'
+                  viewBox='0 0 200 200'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='opacity-30'
+                >
+                  <path
+                    d='M80 40 L120 40 L120 160 L80 160 Z'
+                    stroke='white'
+                    strokeWidth='2'
+                  />
+                  <path d='M50 70 L150 70' stroke='white' strokeWidth='2' />
+                  <path d='M50 140 L150 140' stroke='white' strokeWidth='2' />
+                  <path
+                    d='M90 170 L110 170 L110 180 L90 180 Z'
+                    stroke='white'
+                    strokeWidth='2'
+                  />
+                </svg>
               </div>
+            </div>
           </div>
 
           {/* Feature Card E (Partial) */}
@@ -379,79 +488,82 @@ export function LandingPage() {
             ref={cardERef}
             className='md:col-span-1 bg-gradient-to-br from-gray-900 to-gray-800 rounded-t-3xl overflow-hidden relative p-6 h-96'
           >
+             <div className='absolute inset-0 z-0 opacity-20'>
+              <img
+                src='/featurefive.jpg' // Path to your image in the public folder
+                alt='Feature A'
+                className='w-full h-full object-cover'
+              />
+            </div>
             {/* ... (Card E content) */}
             <div className='absolute top-6 left-6 text-4xl font-light text-gray-400'>
-                E
-              </div>
-              <div className='mt-12'>
-                <h3 className='text-xl font-bold mb-2 underline'>
-                  Affordable Plans
-                </h3>
-                <p className='text-gray-300'>
-                  offers budget-friendly insurance options to ensure that
-                  everyone can afford comprehensive mobile protection.
-                </p>
-              </div>
+              E
+            </div>
+            <div className='mt-12'>
+              <h3 className='text-xl font-bold mb-2 underline'>
+                High-Quality Service
+              </h3>
+              <p className='font-bold text-white'>
+                We provide professional repair and replacement services to maintain the performance and longevity of your device.
+              </p>
+            </div>
 
-              <div className='absolute bottom-6 left-6'>
-                <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
-                  <Activity className='h-6 w-6 text-white' />
-                </div>
+            <div className='absolute bottom-6 left-6'>
+              <div className='bg-indigo-600 h-12 w-12 rounded-lg flex items-center justify-center'>
+                <Activity className='h-6 w-6 text-white' />
               </div>
+            </div>
 
-              <div className='absolute inset-0 z-0 opacity-20'>
-                <div className='w-full h-full bg-black'></div>
-                <div className='absolute inset-0 flex items-center justify-center'>
-                  <svg
-                    width='200'
-                    height='200'
-                    viewBox='0 0 200 200'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='opacity-30'
-                  >
-                    <path
-                      d='M80 40 L120 40 L120 160 L80 160 Z'
-                      stroke='white'
-                      strokeWidth='2'
-                    />
-                    <path d='M50 70 L150 70' stroke='white' strokeWidth='2' />
-                    <path d='M50 140 L150 140' stroke='white' strokeWidth='2' />
-                    <path
-                      d='M90 170 L110 170 L110 180 L90 180 Z'
-                      stroke='white'
-                      strokeWidth='2'
-                    />
-                  </svg>
-                </div>
+            <div className='absolute inset-0 z-0 opacity-10'>
+              <div className='w-full h-full bg-black'></div>
+              <div className='absolute inset-0 flex items-center justify-center'>
+                <svg
+                  width='200'
+                  height='200'
+                  viewBox='0 0 200 200'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='opacity-30'
+                >
+                  <path
+                    d='M80 40 L120 40 L120 160 L80 160 Z'
+                    stroke='white'
+                    strokeWidth='2'
+                  />
+                  <path d='M50 70 L150 70' stroke='white' strokeWidth='2' />
+                  <path d='M50 140 L150 140' stroke='white' strokeWidth='2' />
+                  <path
+                    d='M90 170 L110 170 L110 180 L90 180 Z'
+                    stroke='white'
+                    strokeWidth='2'
+                  />
+                </svg>
               </div>
+            </div>
           </div>
         </div>
       </section>
 
 
       {/* Seamless User Experience Section */}
-      <section className='px-6 py-16 bg-black'>
-        <div className='relative mb-12'>
-          <div className='h-48 w-full overflow-hidden rounded-lg relative'>
-            <div className='absolute inset-0 z-0 opacity-40'>
-              <img
-                src='/api/placeholder/1200/300'
-                alt='Keyboard background'
-                className='w-full h-full object-cover'
-              />
-            </div>
-            <div className='relative z-10 p-8 flex items-center h-full'>
-              <h2 className='text-4xl md:text-5xl font-light text-white'>
-                A Seamless User Experience
+      <section ref={seamlessSectionRef} className= 'overflow-hidden px-6 py-16 bg-black'>
+        {/* ... (rest of your seamless section code - header, etc.) */}
+        <div className='relative w-full h-48 mb-16 rounded-lg overflow-hidden'>
+            <img
+              src='/sux.jpg' // Path to your image in the public folder
+              alt='Seamless User Experience'
+              className='w-full h-full object-cover opacity-30'
+            />
+            <div className='absolute inset-0 bg-opacity-30'></div>
+            <div className='absolute inset-0 flex items-center px-8'>
+              <h2 className='text-5xl font-light text-white'> {/* Increased text size */}
+                Seamless User Experience
               </h2>
             </div>
           </div>
-        </div>
-
         {/* Feature Grid - First Row */}
-        <div className='flex justify-start w-full'>
-          <div className='w-[90%] grid grid-cols-1 md:grid-cols-3 gap-6 mb-6'>
+        <div ref={firstRowRef} className='flex justify-start w-full'>
+          <div className='w-[90%] grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 mb-6'>
             {/* Feature 1 */}
             <div className='rounded-lg overflow-hidden'>
               <div className='bg-gray-800 py-3 px-4'>
@@ -489,7 +601,7 @@ export function LandingPage() {
         </div>
 
         {/* Feature Grid - Second Row */}
-        <div className='flex justify-end w-full'>
+        <div ref={secondRowRef} className='flex justify-end w-full'>
           <div className='w-[90%] grid grid-cols-1 md:grid-cols-3 gap-6'>
             {/* Feature 4 */}
             <div className='rounded-lg overflow-hidden'>
@@ -530,19 +642,21 @@ export function LandingPage() {
         </div>
       </section>
 
-      <div className='flex flex-col w-full bg-slate-800 text-white'>
+      <div className='flex flex-col w-full text-white'>
         {/* Top banner with "About us" */}
         <div className='relative w-full h-64'>
-          <div className='absolute inset-0'>
+        <div className='relative w-full h-48 mt-16 mb-8 rounded-lg overflow-hidden'>
             <img
-              src='/api/placeholder/1200/400'
-              alt='Mobile devices'
-              className='w-full h-full object-cover'
+              src='/ux.jpg' // Path to your image in the public folder
+              alt='Seamless User Experience'
+              className='w-full h-full object-cover opacity-40'
             />
-          </div>
-          <div className='absolute inset-0 bg-black bg-opacity-30'></div>
-          <div className='absolute top-10 left-10'>
-            <h1 className='text-4xl font-bold text-white'>About us</h1>
+            <div className='absolute inset-0'></div>
+            <div className='absolute inset-0 flex items-center px-8'>
+              <h2 className='text-5xl font-light text-white'> {/* Increased text size */}
+                About Us
+              </h2>
+            </div>
           </div>
         </div>
 
@@ -659,7 +773,7 @@ export function LandingPage() {
                 <li key={index}>
                   <a
                     href={link.url}
-                    className='hover:text-gray-300 transition-colors'
+                    className='hover:font-bold text-white transition-colors'
                   >
                     {link.name}
                   </a>

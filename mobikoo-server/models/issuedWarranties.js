@@ -17,6 +17,12 @@ const issuedWarrantiesSchema = mongoose.Schema({
     issueDate: {
         type: Date
     },
+    activationDate:{
+        type: Date
+    },
+    expiryDate: {
+        type: Date
+    },
     phoneChecker: { type: mongoose.Schema.Types.ObjectId, ref: 'PhoneChecker', required: true },  
     claimStatus: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' }, 
 })

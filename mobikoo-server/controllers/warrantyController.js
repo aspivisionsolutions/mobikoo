@@ -45,8 +45,7 @@ exports.activateWarranty = async (req, res) => {
             populate: { path: 'warrantyPlanId' }
         });;
         if (!report) return res.status(404).json({ error: 'Inspection report not found' });
-
-        report.warrantyStatus = 'activated';
+        report.warrantyStatus = 'processing';
         await report.save();
 
         const customerData = new Customer(
@@ -92,26 +91,53 @@ exports.getAllIssuedWarranties = async (req, res) => {
     try {
         const issuedWarranties = await IssuedWarranties.find()
             .populate({
-            path: 'inspectionReport',
-            populate: [
-                { path: 'inspectorId' }, // Populate inspectorId within inspectionReport
-                { path: 'warrantyDetails' } // Populate warrantyDetails within inspectionReport
-            ]
+                path: 'inspectionReport',
+                populate: { path: 'inspectorId' } // Only populate necessary fields
             })
             .populate('warrantyPlanId');
-        res.status(200).json({
-            success: true,
-            data: issuedWarranties
-        });
+
+        const populatedWarranties = await Promise.all(issuedWarranties.map(async (warranty) => {
+            const imei = warranty.inspectionReport.imeiNumber; // Get IMEI from inspectionReport
+            const customer = await Customer.findOne({ imeiNumber: imei }); // Find customer by IMEI
+
+            return { ...warranty.toObject(), customer }; // Add customer to the warranty object
+        }));
+
+        res.status(200).json({ success: true, data: populatedWarranties });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching issued warranties',
-            error: error.message
-        });
+        res.status(500).json({ success: false, message: 'Error fetching issued warranties', error: error.message });
     }
 };
+exports.confirmWarranty = async (req, res) => {
+    const { warrantyId } = req.params; // Get warranty ID from the request parameters
+    console.log(warrantyId)
+    try {
+        // Find the warranty document
+        const warranty = await IssuedWarranties.findById(warrantyId)
+            .populate('inspectionReport')
+            .populate('warrantyPlanId');
+        console.log(warranty)
+        if (!warranty) {
+            return res.status(401).json({ error: 'Warranty not found' });
+        }
+        // Check if the warranty is in a 'processing' state
+        if (warranty.inspectionReport.warrantyStatus.toLowerCase() !== 'processing') {
+            return res.status(400).json({ error: 'Warranty is not in a processable state' });
+        }
 
+        // Update the warranty status to 'activated'
+        warranty.inspectionReport.warrantyStatus = 'activated';
+        await warranty.inspectionReport.save(); // Save the updated inspection report
+        await warranty.save(); // Save the updated issued warranty
+
+        // Optionally, you can add logging or other actions here
+
+        res.status(200).json({ message: 'Warranty confirmed successfully' });
+    } catch (error) {
+        console.error('Error confirming warranty:', error);
+        res.status(500).json({ error: 'Failed to confirm warranty' });
+    }
+};
 exports.claimWarranty = async (req, res) => {
     const { imeiNumber, customerAdhaarNumber } = req.body;
 
