@@ -1,7 +1,10 @@
-import React,{useRef,useEffect} from 'react';
+import React,{useRef,useEffect,useState} from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { ArrowRight, Activity, ArrowDownRight, Quote } from 'lucide-react';
 import {gsap} from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import CustomerWarrantyDetails from '../components/CustomerWarrantyDetails';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,7 +30,7 @@ export function LandingPage() {
   const cardERef = useRef(null);
   const gridRef = useRef(null);
   const featuresSectionRef = useRef(null);
-
+  const [warrantyDetails, setWarrantyDetails] = useState(null); // Add state for warranty details
   useEffect(() => {
     const cardA = cardARef.current;
     const cardB = cardBRef.current;
@@ -141,12 +144,45 @@ export function LandingPage() {
       });
     }
   }, []);
+  const [imeiNumber, setImeiNumber] = useState('');
+  const [searchError, setSearchError] = useState('');
+  const navigate = useNavigate();
 
+  const handleImeiChange = (event) => {
+    setImeiNumber(event.target.value);
+    setSearchError(''); // Clear previous error
+};
+
+const handleSearch = async () => {
+    if (!imeiNumber) {
+        setSearchError('Please enter an IMEI number.');
+        return;
+    }
+
+    try {
+        const response = await axios.get(`http://localhost:5000/api/warranty/find-by-imei/${imeiNumber}`);
+        console.log(response.data.data)
+        if (response.data.success) {
+            const warranty = response.data.data;
+            if (warranty) {
+              navigate('/warranty-details', { state: { warranty } });
+            } else {
+                setSearchError('No warranty found for this IMEI number.');
+            }
+        } else {
+            setSearchError(response.data.message);
+        }
+    } catch (error) {
+        console.error('Error searching for warranty:', error);
+        setSearchError('An error occurred while searching. Please try again later.');
+        setWarrantyDetails(null); // Clear warranty details on error
+    }
+};
   const stats = [
-    { value: '80K', label: 'TRUSTED CUSTOMERS' },
-    { value: '72', label: 'SHOP' },
-    { value: '70K', label: 'ACTIVE CLAIMS' },
-    { value: '3', label: 'BRANCHES' }, // Note: "BRANCES" in image appears to be a typo for "BRANCHES"
+    { value: '80K+', label: 'TRUSTED CUSTOMERS' },
+    { value: '72+', label: 'SHOP' },
+    { value: '70K+', label: 'ACTIVE CLAIMS' },
+    { value: '3+', label: 'BRANCHES' }, // Note: "BRANCES" in image appears to be a typo for "BRANCHES"
   ];
 
   const reviews = [
@@ -269,6 +305,32 @@ export function LandingPage() {
               Your Phone's Best Friend in Times of Trouble
             </h2>
           </div>
+        </div>
+        {/* Search Section */}
+        <div className="max-w-md mx-auto mt-8 p-4 bg-gray-800 rounded-lg shadow-md">
+            <div className="relative">
+                <input
+                    type="text"
+                    id="imei"
+                    name="imei"
+                    value={imeiNumber}
+                    onChange={handleImeiChange}
+                    placeholder="Enter IMEI Number"
+                    className="w-full px-4 py-3 text-white bg-transparent border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                />
+                <button
+                    onClick={handleSearch}
+                    className="absolute top-0 right-0 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg focus:outline-none"
+                >
+                    Search
+                </button>
+            </div>
+            {searchError && (
+                <p className="mt-2 text-red-500 text-sm">{searchError}</p>
+            )}
+            {warrantyDetails && ( // Conditionally render CustomerWarrantyDetails
+                <CustomerWarrantyDetails warranty={warrantyDetails} />
+            )}
         </div>
       </main>
 

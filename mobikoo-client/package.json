@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.0.8",
     "axios": "^1.8.2",
+    "framer-motion": "^12.5.0",
     "gsap": "^3.12.7",
     "lucide-react": "^0.483.0",
     "mobikoo-client": "file:",

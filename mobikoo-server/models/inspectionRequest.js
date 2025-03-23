@@ -6,7 +6,6 @@ const inspectionRequestSchema = new mongoose.Schema({
     status: { type: String, enum: ['accepted', 'rejected', 'pending', 'completed'], required: true },
     createdAt: { type: Date, default: Date.now }
 });
-
 const InspectionRequest = mongoose.model('InspectionRequest', inspectionRequestSchema);
 
 module.exports = InspectionRequest;

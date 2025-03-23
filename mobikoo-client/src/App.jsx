@@ -13,6 +13,7 @@ import InspectionReportView from './pages/InspectionReportView';
 import PhoneCheckerProfile from './pages/PhoneChecker/PhoneCheckerProfile';
 import LandingPage from './pages/LandingPage';
 import './App.css';
+import CustomerWarrantyDetails from './components/CustomerWarrantyDetails'
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import InspectionReportDetails from './components/InspectionReportDetails';
 import PhoneCheckerFinesPanel from './pages/PhoneChecker/Fines';
@@ -50,6 +51,7 @@ const App = () => {
         </Route>
 
         <Route path='/admin/dashboard' element={<AdminDashboard/>}/>
+        <Route path="/warranty-details" element={<CustomerWarrantyDetails />} /> {/* New route */}
       </Routes>
     </Router>
   );

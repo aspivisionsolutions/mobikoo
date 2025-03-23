@@ -255,3 +255,31 @@ exports.downloadWarrantyPDF = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+exports.findByImei = async (req, res) => {
+    const imei = req.params.imei;
+
+    try {
+        // Find the customer using the IMEI number
+        const customer = await Customer.findOne({ imeiNumber: imei })
+            .populate({
+                path: 'warrantyDetails', // Assuming you have a warrantyDetails field in your Customer model
+                populate: ['inspectionReport', 'warrantyPlanId']
+            });
+
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'No customer found for this IMEI.' });
+        }
+
+        // Check if a warranty exists for this customer
+        if (!customer.warrantyDetails) {
+            return res.status(404).json({ success: false, message: 'No warranty found for this customer.' });
+        }
+
+        // The warranty details are now in customer.warrantyDetails
+        res.status(200).json({ success: true, data: customer.warrantyDetails });
+    } catch (error) {
+        console.error('Error finding warranty by IMEI:', error);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+};
+
