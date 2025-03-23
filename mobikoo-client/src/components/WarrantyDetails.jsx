@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FiUser, FiArrowLeft, FiSmartphone, FiHash, FiCalendar,
@@ -7,7 +7,10 @@ import {
 
 const WarrantyDetails = ({ warranty, onClose }) => {
     const navigate = useNavigate();
+    const [isExpired, setIsExpired] = useState(false);
+    const [currentStatus, setCurrentStatus] = useState("");
 
+    // Handle warranty not found case
     if (!warranty) {
         return (
             <div className="text-center py-12">
@@ -27,7 +30,23 @@ const WarrantyDetails = ({ warranty, onClose }) => {
     // Calculate expiry date
     const issueDate = new Date(warranty.issueDate);
     const durationMonths = warranty.warrantyPlanId.warranty_months;
-    const expiryDate = new Date(issueDate.setMonth(issueDate.getMonth() + durationMonths));
+    const expiryDate = new Date(issueDate);
+    expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
+
+    // Check if warranty is expired and update status
+    useEffect(() => {
+        const today = new Date();
+        const isWarrantyExpired = today > expiryDate;
+        setIsExpired(isWarrantyExpired);
+        
+        // Determine current status - prioritize expiration
+        if (isWarrantyExpired) {
+            setCurrentStatus("expired");
+        } else {
+            // Use existing status logic if not expired
+            setCurrentStatus(warranty.inspectionReport.warrantyStatus || warranty.claimStatus || "activated");
+        }
+    }, [warranty, expiryDate]);
 
     const DetailRow = ({ icon: Icon, label, value }) => (
         <div className="flex items-center py-3 border-b last:border-b-0">
@@ -65,7 +84,7 @@ const WarrantyDetails = ({ warranty, onClose }) => {
             <div className="bg-white rounded-lg shadow p-6 mb-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold text-gray-900">Warranty Details</h2>
-                    <StatusBadge status={warranty.inspectionReport.warrantyStatus || warranty.claimStatus} />
+                    <StatusBadge status={currentStatus} />
                 </div>
 
                 <DetailRow
@@ -154,6 +173,40 @@ const WarrantyDetails = ({ warranty, onClose }) => {
               </div>
             )}
 
+            {/* Warranty Status Section */}
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Warranty Status</h3>
+                {isExpired ? (
+                    <div className="p-4 bg-red-50 rounded-md">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <FiAlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">Warranty Expired</h3>
+                                <div className="mt-2 text-sm text-red-700">
+                                    <p>Your warranty has expired on {expiryDate.toLocaleDateString()}.</p>
+                                    <p className="mt-2">This warranty cannot be renewed or extended.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-4 bg-green-50 rounded-md">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <FiCheckCircle className="h-5 w-5 text-green-400" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-green-800">Warranty Active</h3>
+                                <div className="mt-2 text-sm text-green-700">
+                                    <p>Your warranty is active until {expiryDate.toLocaleDateString()}.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

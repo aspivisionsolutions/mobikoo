@@ -77,6 +77,21 @@ const WarrantiesManagement = () => {
         setViewingDetails(false);
         setSelectedWarranty(null);
     };
+      // Function to determine if a warranty is expired
+      const getWarrantyStatus = (warranty) => {
+        // Calculate expiry date
+        const issueDate = new Date(warranty.issueDate);
+        const durationMonths = warranty.warrantyPlanId?.warranty_months || 0;
+        const expiryDate = new Date(issueDate);
+        expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
+        
+        // Check if warranty is expired
+        const today = new Date();
+        const isExpired = today > expiryDate;
+        
+        // Return expired status if warranty has expired, otherwise return the current status
+        return isExpired ? "expired" : warranty.inspectionReport.warrantyStatus;
+    };
 
     const StatusBadge = ({ status }) => {
         let bgColor = '';
@@ -147,7 +162,7 @@ const WarrantiesManagement = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.inspectionReport.grade}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{warranty.warrantyPlanId?.warranty_months || "N/A"} months</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <StatusBadge status={warranty.inspectionReport.warrantyStatus} />
+                                                <StatusBadge status={getWarrantyStatus(warranty)} />
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     <div className="flex space-x-2">
