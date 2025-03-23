@@ -24,7 +24,7 @@ const ShopDetailsModal = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      await axios.post('http://localhost:5000/api/shop-owner/shop-details', formData, {
+      await axios.post('http://localhost:5000/api/user/shop-owner', formData, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       toast.success('Shop details added successfully');

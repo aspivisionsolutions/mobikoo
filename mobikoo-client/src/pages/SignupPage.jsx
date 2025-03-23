@@ -41,15 +41,8 @@ const SignupPage = () => {
     
     try {
       const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
-      
-      if (formData.role === 'shop-owner') {
-        // Store the token for the shop details modal
-        localStorage.setItem('token', response.data.token);
-        setShowShopDetailsModal(true);
-      } else {
         toast.success('Registration successful! Please login.');
-        navigate('/login');
-      }
+        navigate('/admin/dashboard');
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Registration failed';
       toast.error(errorMessage);
