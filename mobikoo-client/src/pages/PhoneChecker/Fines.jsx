@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiRefreshCw, FiFilter } from 'react-icons/fi';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import {load} from '@cashfreepayments/cashfree-js'
 
 const PhoneCheckerFinesPanel = () => {
   const [fines, setFines] = useState([]);
@@ -55,46 +56,72 @@ const PhoneCheckerFinesPanel = () => {
     fetchFines();
   };
 
-  const handlePayFine = async (fineId) => {
-    try {
+   let cashfree;
+  
+    let insitialzeSDK = async function () {
+  
+      cashfree = await load({
+        mode: "sandbox",
+      })
+    }
+  
+    insitialzeSDK()
+
+    const [orderId, setOrderId] = useState('')
+
+    const getSessionId = async (fineId) => {
+      try {
+        console.log('Initiating fine payment:', fineId);
       // Create Razorpay order for the fine
-      const orderResponse = await axios.post('http://localhost:5000/api/payment/create-fine-order', {
+      const res = await axios.post('http://localhost:5000/api/payment/create-fine-order', {
         fineId
       }, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
+        
+        if(res.data && res.data.payment_session_id){
+  
+          console.log(res.data)
+          setOrderId(res.data.order_id)
+          return res.data.payment_session_id
+        }
+  
+  
+      } catch (error) {
+        console.log(error)
+      }
+    }
 
-      const options = {
-        key: "rzp_test_wrWBdn4mFAZoo8", // Razorpay test key
-        amount: orderResponse.data.amount, // Amount in paise
-        currency: orderResponse.data.currency,
-        name: 'Fine Payment',
-        description: 'Payment for fine',
-        order_id: orderResponse.data.id, // Order ID returned from Razorpay
-        handler: async function (response) {
-          // Handle successful payment
-          await axios.patch(`http://localhost:5000/api/inspection/payFine/${fineId}`, {
+    const verifyPayment = async (fineId , orderId) => {
+        try{
+          let resp = await axios.patch(`http://localhost:5000/api/inspection/payFine/${fineId}`, {
             status: 'Paid',
-            razorpayPaymentId: response.razorpay_payment_id // Include payment ID
+            orderId: orderId
           }, {
             headers: { Authorization: `${localStorage.getItem('token')}` }
           });
-
+  
           toast.success('Fine paid successfully!');
           fetchFines();
-        },
-        prefill: {
-          name: 'Phone Checker',
-          email: 'checker@example.com',
-          contact: '9999999999'
-        },
-        theme: {
-          color: '#F37254'
+        }catch(err){
+          toast.error('Payment Failed');
+          console.log(err)
         }
-      };
+    }
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+  const handlePayFine = async (fineId) => {
+    try {
+      let sessionId = await getSessionId(fineId)
+      let checkoutOptions = {
+        paymentSessionId : sessionId,
+        redirectTarget:"_modal",
+      }
+
+      cashfree.checkout(checkoutOptions).then((res) => {
+        console.log("payment initialized")
+
+        verifyPayment(fineId,orderId)
+      })
     } catch (error) {
       toast.error('Failed to initiate fine payment.');
       console.error('Error initiating fine payment:', error);

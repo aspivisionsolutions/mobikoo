@@ -11,6 +11,26 @@ const cloudinary = require('../cloudinary');
 const multer = require('../multer');
 const Fine = require("../models/fine");
 
+const crypto = require('crypto');
+const {
+    Cashfree
+} = require('cashfree-pg');
+
+Cashfree.XClientId = process.env.CASHFREE_APP_ID;
+Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
+Cashfree.XEnvironment = Cashfree.Environment.SANDBOX;
+
+function generateOrderId() {
+    const uniqueId = crypto.randomBytes(16).toString('hex');
+
+    const hash = crypto.createHash('sha256');
+    hash.update(uniqueId);
+
+    const orderId = hash.digest('hex');
+
+    return orderId.substr(0, 12);
+}
+
 exports.createInspectionRequest = async (req, res) => {
   const { area, inspectorId } = req.body;
   try {
@@ -109,6 +129,9 @@ exports.updateFineStatus = async (req, res) => {
 exports.payFine = async (req, res) => {
   try {
     const { fineId } = req.params;
+    const {orderId} = req.body;
+    console.log(fineId, "fineId")
+    Cashfree.PGOrderFetchPayments("2025-01-01", orderId).then(async (response) => {
 
     const updatedFine = await Fine.findByIdAndUpdate(fineId, { status: 'Paid' }, { new: true }).populate('inspectorId').populate('inspectionId');
     if (!updatedFine) {
@@ -125,8 +148,9 @@ exports.payFine = async (req, res) => {
       },
       timestamp: new Date()
     });
-
+    
     res.status(200).json({ message: "Fine paid successfully", fine: updatedFine });
+  })
   } catch (error) {
     console.error("Error paying fine:", error);
     res.status(500).json({ message: "Internal server error" });

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FiSearch, FiDownload, FiEye, FiShield, FiX, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import { toast } from 'react-toastify'; // Ensure you have toast notifications set up
 import InspectionReportDetails from '../../components/InspectionReportDetails';
+import {load} from '@cashfreepayments/cashfree-js'
 
 const PhoneReports = ({ standalone = false }) => {
   const [reports, setReports] = useState([]);
@@ -122,53 +123,81 @@ const PhoneReports = ({ standalone = false }) => {
     setShowWarrantyModal(true);
   };
 
+  let cashfree;
+
+  let insitialzeSDK = async function () {
+
+    cashfree = await load({
+      mode: "sandbox",
+    })
+  }
+
+  insitialzeSDK()
+
+  const [orderId, setOrderId] = useState("")
+
+  const getSessionId = async (plan) => {
+    try {
+      let res = await axios.post("http://localhost:5000/api/payment/create-order", {
+        amount: plan.price,
+        receipt: reportForWarranty._id,
+        notes: {},
+      })
+      
+      if(res.data && res.data.payment_session_id){
+
+        console.log(res.data)
+        setOrderId(res.data.order_id)
+        return res.data.payment_session_id
+      }
+
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const verifyPayment = async (plan,orderId) => {
+    try {
+      
+      let res = await axios.post("http://localhost:5000/api/payment/payment/verify", {
+        reportId: reportForWarranty._id,
+        deviceModel: reportForWarranty.deviceModel,
+        imeiNumber: reportForWarranty.imeiNumber,
+        grade: reportForWarranty.grade,
+        planId: plan._id,
+        orderId: orderId
+      })
+
+      if(res && res.data){
+        toast.success('Warranty purchased successfully');
+        setShowWarrantyModal(false);
+        setWarrantyPlan(null);
+        setReportForWarranty(null);
+        fetchReports();
+      }
+
+    } catch (error) {
+      toast.error('Failed to purchase warranty');
+      console.log(error)
+    }
+  }
+
   const handleWarrantyPurchaseConfirm = async (plan) => {
     try {
-      // Create order with Razorpay
-      const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
-        amount: plan.price, // Amount in INR
-        receipt: reportForWarranty._id,
-        notes: {}, // Ensure this is set in your environment
-      });
 
-      const options = {
-        key: "rzp_test_wrWBdn4mFAZoo8", // Updated to use the prefixed variable
-        amount: orderResponse.data.amount, // Amount in paise
-        currency: orderResponse.data.currency,
-        name: 'Warranty Purchase',
-        description: 'Purchase of warranty plan',
-        order_id: orderResponse.data.id, // Order ID returned from Razorpay
-        handler: async function (response) {
-          // Handle successful payment
-          await axios.post(`http://localhost:5000/api/payment/warranty/purchase`, {
-            reportId: reportForWarranty._id,
-            deviceModel: reportForWarranty.deviceModel,
-            imeiNumber: reportForWarranty.imeiNumber,
-            grade: reportForWarranty.grade,
-            planId: plan._id,
-            razorpayPaymentId: response.razorpay_payment_id // Include payment ID
-          }, {
-            headers: { Authorization: `${localStorage.getItem('token')}` }
-          });
+      let sessionId = await getSessionId(plan)
+      let checkoutOptions = {
+        paymentSessionId : sessionId,
+        redirectTarget:"_modal",
+      }
 
-          toast.success('Warranty purchased successfully');
-          setShowWarrantyModal(false);
-          setWarrantyPlan(null);
-          setReportForWarranty(null);
-          fetchReports();
-        },
-        prefill: {
-          name: 'Customer Name',
-          email: 'customer@example.com',
-          contact: '9999999999'
-        },
-        theme: {
-          color: '#F37254'
-        }
-      };
+      cashfree.checkout(checkoutOptions).then((res) => {
+        console.log("payment initialized")
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+        verifyPayment(plan,orderId)
+      })
+
     } catch (error) {
       console.error('Error purchasing warranty:', error);
       toast.error(error.response?.data?.message || 'Failed to purchase warranty');
@@ -222,6 +251,49 @@ const PhoneReports = ({ standalone = false }) => {
     }));
   };
 
+  const getSessionIdForBulkPurchase = async (totalAmount) => {
+    try {
+      let res = await axios.post("http://localhost:5000/api/payment/create-order", {
+        amount: totalAmount,
+        receipt: 'bulk_warranty_purchase',
+        notes: {},
+      })
+      
+      if(res.data && res.data.payment_session_id){
+
+        console.log(res.data)
+        setOrderId(res.data.order_id)
+        return res.data.payment_session_id
+      }
+
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const verifyPaymentForBulkPurchase = async (purchaseDetails, orderId) => {
+    try {
+      
+      let res = await axios.post("http://localhost:5000/api/payment/warranty/bulk-purchase/verify", {
+        purchaseDetails: purchaseDetails,
+        orderId: orderId
+      }, {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
+      })
+
+      if(res && res.data){
+        toast.success('Bulk warranty purchased successfully');
+        setShowBulkModal(false);
+        fetchReports();
+      }
+
+    } catch (error) {
+      toast.error('Failed to purchase bulk warranty');
+      console.log(error)
+    }
+  }
+
   const handlePurchaseBulkWarranty = async () => {
     const selectedIds = selectedReports.filter(report => report.selected).map(report => report._id);
     if (selectedIds.length === 0) {
@@ -238,43 +310,56 @@ const PhoneReports = ({ standalone = false }) => {
       });
 
     try {
-      const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
-        amount: totalAmount, // Amount in INR
-        receipt: 'bulk_warranty_purchase',
-        notes: { purchaseDetails },
-      });
 
-      const options = {
-        key: "rzp_test_wrWBdn4mFAZoo8",
-        amount: orderResponse.data.amount,
-        currency: orderResponse.data.currency,
-        name: 'Bulk Warranty Purchase',
-        description: 'Purchase of multiple warranty plans',
-        order_id: orderResponse.data.id,
-        handler: async function (response) {
-          await axios.post(`http://localhost:5000/api/payment/warranty/bulk-purchase`, {
-            purchaseDetails,
-            razorpayPaymentId: response.razorpay_payment_id
-          }, {
-            headers: { Authorization: `${localStorage.getItem('token')}` }
-          });
+      let sessionId = await getSessionIdForBulkPurchase(totalAmount)
+      let checkoutOptions = {
+        paymentSessionId : sessionId,
+        redirectTarget:"_modal",
+      }
 
-          toast.success('Bulk warranty purchased successfully');
-          setShowBulkModal(false);
-          fetchReports();
-        },
-        prefill: {
-          name: 'Customer Name',
-          email: 'customer@example.com',
-          contact: '9999999999'
-        },
-        theme: {
-          color: '#F37254'
-        }
-      };
+      cashfree.checkout(checkoutOptions).then((res) => {
+        console.log("payment initialized")
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+        verifyPaymentForBulkPurchase(purchaseDetails, orderId)
+      })
+
+      // const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
+      //   amount: totalAmount, // Amount in INR
+      //   receipt: 'bulk_warranty_purchase',
+      //   notes: { purchaseDetails },
+      // });
+
+      // const options = {
+      //   key: "rzp_test_wrWBdn4mFAZoo8",
+      //   amount: orderResponse.data.amount,
+      //   currency: orderResponse.data.currency,
+      //   name: 'Bulk Warranty Purchase',
+      //   description: 'Purchase of multiple warranty plans',
+      //   order_id: orderResponse.data.id,
+      //   handler: async function (response) {
+      //     await axios.post(`http://localhost:5000/api/payment/warranty/bulk-purchase`, {
+      //       purchaseDetails,
+      //       razorpayPaymentId: response.razorpay_payment_id
+      //     }, {
+      //       headers: { Authorization: `${localStorage.getItem('token')}` }
+      //     });
+
+      //     toast.success('Bulk warranty purchased successfully');
+      //     setShowBulkModal(false);
+      //     fetchReports();
+      //   },
+      //   prefill: {
+      //     name: 'Customer Name',
+      //     email: 'customer@example.com',
+      //     contact: '9999999999'
+      //   },
+      //   theme: {
+      //     color: '#F37254'
+      //   }
+      // };
+
+      // const rzp = new window.Razorpay(options);
+      // rzp.open();
     } catch (error) {
       console.error('Error purchasing bulk warranty:', error);
       toast.error(error.response?.data?.message || 'Failed to purchase bulk warranty');
