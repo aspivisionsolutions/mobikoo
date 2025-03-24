@@ -32,13 +32,38 @@ const Warranties = () => {
       const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      setWarranties(response.data.data);
-      setFilteredWarranties(response.data.data);
+      const updatedWarranties = updateWarrantyStatuses(response.data.data);
+      setWarranties(updatedWarranties);
+      setFilteredWarranties(updatedWarranties);
     } catch (error) {
       console.error('Error fetching warranties:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+  const updateWarrantyStatuses = (warranties) => {
+    return warranties.map(warranty => {
+      const issueDate = new Date(warranty.issueDate);
+      const durationMonths = warranty.warrantyPlanId?.warranty_months || warranty.warrantyPlanId?.durationMonths;
+      const expiryDate = new Date(issueDate);
+      expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
+
+      // For testing purposes, using a mock future date
+      const currentDate = new Date();
+
+      // Update status if current date is past expiry date
+      if (currentDate > expiryDate) {
+        return {
+          ...warranty,
+          inspectionReport: {
+            ...warranty.inspectionReport,
+            warrantyStatus: 'expired'
+          }
+        };
+      }
+
+      return warranty;
+    });
   };
 
   const applyFilters = () => {
@@ -134,7 +159,12 @@ const Warranties = () => {
   const renderRow = (warranty, index, viewType) => {
     const issueDate = new Date(warranty.issueDate);
     const durationMonths = warranty.warrantyPlanId?.warranty_months || warranty.warrantyPlanId?.durationMonths;
-    const expiryDate = new Date(issueDate.setMonth(issueDate.getMonth() + durationMonths));
+    const expiryDate = new Date(issueDate);
+    expiryDate.setMonth(expiryDate.getMonth() + durationMonths);
+    
+    // Determining status based on a mock future date
+    const currentDate = new Date();
+    const currentStatus = currentDate > expiryDate ? 'expired' : warranty.inspectionReport.warrantyStatus;
 
     if (viewType === 'desktop') {
       return (
@@ -154,7 +184,7 @@ const Warranties = () => {
                 warranty.inspectionReport.warrantyStatus === 'expired' ? 'bg-red-100 text-red-800' :
                   'bg-yellow-100 text-yellow-800'}`}
             >
-              {warranty.inspectionReport.warrantyStatus}
+             {currentStatus}
             </span>
           </td>
           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
