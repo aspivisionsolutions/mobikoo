@@ -142,24 +142,50 @@ const PhoneReports = ({ standalone = false }) => {
         amount: plan.price,
         receipt: reportForWarranty._id,
         notes: {},
-      })
+      });
       
       if(res.data && res.data.payment_session_id){
-
-        console.log(res.data)
-        setOrderId(res.data.order_id)
-        return res.data.payment_session_id
+        console.log('Full response:', res.data);
+        
+        // Return an object with both session ID and order ID
+        return {
+          sessionId: res.data.payment_session_id,
+          orderId: res.data.order_id
+        };
       }
-
-
     } catch (error) {
-      console.log(error)
+      console.error('Error getting session ID:', error);
+      throw error;
     }
-  }
-
-  const verifyPayment = async (plan,orderId) => {
+  };
+  
+  const handleWarrantyPurchaseConfirm = async (plan) => {
     try {
+      // Destructure sessionId and orderId from the returned object
+      const { sessionId, orderId } = await getSessionId(plan);
       
+      let checkoutOptions = {
+        paymentSessionId: sessionId,
+        redirectTarget: "_modal",
+      };
+  
+      cashfree.checkout(checkoutOptions).then((res) => {
+        console.log("Payment initialized");
+        
+        // Pass both plan and orderId to verifyPayment
+        verifyPayment(plan, orderId);
+      }).catch((err) => {
+        console.error("Checkout error:", err);
+        toast.error('Payment initialization failed.');
+      });
+    } catch (error) {
+      console.error('Error purchasing warranty:', error);
+      toast.error(error.response?.data?.message || 'Failed to purchase warranty');
+    }
+  };
+  
+  const verifyPayment = async (plan, orderId) => {
+    try {
       let res = await axios.post("http://localhost:5000/api/payment/payment/verify", {
         reportId: reportForWarranty._id,
         deviceModel: reportForWarranty.deviceModel,
@@ -167,8 +193,8 @@ const PhoneReports = ({ standalone = false }) => {
         grade: reportForWarranty.grade,
         planId: plan._id,
         orderId: orderId
-      })
-
+      });
+  
       if(res && res.data){
         toast.success('Warranty purchased successfully');
         setShowWarrantyModal(false);
@@ -176,33 +202,12 @@ const PhoneReports = ({ standalone = false }) => {
         setReportForWarranty(null);
         fetchReports();
       }
-
     } catch (error) {
       toast.error('Failed to purchase warranty');
-      console.log(error)
-    }
-  }
-
-  const handleWarrantyPurchaseConfirm = async (plan) => {
-    try {
-
-      let sessionId = await getSessionId(plan)
-      let checkoutOptions = {
-        paymentSessionId : sessionId,
-        redirectTarget:"_modal",
-      }
-
-      cashfree.checkout(checkoutOptions).then((res) => {
-        console.log("payment initialized")
-
-        verifyPayment(plan,orderId)
-      })
-
-    } catch (error) {
-      console.error('Error purchasing warranty:', error);
-      toast.error(error.response?.data?.message || 'Failed to purchase warranty');
+      console.error('Verification error:', error);
     }
   };
+  
 
   const handleBulkWarrantyPurchase = () => {
     const unpurchasedReports = reports.filter(report => report.warrantyStatus === 'not-purchased');

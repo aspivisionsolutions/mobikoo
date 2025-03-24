@@ -13,6 +13,7 @@ const PhoneCheckerFinesPanel = () => {
   const [itemsPerPage] = useState(10);
   const [sortField, setSortField] = useState('timestamp');
   const [sortDirection, setSortDirection] = useState('desc');
+  const [orderId, setOrderId] = useState('');
 
   useEffect(() => {
     fetchFines();
@@ -67,33 +68,37 @@ const PhoneCheckerFinesPanel = () => {
   
     insitialzeSDK()
 
-    const [orderId, setOrderId] = useState('')
+   
 
     const getSessionId = async (fineId) => {
       try {
         console.log('Initiating fine payment:', fineId);
-      // Create Razorpay order for the fine
-      const res = await axios.post('http://localhost:5000/api/payment/create-fine-order', {
-        fineId
-      }, {
-        headers: { Authorization: `${localStorage.getItem('token')}` }
-      });
+        // Create Razorpay order for the fine
+        const res = await axios.post('http://localhost:5000/api/payment/create-fine-order', {
+          fineId
+        }, {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
         
         if(res.data && res.data.payment_session_id){
-  
-          console.log(res.data)
-          setOrderId(res.data.order_id)
-          return res.data.payment_session_id
+          // Log both payment_session_id and order_id
+          console.log('Payment Session ID:', res.data.payment_session_id);
+          console.log('Order ID:', res.data.order_id);
+          
+          // Return an object with both session ID and order ID
+          return {
+            sessionId: res.data.payment_session_id,
+            orderId: res.data.order_id
+          };
         }
-  
-  
       } catch (error) {
-        console.log(error)
+        console.error('Error getting session ID:', error);
+        throw error;
       }
     }
-
     const verifyPayment = async (fineId , orderId) => {
         try{
+          console.log(orderId);
           let resp = await axios.patch(`http://localhost:5000/api/inspection/payFine/${fineId}`, {
             status: 'Paid',
             orderId: orderId
@@ -109,24 +114,30 @@ const PhoneCheckerFinesPanel = () => {
         }
     }
 
-  const handlePayFine = async (fineId) => {
-    try {
-      let sessionId = await getSessionId(fineId)
-      let checkoutOptions = {
-        paymentSessionId : sessionId,
-        redirectTarget:"_modal",
+    const handlePayFine = async (fineId) => {
+      try {
+        // Destructure sessionId and orderId from the returned object
+        const { sessionId, orderId } = await getSessionId(fineId);
+        
+        let checkoutOptions = {
+          paymentSessionId: sessionId,
+          redirectTarget: "_modal",
+        }
+    
+        cashfree.checkout(checkoutOptions).then((res) => {
+          console.log("Payment initialized");
+          
+          // Pass both fineId and orderId to verifyPayment
+          verifyPayment(fineId, orderId);
+        }).catch((err) => {
+          console.error("Checkout error:", err);
+          toast.error('Payment initialization failed.');
+        });
+      } catch (error) {
+        toast.error('Failed to initiate fine payment.');
+        console.error('Error initiating fine payment:', error);
       }
-
-      cashfree.checkout(checkoutOptions).then((res) => {
-        console.log("payment initialized")
-
-        verifyPayment(fineId,orderId)
-      })
-    } catch (error) {
-      toast.error('Failed to initiate fine payment.');
-      console.error('Error initiating fine payment:', error);
-    }
-  };
+    };
 
   const filteredFines = fines.filter(fine => {
     if (!filterKeyword) return true;

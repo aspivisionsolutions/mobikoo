@@ -131,9 +131,11 @@ exports.payFine = async (req, res) => {
     const { fineId } = req.params;
     const {orderId} = req.body;
     console.log(fineId, "fineId")
+    console.log(orderId,"ID")
     Cashfree.PGOrderFetchPayments("2025-01-01", orderId).then(async (response) => {
 
-    const updatedFine = await Fine.findByIdAndUpdate(fineId, { status: 'Paid' }, { new: true }).populate('inspectorId').populate('inspectionId');
+      try{
+        const updatedFine = await Fine.findByIdAndUpdate(fineId, { status: 'Paid' }, { new: true }).populate('inspectorId').populate('inspectionId');
     if (!updatedFine) {
       return res.status(404).json({ message: "Fine not found" });
     }
@@ -150,13 +152,18 @@ exports.payFine = async (req, res) => {
     });
     
     res.status(200).json({ message: "Fine paid successfully", fine: updatedFine });
-  })
+      }catch(error){
+        console.error("Error paying fine:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+  }).catch(error => {
+    console.error(error.response.data.message);
+})
   } catch (error) {
     console.error("Error paying fine:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 // New function to get all inspection requests for a phone checker
 exports.getInspectionRequestsForPhoneChecker = async (req, res) => {
   try {
