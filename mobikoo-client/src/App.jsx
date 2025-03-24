@@ -17,6 +17,7 @@ import CustomerWarrantyDetails from './components/CustomerWarrantyDetails'
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import InspectionReportDetails from './components/InspectionReportDetails';
 import PhoneCheckerFinesPanel from './pages/PhoneChecker/Fines';
+import Invoices from './pages/ShopOwner/Invoices';
 
 const App = () => {
   return (
@@ -48,6 +49,7 @@ const App = () => {
           <Route path="dashboard/claims" element={<ShopOwnerDashboard />} />
           <Route path="profile" element={<ShopOwnerProfile />} />
           <Route path="reports/:reportId" element={<InspectionReportView />} />
+          <Route path="dashboard/invoices" element={<Invoices />} />
         </Route>
 
         <Route path='/admin/dashboard' element={<AdminDashboard/>}/>
