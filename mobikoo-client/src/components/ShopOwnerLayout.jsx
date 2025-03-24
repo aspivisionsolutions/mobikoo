@@ -116,6 +116,9 @@ const ShopOwnerLayout = () => {
             <NavItem to="/shop-owner/dashboard/claims" icon={FiAlertCircle}>
               Claims
             </NavItem>
+            <NavItem to="/shop-owner/dashboard/invoices" icon={FiAlertCircle}>
+              Invoices
+            </NavItem>
             <NavItem to="/shop-owner/profile" icon={FiSettings}>
               Shop Profile
             </NavItem>

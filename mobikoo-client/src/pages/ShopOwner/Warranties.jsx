@@ -32,9 +32,8 @@ const Warranties = () => {
       const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      const updatedWarranties = updateWarrantyStatuses(response.data.data);
-      setWarranties(updatedWarranties);
-      setFilteredWarranties(updatedWarranties);
+      setWarranties(response.data.data);
+      setFilteredWarranties(response.data.data);
     } catch (error) {
       console.error('Error fetching warranties:', error);
     } finally {
