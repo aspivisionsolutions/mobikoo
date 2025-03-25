@@ -27,7 +27,7 @@ exports.getShopOwnerStats = async (req, res) => {
 
         // Count total issued warranties
         const filteredWarranties = issuedWarranties.filter(warranty => 
-            warranty.inspectionReport && warranty.inspectionReport.shopName === shopOwner.shopName
+            warranty.inspectionReport && warranty.inspectionReport.shopName === shopOwner.shopDetails.shopName
         );
 
         const totalIssuedWarranties = filteredWarranties.length;
