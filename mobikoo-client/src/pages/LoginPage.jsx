@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiArrowLeft, FiCheck } from 'react-icons/fi';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const LoginPage = () => {
+
+  console.log(API_URL);
+
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -53,7 +57,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+      const response = await axios.post(`${API_URL}/api/auth/login`, formData);
       toast.success('Login successful!');
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.role);
@@ -99,7 +103,7 @@ const LoginPage = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/request-otp', { email: resetEmail });
+      const response = await axios.post(`${API_URL}/api/auth/request-otp`, { email: resetEmail });
       toast.success('OTP sent to your email address');
       setForgotPasswordStep(2); // Skip directly to OTP input
       setOtpResendTimer(60); // 60 seconds cooldown
@@ -145,7 +149,7 @@ const LoginPage = () => {
     setPasswordError('');
 
     try {
-      await axios.post('http://localhost:5000/api/auth/reset-password', {
+      await axios.post(`${API_URL}/api/auth/reset-password`, {
         email: resetEmail,
         otp: otp.join(''),
         newPassword

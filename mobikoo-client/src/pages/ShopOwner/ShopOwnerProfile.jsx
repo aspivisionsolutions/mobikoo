@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiUser, FiShoppingBag, FiPhone, FiMapPin, FiSave, FiMail } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ShopOwnerProfile = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const ShopOwnerProfile = () => {
 
   const fetchShopDetails = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+      const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       if (response.data.shopprofile && response.data.shopprofile.length > 0) {
@@ -73,7 +74,7 @@ const ShopOwnerProfile = () => {
         address: formData.address
       };
 
-      await axios.post('http://localhost:5000/api/user/shop-owner', submitData, {
+      await axios.post(`${API_URL}/api/user/shop-owner`, submitData, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       toast.success('Shop details updated successfully');

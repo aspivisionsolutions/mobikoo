@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiHome, FiFileText, FiShield, FiLogOut, FiUser, FiSettings, FiMenu, FiX, FiAlertCircle } from 'react-icons/fi';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ShopOwnerLayout = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const ShopOwnerLayout = () => {
 
   const fetchShopDetails = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+      const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       

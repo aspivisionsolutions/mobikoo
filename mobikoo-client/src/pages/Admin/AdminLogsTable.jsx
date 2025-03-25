@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiDownload, FiRefreshCw, FiFilter, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const AdminActivityLogsTable = () => {
   const [activityLogs, setActivityLogs] = useState([]);
@@ -20,7 +21,7 @@ const AdminActivityLogsTable = () => {
     setLoading(true);
     
     try {
-      const response = await axios.get('http://localhost:5000/api/activity-log', {
+      const response = await axios.get(`${API_URL}/api/activity-log`, {
         headers: { Authorization: `${localStorage.getItem('token')}` },
         params: {
           page: currentPage,

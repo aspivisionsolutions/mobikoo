@@ -6,6 +6,7 @@ import { Typography,Button } from '@mui/material';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 import WarrantyActivationDialog from '../../components/WarrantyActivationDialog';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const InspectionReports = () => {
   const [reports, setReports] = useState([]);
@@ -21,7 +22,7 @@ const InspectionReports = () => {
   
   const fetchReports = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/inspection/shopOwner/reports', {
+      const response = await axios.get(`${API_URL}/api/inspection/shopOwner/reports`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       setReports(response.data);
@@ -38,7 +39,7 @@ useEffect(() => {
 
   const fetchShopDetails = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+        const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
         console.log(response.data)
@@ -93,7 +94,7 @@ useEffect(() => {
     print(tempReport);
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/inspection/reports/${reportId}/download`, {
+      const response = await axios.get(`${API_URL}/api/inspection/reports/${reportId}/download`, {
         responseType: 'blob',
         headers: {
           Authorization: `${localStorage.getItem('token')}`
@@ -127,7 +128,7 @@ useEffect(() => {
 
   const handleSubmitActivation = async (formData) => {
     try {
-      await axios.post('http://localhost:5000/api/warranty/activate-warranty', {
+      await axios.post(`${API_URL}/api/warranty/activate-warranty`, {
         deviceModel: activatingReport.deviceModel,
         imeiNumber: activatingReport.imeiNumber,
         grade: activatingReport.grade,

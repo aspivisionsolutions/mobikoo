@@ -9,6 +9,7 @@ import CreateInspectionRequestModal from './CreateInspectionRequestModal';
 import Claims from './Claims';
 import customersData from "../../assets/customers.json"
 import SalesChart from '../../components/SalesChart';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ShopOwnerDashboard = () => {
   const location = useLocation();
@@ -38,7 +39,7 @@ const ShopOwnerDashboard = () => {
     const fetchCustomers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/user/shop-owner/customers",
+          `${API_URL}/api/user/shop-owner/customers`,
           { headers: { Authorization: `${localStorage.getItem("token")}` } }
         );
         // setCustomers(response.data);
@@ -51,7 +52,7 @@ const ShopOwnerDashboard = () => {
   }, []);
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/stats/shop-owner', {
+      const response = await axios.get(`${API_URL}/api/stats/shop-owner`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       setStats(response.data.stats);
@@ -65,7 +66,7 @@ const ShopOwnerDashboard = () => {
 
   const fetchShopDetails = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+      const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const SalesGraph = () => {
   const [chartData, setChartData] = useState([]);
@@ -14,7 +15,7 @@ const SalesGraph = () => {
     setError(null);
 
     try {
-      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
+      const response = await axios.get(`${API_URL}/api/warranty/issued-warranties`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       setWarranties(response.data.data);

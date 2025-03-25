@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import {load} from '@cashfreepayments/cashfree-js'
 import { Typography,Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 const PhoneCheckerFinesPanel = () => {
@@ -23,7 +24,7 @@ const PhoneCheckerFinesPanel = () => {
     useEffect(() => {
       const getProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
+        const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -46,7 +47,7 @@ const PhoneCheckerFinesPanel = () => {
   const fetchFines = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker/fines', {
+      const response = await axios.get(`${API_URL}/api/inspection/phoneChecker/fines`, {
         headers: { Authorization: `${localStorage.getItem('token')}` },
         params: {
           page: currentPage,
@@ -98,7 +99,7 @@ const PhoneCheckerFinesPanel = () => {
       try {
         console.log('Initiating fine payment:', fineId);
         // Create Razorpay order for the fine
-        const res = await axios.post('http://localhost:5000/api/payment/create-fine-order', {
+        const res = await axios.post(`${API_URL}/api/payment/create-fine-order`, {
           fineId
         }, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
@@ -123,7 +124,7 @@ const PhoneCheckerFinesPanel = () => {
     const verifyPayment = async (fineId , orderId) => {
         try{
           console.log(orderId);
-          let resp = await axios.patch(`http://localhost:5000/api/inspection/payFine/${fineId}`, {
+          let resp = await axios.patch(`${API_URL}/api/inspection/payFine/${fineId}`, {
             status: 'Paid',
             orderId: orderId
           }, {

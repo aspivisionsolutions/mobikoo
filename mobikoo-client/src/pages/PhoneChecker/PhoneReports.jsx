@@ -6,6 +6,7 @@ import InspectionReportDetails from '../../components/InspectionReportDetails';
 import {load} from '@cashfreepayments/cashfree-js'
 import { useNavigate } from 'react-router-dom';
 import { Typography,Button } from '@mui/material';
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 const PhoneReports = ({ standalone = false }) => {
@@ -32,7 +33,7 @@ const PhoneReports = ({ standalone = false }) => {
   useEffect(() => {
     const getProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
+      const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
       headers: {
         Authorization: `${localStorage.getItem('token')}`
       }
@@ -54,7 +55,7 @@ const PhoneReports = ({ standalone = false }) => {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker/reports', {
+      const response = await axios.get(`${API_URL}/api/inspection/phoneChecker/reports`, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -81,7 +82,7 @@ const PhoneReports = ({ standalone = false }) => {
 
   const handleDownloadReport = async (reportId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/inspection/reports/${reportId}/download`, {
+      const response = await axios.get(`${API_URL}/api/inspection/reports/${reportId}/download`, {
         responseType: 'blob',
         headers: {
           Authorization: `${localStorage.getItem('token')}`
@@ -111,7 +112,7 @@ const PhoneReports = ({ standalone = false }) => {
 
   const fetchWarrantyPlans = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/warranty/plans', {
+      const response = await axios.get(`${API_URL}/api/warranty/plans`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       // console.log(response.data.data)
@@ -158,7 +159,7 @@ const PhoneReports = ({ standalone = false }) => {
 
   const getSessionId = async (plan) => {
     try {
-      let res = await axios.post("http://localhost:5000/api/payment/create-order", {
+      let res = await axios.post(`${API_URL}/api/payment/create-order`, {
         amount: plan.price,
         receipt: reportForWarranty._id,
         notes: {},
@@ -206,7 +207,7 @@ const PhoneReports = ({ standalone = false }) => {
   
   const verifyPayment = async (plan, orderId) => {
     try {
-      let res = await axios.post("http://localhost:5000/api/payment/payment/verify", {
+      let res = await axios.post(`${API_URL}/api/payment/payment/verify`, {
         reportId: reportForWarranty._id,
         deviceModel: reportForWarranty.deviceModel,
         imeiNumber: reportForWarranty.imeiNumber,
@@ -278,7 +279,7 @@ const PhoneReports = ({ standalone = false }) => {
 
   const getSessionIdForBulkPurchase = async (totalAmount) => {
     try {
-      let res = await axios.post("http://localhost:5000/api/payment/create-order", {
+      let res = await axios.post(`${API_URL}/api/payment/create-order`, {
         amount: totalAmount,
         receipt: 'bulk_warranty_purchase',
         notes: {},
@@ -300,7 +301,7 @@ const PhoneReports = ({ standalone = false }) => {
   const verifyPaymentForBulkPurchase = async (purchaseDetails, orderId) => {
     try {
       
-      let res = await axios.post("http://localhost:5000/api/payment/warranty/bulk-purchase/verify", {
+      let res = await axios.post(`${API_URL}/api/payment/warranty/bulk-purchase/verify`, {
         purchaseDetails: purchaseDetails,
         orderId: orderId
       }, {

@@ -2,6 +2,7 @@ import React, { useState , useEffect} from 'react';
 import axios from 'axios';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { FiHome, FiClipboard, FiFileText, FiLogOut, FiUser, FiMenu, FiX } from 'react-icons/fi';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const PhoneCheckerLayout = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const PhoneCheckerLayout = () => {
   
     const fetchProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
+        const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
           headers: {
             Authorization: `${localStorage.getItem('token')}`
           }

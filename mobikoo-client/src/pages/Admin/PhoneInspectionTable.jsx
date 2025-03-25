@@ -5,6 +5,7 @@ import { ImHammer2 } from "react-icons/im";
 import { useNavigate } from 'react-router-dom';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 import {toast, Toaster} from 'react-hot-toast';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const PhoneInspectionTable = () => {
   const [reports, setReports] = useState([]);
@@ -29,7 +30,7 @@ const PhoneInspectionTable = () => {
     console.log("Updating fine status for report ID:", reportId); // Debugging log
     try {
       await axios.post(
-        `http://localhost:5000/fine/${reportId}`,
+        `${API_URL}/fine/${reportId}`,
         { fineStatus: "Fined" },
         { headers: { Authorization: `${localStorage.getItem("token")}` } }
       );
@@ -51,7 +52,7 @@ const PhoneInspectionTable = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/inspection/fine", {
+      const response = await axios.post(`${API_URL}/api/inspection/fine`, {
         fineAmount,
         comment,
         reportId: selectedReport._id,
@@ -92,7 +93,7 @@ const PhoneInspectionTable = () => {
     
     try {
 
-const response = await axios.get('http://localhost:5000/api/inspection/admin/reports', {
+const response = await axios.get(`${API_URL}/api/inspection/admin/reports`, {
   headers: { Authorization: `${localStorage.getItem('token')}` }
 });
       
@@ -141,7 +142,7 @@ const response = await axios.get('http://localhost:5000/api/inspection/admin/rep
     console.log(reportId)
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/inspection/reports/${reportId}/download`,
+        `${API_URL}/api/inspection/reports/${reportId}/download`,
         { 
           responseType: 'blob',
           headers: { Authorization: `${localStorage.getItem('token')}` }

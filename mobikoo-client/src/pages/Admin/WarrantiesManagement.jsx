@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FiDownload, FiEye, FiRefreshCw, FiArrowLeft, FiCheckSquare } from 'react-icons/fi';
 import WarrantyDetails from '../../components/WarrantyDetails';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+const API_URL = import.meta.env.VITE_API_URL;
 
 const WarrantiesManagement = () => {
     const [warranties, setWarranties] = useState([]);
@@ -16,7 +17,7 @@ const WarrantiesManagement = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
+            const response = await axios.get(`${API_URL}/api/warranty/issued-warranties`, {
                 headers: { Authorization: `${localStorage.getItem('token')}` }
             });
             setWarranties(response.data.data);
@@ -34,7 +35,7 @@ const WarrantiesManagement = () => {
 
     const handleWarrantyDownload = async (warrantyId) => {
         try {
-            const response = await axios.get(`http://localhost:5000/warranty/download-warranty/${warrantyId}`, {
+            const response = await axios.get(`${API_URL}/warranty/download-warranty/${warrantyId}`, {
                 responseType: 'blob',
                 headers: { Authorization: `${localStorage.getItem('token')}` }
             });
@@ -54,7 +55,7 @@ const WarrantiesManagement = () => {
     const handleActivateWarranty = async (warranty) => {
         console.log(warranty._id)
         try {
-            const response = await axios.put(`http://localhost:5000/api/warranty/confirm/${warranty._id}`, {
+            const response = await axios.put(`${API_URL}/api/warranty/confirm/${warranty._id}`, {
                 headers: { Authorization: `${localStorage.getItem('token')}` }
             });
             if (response.status === 200) {

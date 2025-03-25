@@ -6,6 +6,7 @@ import ClaimRequests from './ClaimRequests';
 import InspectionRequests from './InspectionRequests';
 import { InspectionReportDetails } from '../../components/InspectionReportDetails';
 import SalesGraph from './SalesGraph';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const PhoneCheckerDashboard = () => {
   const [shopOwners, setShopOwners] = useState([]);
@@ -57,7 +58,7 @@ const PhoneCheckerDashboard = () => {
 
   const fetchShopOwners = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/user/shop-owners', {
+      const response = await axios.get(`${API_URL}/api/user/shop-owners`, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -75,7 +76,7 @@ const PhoneCheckerDashboard = () => {
     try {
       // Fetch both types of requests
       const [inspectionsResponse] = await Promise.all([
-        axios.get('http://localhost:5000/api/inspection/phoneChecker', {
+        axios.get(`${API_URL}/api/inspection/phoneChecker`, {
           headers: {
             Authorization: `${localStorage.getItem('token')}`
           }
@@ -94,7 +95,7 @@ const PhoneCheckerDashboard = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/inspection/phoneChecker/reports', {
+      const response = await axios.get(`${API_URL}/api/inspection/phoneChecker/reports`, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -109,7 +110,7 @@ const PhoneCheckerDashboard = () => {
 
   const fetchSalesStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/stats/phone-checker', {
+      const response = await axios.get(`${API_URL}/api/stats/phone-checker`, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -122,7 +123,7 @@ const PhoneCheckerDashboard = () => {
 
   const handleStatusUpdate = async (requestId, type, newStatus) => {
     try {
-      const endpoint = `http://localhost:5000/api/inspections/${requestId}/status`;
+      const endpoint = `${API_URL}/api/inspections/${requestId}/status`;
 
       await axios.patch(endpoint, { status: newStatus });
       toast.success(`${type} status updated successfully`);
@@ -213,7 +214,7 @@ const PhoneCheckerDashboard = () => {
     console.log("FormDataToSend entries:", [...formDataToSend.entries()]);
     console.log(formData);
     try {
-      await axios.post('http://localhost:5000/api/inspection/submitReport', formDataToSend, {
+      await axios.post(`${API_URL}/api/inspection/submitReport`, formDataToSend, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         },
@@ -232,7 +233,7 @@ const PhoneCheckerDashboard = () => {
 
   const handleDownloadReport = async (reportId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/inspection/reports/${reportId}/download`, {
+      const response = await axios.get(`${API_URL}/api/inspection/reports/${reportId}/download`, {
         responseType: 'blob',
         headers: {
           Authorization: `${localStorage.getItem('token')}`
@@ -315,7 +316,7 @@ const PhoneCheckerDashboard = () => {
 
   const handlePurchaseWarranty = async (report) => {
     try {
-      const response = await axios.get('http://localhost:5000/api/warranty/plans', {
+      const response = await axios.get(`${API_URL}/api/warranty/plans`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
 
@@ -340,7 +341,7 @@ const PhoneCheckerDashboard = () => {
   const handleWarrantyPurchaseConfirm = async () => {
     try {
       // Create order with Razorpay
-      const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
+      const orderResponse = await axios.post(`${API_URL}/api/payment/create-order`, {
         amount: warrantyPlan.price, // Amount in INR
         receipt: reportForWarranty._id,
         notes: {}, // Ensure this is set in your environment
@@ -355,7 +356,7 @@ const PhoneCheckerDashboard = () => {
         order_id: orderResponse.data.id, // Order ID returned from Razorpay
         handler: async function (response) {
           // Handle successful payment
-          await axios.post(`http://localhost:5000/api/payment/warranty/purchase`, {
+          await axios.post(`${API_URL}/api/payment/warranty/purchase`, {
             reportId: reportForWarranty._id,
             deviceModel: reportForWarranty.deviceModel,
             imeiNumber: reportForWarranty.imeiNumber,

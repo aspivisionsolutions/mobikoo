@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiAlertCircle, FiSearch } from 'react-icons/fi';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const UserManagement = () => {
   // State variables
@@ -50,16 +51,16 @@ const UserManagement = () => {
       let endpoint;
       switch (activeTab) {
         case 'customers':
-          endpoint = 'http://localhost:5000/api/admin/customers';
+          endpoint = `${API_URL}/api/admin/customers`;
           break;
         case 'phoneCheckers':
-          endpoint = 'http://localhost:5000/api/admin/phone-checkers';
+          endpoint = `${API_URL}/api/admin/phone-checkers`;
           break;
         case 'shopOwners':
-          endpoint = 'http://localhost:5000/api/admin/shop-owners';
+          endpoint = `${API_URL}/api/admin/shop-owners`;
           break;
         default:
-          endpoint = 'http://localhost:5000/api/admin/customers';
+          endpoint = `${API_URL}/api/admin/customers`;
       }
       const response = await axios.get(endpoint,getAxiosConfig());
       console.log(response.data);
@@ -114,7 +115,7 @@ const UserManagement = () => {
         return;
       }
       
-      await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, getAxiosConfig());
+      await axios.delete(`${API_URL}/api/admin/users/${userId}`, getAxiosConfig());
       
       // Remove user from respective state
       switch (activeTab) {
@@ -213,7 +214,7 @@ const UserManagement = () => {
         };
       }
       
-      await axios.put(`http://localhost:5000/api/admin/users/${userId}`, updateData, getAxiosConfig());
+      await axios.put(`${API_URL}/api/admin/users/${userId}`, updateData, getAxiosConfig());
       
       // Update user in respective state
       const updatedUser = { ...editingUser };

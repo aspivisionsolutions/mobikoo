@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const SalesChart = () => {
   const [chartData, setChartData] = useState([]);
@@ -17,7 +18,7 @@ const SalesChart = () => {
     const fetchCustomers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/user/shop-owner/customers",
+          `${API_URL}/api/user/shop-owner/customers`,
           {
             headers: { Authorization: `${localStorage.getItem("token")}` },
           }

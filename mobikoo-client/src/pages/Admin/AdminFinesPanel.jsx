@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiDownload, FiRefreshCw, FiFilter } from 'react-icons/fi';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const AdminFinesPanel = () => {
   const [fines, setFines] = useState([]);
@@ -19,7 +20,7 @@ const AdminFinesPanel = () => {
   const fetchFines = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/inspection/admin/fines', {
+      const response = await axios.get(`${API_URL}/api/inspection/admin/fines`, {
         headers: { Authorization: `${localStorage.getItem('token')}` },
         params: {
           page: currentPage,

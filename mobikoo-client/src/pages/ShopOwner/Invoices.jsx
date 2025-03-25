@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow,Typography, Paper, TextField,Button } from '@mui/material';
 import { FaDownload, FaWhatsapp } from 'react-icons/fa';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Invoices = () => {
   const [warranties, setWarranties] = useState([]);
@@ -19,7 +20,7 @@ const Invoices = () => {
   useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+        const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
   
@@ -46,7 +47,7 @@ const Invoices = () => {
 
     const fetchWarranties = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
+        const response = await axios.get(`${API_URL}/api/warranty/issued-warranties/shopOwner`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
         const warrantiesWithCustomerName = response.data.data.filter(

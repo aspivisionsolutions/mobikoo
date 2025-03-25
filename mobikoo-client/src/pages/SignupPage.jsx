@@ -4,6 +4,7 @@ import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiPhone } from 'react-icons/fi';
 import ShopDetailsModal from '../components/ShopDetailsModal';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const SignupPage = () => {
     setIsLoading(true);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
+      const response = await axios.post(`${API_URL}/api/auth/signup`, formData);
         toast.success('Registration successful! Please login.');
         navigate('/admin/dashboard');
     } catch (error) {

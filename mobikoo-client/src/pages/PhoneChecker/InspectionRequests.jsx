@@ -4,9 +4,10 @@ import { FiSearch, FiCheckCircle, FiXCircle, FiMapPin } from 'react-icons/fi';
 import { Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${API_URL}/api`,
   headers: {
     Authorization: `${localStorage.getItem('token')}`,
   },

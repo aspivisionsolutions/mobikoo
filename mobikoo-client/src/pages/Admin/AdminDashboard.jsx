@@ -24,6 +24,7 @@ import PartnerManagement from './PartnerDashboard';
 import AdminFinesPanel from './AdminFinesPanel';
 import SalesGraph from './SalesGraph';
 import Invoices from './Invoices';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -217,7 +218,7 @@ const DashboardContent = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/stats/admin', {
+        const response = await axios.get(`${API_URL}/api/stats/admin`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
         setStats(response.data.stats);

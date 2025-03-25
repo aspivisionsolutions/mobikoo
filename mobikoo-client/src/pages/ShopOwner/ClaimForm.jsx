@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiArrowLeft, FiArrowRight, FiCheck, FiUpload, FiX } from 'react-icons/fi';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ClaimForm = ({ onSubmit, onCancel, isSubmitting, setIsSubmitting }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -44,7 +45,7 @@ const ClaimForm = ({ onSubmit, onCancel, isSubmitting, setIsSubmitting }) => {
       const formattedPhone = phoneNumber.replace(/[^\d+]/g, '');
       
       // Make the API request to fetch customer devices
-      const response = await fetch(`http://localhost:5000/api/user/devices/${encodeURIComponent(formattedPhone)}`);
+      const response = await fetch(`${API_URL}/api/user/devices/${encodeURIComponent(formattedPhone)}`);
       
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`);

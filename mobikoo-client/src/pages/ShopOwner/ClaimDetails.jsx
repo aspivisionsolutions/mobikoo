@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiPhone, FiMail, FiHash, FiShield, FiCheckCircle, FiHome, FiFileText, FiArrowLeft, FiSmartphone, FiBattery, FiImage } from 'react-icons/fi';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ClaimDetails = ({ claim }) => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const ClaimDetails = ({ claim }) => {
     
     const fetchShopDetails = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+        const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
         

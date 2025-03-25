@@ -13,6 +13,7 @@ import Timex from '../../public/timex.png';
 import Amazon from '../../public/amazon.png';
 import Flipkart from '../../public/flipkart.png';
 import SuccessStories from '../components/SuccessStories';
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 gsap.registerPlugin(ScrollTrigger);
@@ -225,7 +226,7 @@ export function LandingPage() {
     }
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/warranty/find-by-imei/${imeiNumber}`);
+      const response = await axios.get(`${API_URL}/api/warranty/find-by-imei/${imeiNumber}`);
       console.log(response.data.data)
       if (response.data.success) {
         const warranty = response.data.data;

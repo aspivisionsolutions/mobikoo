@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField } from '@mui/material';
 import { FaDownload, FaWhatsapp } from 'react-icons/fa';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Invoices = () => {
   const [warranties, setWarranties] = useState([]);
@@ -14,7 +15,7 @@ const Invoices = () => {
 
   const fetchWarranties = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
+      const response = await axios.get(`${API_URL}/api/warranty/issued-warranties`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       // Filter out warranties without customer name during initial fetch

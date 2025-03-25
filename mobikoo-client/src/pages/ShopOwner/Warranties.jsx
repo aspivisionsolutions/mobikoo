@@ -5,6 +5,7 @@ import ResponsiveTable from '../../components/ResponsiveTable';
 import WarrantyDetails from './WarrantyDetails';
 import { Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 const Warranties = () => {
@@ -28,7 +29,7 @@ const Warranties = () => {
   useEffect(() => {
     const fetchShopDetails = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+        const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
         if (response.status === 200 && response.data.shopprofile && response.data.shopprofile.length > 0) {
@@ -55,7 +56,7 @@ const Warranties = () => {
 
     const fetchWarranties = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
+        const response = await axios.get(`${API_URL}/api/warranty/issued-warranties/shopOwner`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
         setWarranties(response.data.data);
@@ -161,7 +162,7 @@ const Warranties = () => {
   const handleDownload = async (warrantyId) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/shop-owner/warranty-documents/${warrantyId}/download`,
+        `${API_URL}/api/shop-owner/warranty-documents/${warrantyId}/download`,
         {
           responseType: 'blob',
           headers: { Authorization: `${localStorage.getItem('token')}` }

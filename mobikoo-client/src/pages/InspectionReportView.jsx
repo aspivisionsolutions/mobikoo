@@ -4,6 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FiArrowLeft } from 'react-icons/fi';
 import InspectionReportDetails from '../components/InspectionReportDetails';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const InspectionReportView = () => {
   const { reportId } = useParams();
@@ -14,7 +15,7 @@ const InspectionReportView = () => {
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/inspection/reports/${reportId}`, {
+        const response = await axios.get(`${API_URL}/api/inspection/reports/${reportId}`, {
           headers: {
             Authorization: `${localStorage.getItem('token')}`
           }

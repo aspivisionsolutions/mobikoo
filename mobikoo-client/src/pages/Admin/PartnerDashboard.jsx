@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiDownload, FiRefreshCw, FiFilter, FiChevronLeft, FiChevronRight, FiPlus } from 'react-icons/fi';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const PartnerManagement = () => {
   const [partners, setPartners] = useState([]);
@@ -29,7 +30,7 @@ const PartnerManagement = () => {
     setLoading(true);
     
     try {
-      const response = await axios.get('http://localhost:5000/api/partners', {
+      const response = await axios.get(`${API_URL}/api/partners`, {
         headers: { Authorization: `${localStorage.getItem('token')}` },
       });
       
@@ -91,11 +92,11 @@ const PartnerManagement = () => {
     
     try {
       if (currentPartner) {
-        await axios.put(`http://localhost:5000/api/partners/${currentPartner._id}`, formData, {
+        await axios.put(`${API_URL}/api/partners/${currentPartner._id}`, formData, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
       } else {
-        await axios.post('http://localhost:5000/api/partners', formData, {
+        await axios.post(`${API_URL}/api/partners`, formData, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
       }
@@ -113,7 +114,7 @@ const PartnerManagement = () => {
     if (window.confirm('Are you sure you want to delete this partner?')) {
       setLoading(true);
       try {
-        await axios.delete(`http://localhost:5000/api/partners/${id}`, {
+        await axios.delete(`${API_URL}/api/partners/${id}`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
         fetchPartners();

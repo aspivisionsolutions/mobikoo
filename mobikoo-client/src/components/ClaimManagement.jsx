@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiRefreshCw, FiSearch, FiArrowLeft, FiEye } from "react-icons/fi";
 import ClaimDetails from "../pages/ShopOwner/ClaimDetails";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ClaimsManagement = () => {
     const [claims, setClaims] = useState([]);
@@ -18,7 +19,7 @@ const ClaimsManagement = () => {
         setError(null);
 
         try {
-            const response = await axios.get("http://localhost:5000/api/claim/all", {
+            const response = await axios.get(`${API_URL}/api/claim/all`, {
                 headers: { Authorization: `${localStorage.getItem("token")}` },
             });
             console.log(response.data)
@@ -38,7 +39,7 @@ const ClaimsManagement = () => {
     const handleApprove = async (claimId) => {
         console.log(claimId)
         try {
-            await axios.patch(`http://localhost:5000/api/claim/approve/${claimId}`, {}, {
+            await axios.patch(`${API_URL}/api/claim/approve/${claimId}`, {}, {
                 headers: { Authorization: `${localStorage.getItem("token")}` },
             });
             fetchClaims();
@@ -49,7 +50,7 @@ const ClaimsManagement = () => {
 
     const handleReject = async (claimId) => {
         try {
-            await axios.patch(`http://localhost:5000/api/claim/reject/${claimId}`, {}, {
+            await axios.patch(`${API_URL}/api/claim/reject/${claimId}`, {}, {
                 headers: { Authorization: `${localStorage.getItem("token")}` },
             });
             fetchClaims();

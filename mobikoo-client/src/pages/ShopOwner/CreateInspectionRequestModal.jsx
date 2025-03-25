@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const CreateInspectionRequestModal = ({ isOpen, onClose, onSuccess }) => {
   const [step, setStep] = useState(1);
@@ -14,7 +15,7 @@ const CreateInspectionRequestModal = ({ isOpen, onClose, onSuccess }) => {
   const fetchInspectors = async (selectedArea) => {
     setIsLoadingInspectors(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/user/phone-checkers/${encodeURIComponent(selectedArea)}`, {
+      const response = await axios.get(`${API_URL}/api/user/phone-checkers/${encodeURIComponent(selectedArea)}`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       console.log(response.data);
@@ -43,7 +44,7 @@ const CreateInspectionRequestModal = ({ isOpen, onClose, onSuccess }) => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/inspection/create', {
+      const response = await axios.post(`${API_URL}/api/inspection/create`, {
         area,
         inspectorId: selectedInspector.userId._id,
         inspectorEmail: selectedInspector.userId.email

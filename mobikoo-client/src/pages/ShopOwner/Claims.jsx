@@ -5,6 +5,7 @@ import ClaimForm from './ClaimForm';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ClaimDetails from './ClaimDetails';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Claims = () => {
     const [showClaimForm, setShowClaimForm] = useState(false);
@@ -16,7 +17,7 @@ const Claims = () => {
     useEffect(()=>{
         const fetchClaims = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/claim/shop-owner', {
+                const response = await axios.get(`${API_URL}/api/claim/shop-owner`, {
                     headers: { Authorization: `${localStorage.getItem('token')}` },
                 });
                 console.log(response.data)
@@ -31,7 +32,7 @@ const Claims = () => {
 
         const fetchShopDetails = async () => {
             try {
-              const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+              const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
                 headers: { Authorization: `${localStorage.getItem('token')}` }
               });
               console.log(response.data)
@@ -84,7 +85,7 @@ const Claims = () => {
 
             
             // Send the claim request to the server
-            const response = await axios.post('http://localhost:5000/api/claim/submit', claimData, {
+            const response = await axios.post(`${API_URL}/api/claim/submit`, claimData, {
                 headers: { Authorization: `${localStorage.getItem('token')}` },
             });
 

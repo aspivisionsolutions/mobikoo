@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiUser, FiPhone, FiMapPin, FiMail, FiSave } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const PhoneCheckerProfile = () => {
   const [profile, setProfile] = useState({
@@ -22,7 +23,7 @@ const PhoneCheckerProfile = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
+      const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }
@@ -65,7 +66,7 @@ const PhoneCheckerProfile = () => {
         area: profile.area
       };
 
-      await axios.post('http://localhost:5000/api/user/phone-checker', submitData, {
+      await axios.post(`${API_URL}/api/user/phone-checker`, submitData, {
         headers: {
           Authorization: `${localStorage.getItem('token')}`
         }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { FiX, FiMapPin, FiShoppingBag, FiPhone } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ShopDetailsModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ const ShopDetailsModal = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      await axios.post('http://localhost:5000/api/user/shop-owner', formData, {
+      await axios.post(`${API_URL}/api/user/shop-owner`, formData, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       toast.success('Shop details added successfully');
