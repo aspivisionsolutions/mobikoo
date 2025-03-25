@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow,Typography, Paper, TextField,Button } from '@mui/material';
 import { FaDownload, FaWhatsapp } from 'react-icons/fa';
 
 const Invoices = () => {
@@ -10,31 +10,80 @@ const Invoices = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredWarranties, setFilteredWarranties] = useState([]); // Initialize with empty array
-
-  const fetchWarranties = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
-        headers: { Authorization: `${localStorage.getItem('token')}` }
-      });
-      console.log(response.data)
-      // Filter out warranties without customer name during initial fetch
-      const warrantiesWithCustomerName = response.data.data.filter(
-        (warranty) => warranty.customer?.customerName
-      );
-      setWarranties(warrantiesWithCustomerName);
-      setFilteredWarranties(warrantiesWithCustomerName);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [filteredWarranties, setFilteredWarranties] = useState([]);
+  const [shopDetails, setShopDetails] = useState(null);
+  const [shopDetailsComplete, setShopDetailsComplete] = useState(false); // Added state for shop details completion
+  const navigate = useNavigate();
+  
 
   useEffect(() => {
+    const fetchShopDetails = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
+  
+        if (response.data.shopprofile && response.data.shopprofile.length > 0) {
+          const profile = response.data.shopprofile[0];
+          const shopDetails = {
+            shopName: profile.shopDetails?.shopName,
+            address: profile.shopDetails?.address,
+            mobileNumber: profile.phoneNumber
+          };
+  
+          setShopDetails(shopDetails);
+          setShopDetailsComplete(isShopDetailsComplete(shopDetails)); // Pass shopDetails to the function
+        } else {
+          setShopDetails(null);
+          setShopDetailsComplete(false);
+        }
+      } catch (error) {
+        console.error('Error fetching shop details:', error);
+        setShopDetails(null);
+        setShopDetailsComplete(false);
+      }
+    };
+
+    const fetchWarranties = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
+        const warrantiesWithCustomerName = response.data.data.filter(
+          (warranty) => warranty.customer?.customerName
+        );
+        setWarranties(warrantiesWithCustomerName);
+        setFilteredWarranties(warrantiesWithCustomerName);
+        setLoading(false);
+      } catch (err) {
+        setError(err);
+        setLoading(false);
+      }
+    };
+
+    fetchShopDetails();
     fetchWarranties();
   }, []);
+  const isShopDetailsComplete = (shopDetails) => { // Added shopDetails parameter
+    return shopDetails &&
+           shopDetails.shopName &&
+           shopDetails.mobileNumber &&
+           shopDetails.address;
+  };
+  if (!shopDetailsComplete) { // Use shopDetailsComplete state
+    return (
+      <div style={{ textAlign: 'center', marginTop: '50px' }}>
+        <Typography variant="h5" component="div" gutterBottom>
+          Please complete your shop profile to view invoices.
+        </Typography>
+        <Typography variant="body1" component="div" gutterBottom>
+          Go to your profile settings to complete the missing information.
+        </Typography>
+        <Button variant="contained" onClick={() => navigate('/shop-owner/profile')}>Go to Profile</Button> {/* Added button */}
+      </div>
 
+    );
+  }
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
     filterWarranties(event.target.value);
@@ -97,7 +146,6 @@ const Invoices = () => {
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-
   return (
     <>
     <TextField

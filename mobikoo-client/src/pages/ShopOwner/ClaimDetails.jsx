@@ -4,7 +4,49 @@ import { FiUser, FiPhone, FiMail, FiHash, FiShield, FiCheckCircle, FiHome, FiFil
 
 const ClaimDetails = ({ claim }) => {
   const navigate = useNavigate();
-
+  useEffect(() => {
+    fetchShopDetails();
+    }, []);
+    
+    const fetchShopDetails = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
+        
+        if (response.data.shopprofile && response.data.shopprofile.length > 0) {
+          const profile = response.data.shopprofile[0];
+          setShopDetails({
+            shopName: profile.shopDetails?.shopName,
+            address: profile.shopDetails?.address,
+            mobileNumber: profile.phoneNumber
+          });
+        } else {
+          setShopDetails(null);
+        }
+      } catch (error) {
+        console.error('Error fetching shop details:', error);
+        setShopDetails(null);
+      }
+    };
+    const isShopDetailsComplete = () => {
+      return shopDetails && 
+             shopDetails.shopName && 
+             shopDetails.mobileNumber && 
+             shopDetails.address;
+    };
+    if (!isShopDetailsComplete()) {
+      return (
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+          <Typography variant="h5" component="div" gutterBottom>
+            Please complete your shop profile to view invoices.
+          </Typography>
+          <Typography variant="body1" component="div" gutterBottom>
+            Go to your profile settings to complete the missing information.
+          </Typography>
+        </div>
+      );
+    }
   if (!claim) {
     return (
       <div className="text-center py-12">

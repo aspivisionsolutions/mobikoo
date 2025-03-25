@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { FiPlus, FiEye, FiEdit, FiTrash2, FiArrowLeft } from 'react-icons/fi';
+import { Typography,Button } from '@mui/material';
 import ClaimForm from './ClaimForm';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import ClaimDetails from './ClaimDetails';
 
 const Claims = () => {
@@ -9,21 +11,67 @@ const Claims = () => {
     const [claims, setClaims] = useState([]);
     const [selectedClaim, setSelectedClaim] = useState(null);
     const [isSubmitting , setIsSubmitting] = useState(false);
-
-    const fetchClaims = async () => {
-        try {
-            const response = await axios.get('http://localhost:5000/api/claim/shop-owner', {
-                headers: { Authorization: `${localStorage.getItem('token')}` },
-            });
-            console.log(response.data)
-            setClaims(response.data);
-        } catch (error) {
-            console.error('Error fetching claims:', error);
-        }
-    };
+    const [shopDetails, setShopDetails] = useState(null);
+    const navigate = useNavigate();
     useEffect(()=>{
+        const fetchClaims = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/claim/shop-owner', {
+                    headers: { Authorization: `${localStorage.getItem('token')}` },
+                });
+                console.log(response.data)
+                setClaims(response.data);
+            } catch (error) {
+                console.error('Error fetching claims:', error);
+            }
+        };
         fetchClaims();
-    },[])
+    })
+    useEffect(() => {
+
+        const fetchShopDetails = async () => {
+            try {
+              const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+                headers: { Authorization: `${localStorage.getItem('token')}` }
+              });
+              console.log(response.data)
+              if (response.data.shopprofile && response.data.shopprofile.length > 0) {
+                const profile = response.data.shopprofile[0];
+                setShopDetails({
+                  shopName: profile.shopDetails?.shopName,
+                  address: profile.shopDetails?.address,
+                  mobileNumber: profile.phoneNumber
+                });
+              } else {
+                setShopDetails(null);
+              }
+            } catch (error) {
+              console.error('Error fetching shop details:', error);
+              setShopDetails(null);
+            }
+          };
+      
+          fetchShopDetails();
+        }, []);
+        const isShopDetailsComplete = () => {
+          return shopDetails && 
+          shopDetails.shopName && 
+          shopDetails.mobileNumber && 
+          shopDetails.address;
+        };
+        if (!isShopDetailsComplete()) {
+          return (
+            <div style={{ textAlign: 'center', marginTop: '50px' }}>
+              <Typography variant="h5" component="div" gutterBottom>
+                Please complete your shop profile to view invoices.
+              </Typography>
+              <Typography variant="body1" component="div" gutterBottom>
+                Go to your profile settings to complete the missing information.
+              </Typography>
+               <Button variant="contained" onClick={() => navigate('/shop-owner/profile')}>Go to Profile</Button> {/* Added button */}
+            </div>
+          );
+        }
 
     const handleNewClaim = () => {
         setShowClaimForm(true);
