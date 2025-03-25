@@ -52,9 +52,9 @@ const SuccessStories = () => {
 
   return (
     <div className="bg-gray-900 flex items-center justify-center p-4 mt-32">
-      <div className="flex justify-center items-center gap-12">
+      <div className="flex flex-col lg:flex-row justify-center items-center gap-12">
         {/* Left Side - Text Content */}
-        <div className="space-y-6 w-[50%] pl-20">
+        <div className="space-y-6 w-[100%] lg:w-[50%] pl-5 md:pl-10 lg:pl-20 pt-20 md:pt-10 lg:pt-0">
           <h1 className="text-4xl font-bold text-gray-50">
             Transforming <span className="text-yellow-500">Business</span> Success
           </h1>

@@ -26,8 +26,8 @@ export function LandingPage() {
     { src: SangeethaMobiles, alt: "Sangeetha Mobiles" },
     { src: RelianceJio, alt: "Reliance Jio" },
     { src: Timex, alt: "Timex" },
-    {src: Amazon, alt:"Amazon" },
-    {src: Flipkart, alt:"Flipkart" }
+    { src: Amazon, alt: "Amazon" },
+    { src: Flipkart, alt: "Flipkart" }
   ]
 
   const features = ["Cost-Effective Plans", "Complete Coverage", "Quick Claims", "Rapid Activation", "Peaceful Assurance", "High Quality Service"];
@@ -821,7 +821,7 @@ export function LandingPage() {
 
       </div>
 
-      <SuccessStories/>
+      <SuccessStories />
 
       {/* Partners Sections */}
 
