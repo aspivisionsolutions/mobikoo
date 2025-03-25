@@ -138,6 +138,39 @@ const Invoices = () => {
     });
   
     doc.save(`invoice_${_id.toString()}.pdf`);
+
+  };
+  const sendToWhatsApp = (warranty) => {
+    // Ensure the phone number has +91 prefix
+    const phoneNumber = warranty.customer.customerPhoneNumber.toString().startsWith('+91') 
+      ? warranty.customer.customerPhoneNumber 
+      : `+91${warranty.customer.customerPhoneNumber}`;
+  
+    // Construct the WhatsApp message
+    const message = `
+  *Mobikoo Invoice Details*
+  
+  Invoice ID: ${warranty._id}
+  Customer Name: ${warranty.customer.customerName}
+  Shop Name: ${warranty.inspectionReport.shopName}
+  Mobile: ${phoneNumber}
+  IMEI: ${warranty.customer.imeiNumber}
+  Warranty Plan: ${warranty.warrantyPlanId.lower_limit}-${warranty.warrantyPlanId.upper_limit}
+  Issue Date: ${new Date(warranty.issueDate).toLocaleDateString()}
+  Warranty Price: ₹${warranty.warrantyPlanId.price}
+  Total Price: ₹${warranty.warrantyPlanId.price}
+  
+  Thank you for your purchase!
+    `.trim();
+  
+    // Encode the message for URL
+    const encodedMessage = encodeURIComponent(message);
+  
+    // Open WhatsApp with pre-filled message
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    // Open WhatsApp in a new window/tab
+    window.open(whatsappUrl, '_blank');
   };
   if (loading) {
     return <div>Loading...</div>;
