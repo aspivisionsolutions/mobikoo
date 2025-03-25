@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+.slider {
+    height: fit-content;
+    margin: auto;
+    overflow: hidden;
+    position: relative;
+    width: 960px;
+  }
+  
+  .slide-track {
+    animation: scroll 15s linear infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100px * 32);
+    gap: 30px
+  }
+  
+  .slide {
+    width: 100px;
+  }
+
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(calc(-100px * 16)); } /* Updated to fit doubled items */
+  }
