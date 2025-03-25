@@ -226,14 +226,18 @@ exports.submitInspectionReport = async (req, res) => {
         }
       });
     } catch (error) {
-      console.error('Failed to create activity log:', error.message);
+      console.error('Failed to create activity log:', error);
     }
 
 
     res.status(201).json(newReport);
   } catch (error) {
     console.error("Error submitting inspection report:", error);
-    res.status(500).json({ message: "Error submitting inspection report", error });
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.imeiNumber) {
+      res.status(400).json({ message: "IMEI number already exists. Please provide a unique IMEI number." });
+    } else {
+      res.status(500).json({ message: "Error submitting inspection report", error });
+    }
   }
 };
 

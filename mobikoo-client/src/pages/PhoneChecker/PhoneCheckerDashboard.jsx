@@ -223,7 +223,7 @@ const PhoneCheckerDashboard = () => {
       handleFormClose();
       fetchRequests();
     } catch (error) {
-      toast.error('Failed to submit inspection');
+      toast.error(error.response.data.message || "Failed to submit inspection");
       console.error('Error submitting inspection:', error);
     } finally {
       setIsSubmitting(false); // Reset submission status
