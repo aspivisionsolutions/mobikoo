@@ -7,6 +7,7 @@ const PhoneCheckerLayout = () => {
   const navigate = useNavigate();
   const userName = localStorage.getItem('userName') || 'Phone Checker';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [profile, setProfile] = useState({
       firstName: '',

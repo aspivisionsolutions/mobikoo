@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import axios from 'axios';
 import { FiSearch, FiDownload, FiEye, FiShield, FiX, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import { toast } from 'react-toastify'; // Ensure you have toast notifications set up
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 import {load} from '@cashfreepayments/cashfree-js'
+import { useNavigate } from 'react-router-dom';
+import { Typography,Button } from '@mui/material';
+
 
 const PhoneReports = ({ standalone = false }) => {
   const [reports, setReports] = useState([]);
@@ -11,7 +14,7 @@ const PhoneReports = ({ standalone = false }) => {
   const [phoneChecker, setPhoneChecker] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [filteredReports, setFilteredReports] = useState([]);
-
+  const navigate = useNavigate();
   const [warrantyPlans, setWarrantyPlans] = useState([])
   const [reportToView, setReportToView] = useState(null);
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
@@ -24,16 +27,30 @@ const PhoneReports = ({ standalone = false }) => {
   const [availablePlans, setAvailablePlans] = useState([]);
   const [showDevicePriceModal, setShowDevicePriceModal] = useState(false);
   const [devicePrices, setDevicePrices] = useState({});
+  const [profile, setProfile] = useState({})
 
   useEffect(() => {
-    fetchReports();
-    fetchWarrantyPlans()
+    const getProfile = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
+      headers: {
+        Authorization: `${localStorage.getItem('token')}`
+      }
+    });
+    const profile = {
+      phoneNumber : response.data.phoneChecker.phoneNumber,
+      area: response.data.phoneChecker.area,
+    }
+    setProfile(profile)
+    } catch (error) {
+      console.log({error: error.response.data.message})
+    }}
+    getProfile()
   }, []);
-
+  const isProfileComplete = profile.phoneNumber && profile.area;
   useEffect(() => {
     calculateTotalAmount();
   }, [selectedReports, devicePrices, availablePlans]);
-
   const fetchReports = async () => {
     setIsLoading(true);
     try {
@@ -42,7 +59,6 @@ const PhoneReports = ({ standalone = false }) => {
           Authorization: `${localStorage.getItem('token')}`
         }
       });
-      // console.log(response.data);
       setReports(response.data);
       setFilteredReports(response.data);
     } catch (error) {
@@ -51,7 +67,6 @@ const PhoneReports = ({ standalone = false }) => {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     if (searchTerm === '') {
       setFilteredReports(reports); // Show all reports if search term is empty
@@ -106,6 +121,11 @@ const PhoneReports = ({ standalone = false }) => {
       toast.error('Failed to fetch warranty plans');
     }
   }
+
+  useEffect(() => {
+    fetchReports();
+    fetchWarrantyPlans()
+  }, []);
 
   const handlePurchaseWarranty = (report) => {
     setReportForWarranty(report);
@@ -327,50 +347,26 @@ const PhoneReports = ({ standalone = false }) => {
 
         verifyPaymentForBulkPurchase(purchaseDetails, orderId)
       })
-
-      // const orderResponse = await axios.post('http://localhost:5000/api/payment/create-order', {
-      //   amount: totalAmount, // Amount in INR
-      //   receipt: 'bulk_warranty_purchase',
-      //   notes: { purchaseDetails },
-      // });
-
-      // const options = {
-      //   key: "rzp_test_wrWBdn4mFAZoo8",
-      //   amount: orderResponse.data.amount,
-      //   currency: orderResponse.data.currency,
-      //   name: 'Bulk Warranty Purchase',
-      //   description: 'Purchase of multiple warranty plans',
-      //   order_id: orderResponse.data.id,
-      //   handler: async function (response) {
-      //     await axios.post(`http://localhost:5000/api/payment/warranty/bulk-purchase`, {
-      //       purchaseDetails,
-      //       razorpayPaymentId: response.razorpay_payment_id
-      //     }, {
-      //       headers: { Authorization: `${localStorage.getItem('token')}` }
-      //     });
-
-      //     toast.success('Bulk warranty purchased successfully');
-      //     setShowBulkModal(false);
-      //     fetchReports();
-      //   },
-      //   prefill: {
-      //     name: 'Customer Name',
-      //     email: 'customer@example.com',
-      //     contact: '9999999999'
-      //   },
-      //   theme: {
-      //     color: '#F37254'
-      //   }
-      // };
-
-      // const rzp = new window.Razorpay(options);
-      // rzp.open();
     } catch (error) {
       console.error('Error purchasing bulk warranty:', error);
       toast.error(error.response?.data?.message || 'Failed to purchase bulk warranty');
     }
   };
 
+  if (!isProfileComplete) {
+    return (
+      <div className="flex flex-col items-center justify-center mt-10">
+        <Typography variant="h5">Complete Your Shop Profile</Typography>
+        <Typography variant="body1" className="mt-2">
+          Please update your profile to access inspection requests.
+        </Typography>
+        <Button variant="contained" onClick={() => navigate('/phone-checker/profile')} className="mt-4">
+          Update Profile
+        </Button>
+      </div>
+    );
+  }
+  
   if (reportToView) {
     return (
       <>
@@ -385,7 +381,7 @@ const PhoneReports = ({ standalone = false }) => {
             <h1 className="text-2xl font-semibold text-gray-900">Inspection Report Details</h1>
           </div>
         </div>
-
+  
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
             <InspectionReportDetails report={reportToView} />
@@ -394,7 +390,7 @@ const PhoneReports = ({ standalone = false }) => {
       </>
     );
   }
-
+  
   return (
     <div className={`h-full flex flex-col ${standalone ? 'ml-64' : ''}`}>
       {/* Search Bar */}

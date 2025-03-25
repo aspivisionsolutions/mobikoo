@@ -3,6 +3,9 @@ import { FiRefreshCw, FiFilter } from 'react-icons/fi';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import {load} from '@cashfreepayments/cashfree-js'
+import { Typography,Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
 
 const PhoneCheckerFinesPanel = () => {
   const [fines, setFines] = useState([]);
@@ -14,7 +17,28 @@ const PhoneCheckerFinesPanel = () => {
   const [sortField, setSortField] = useState('timestamp');
   const [sortDirection, setSortDirection] = useState('desc');
   const [orderId, setOrderId] = useState('');
-
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState({})
+  
+    useEffect(() => {
+      const getProfile = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/user/phone-checker', {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+      const profile = {
+        phoneNumber : response.data.phoneChecker.phoneNumber,
+        area: response.data.phoneChecker.area,
+      }
+      setProfile(profile)
+      } catch (error) {
+        console.log({error: error.response.data.message})
+      }}
+      getProfile()
+    }, []);
+    const isProfileComplete = profile.phoneNumber && profile.area;
   useEffect(() => {
     fetchFines();
   }, []);
@@ -113,7 +137,19 @@ const PhoneCheckerFinesPanel = () => {
           console.log(err)
         }
     }
-
+     if (!isProfileComplete) {
+        return (
+          <div className="flex flex-col items-center justify-center mt-10">
+            <Typography variant="h5">Complete Your Shop Profile</Typography>
+            <Typography variant="body1" className="mt-2">
+              Please update your profile to access inspection requests.
+            </Typography>
+            <Button variant="contained" onClick={() => navigate('/phone-checker/profile')} className="mt-4">
+              Update Profile
+            </Button>
+          </div>
+        );
+      }
     const handlePayFine = async (fineId) => {
       try {
         // Destructure sessionId and orderId from the returned object
