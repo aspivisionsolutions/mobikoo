@@ -9,6 +9,52 @@ import CustomerWarrantyDetails from '../components/CustomerWarrantyDetails';
 gsap.registerPlugin(ScrollTrigger);
 
 export function LandingPage() {
+
+  const features = ["Cost-Effective Plans", "Complete Coverage", "Quick Claims", "Rapid Activation", "Peaceful Assurance", "High Quality Service"];
+
+  const [currentFeature, setCurrentFeature] = useState('');
+  const [featureIndex, setFeatureIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const typingSpeed = 100; // Speed of typing
+    const deletingSpeed = 50; // Speed of deleting
+    const pauseBetween = 2000; // Pause between typing and deleting
+
+    const handleTyping = () => {
+      const feature = features[featureIndex];
+      
+      // Typing logic
+      if (!isDeleting && currentFeature.length < feature.length) {
+        setCurrentFeature(feature.substring(0, currentFeature.length + 1));
+      }
+      
+      // Deleting logic
+      else if (isDeleting && currentFeature.length > 0) {
+        setCurrentFeature(feature.substring(0, currentFeature.length - 1));
+      }
+      
+      // Switch between typing and deleting
+      else if (!isDeleting && currentFeature.length === feature.length) {
+        setTimeout(() => setIsDeleting(true), pauseBetween);
+      }
+      
+      // Move to next feature
+      else if (isDeleting && currentFeature.length === 0) {
+        setIsDeleting(false);
+        setFeatureIndex((prevIndex) => (prevIndex + 1) % features.length);
+      }
+    };
+
+    // Set different timeout based on whether we're typing or deleting
+    const timeout = setTimeout(
+      handleTyping, 
+      isDeleting ? deletingSpeed : typingSpeed
+    );
+
+    return () => clearTimeout(timeout);
+  }, [currentFeature, featureIndex, isDeleting]);
+
   const footerLinks = {
     product: [
       { name: 'Features', url: '#' },
@@ -303,6 +349,10 @@ const handleSearch = async () => {
             <h1 className='text-6xl md:text-8xl font-bold mb-4'>MOBIKOO</h1>
             <h2 className='text-2xl md:text-4xl font-light mb-8 max-w-2xl'>
               Your Phone's Best Friend in Times of Trouble
+            </h2>
+            <h2 className='text-2xl md:text-5xl font-bold mb-8'>
+              {currentFeature}
+              <span className='animate-pulse'>|</span>
             </h2>
           </div>
         </div>
