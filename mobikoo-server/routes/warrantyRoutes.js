@@ -7,7 +7,8 @@ const {
     claimWarranty,
     downloadWarrantyPDF,
     confirmWarranty,
-    findByImei
+    findByImei,
+    getAllIssuedWarrantiesForShopOwner
 } = require('../controllers/warrantyController');
 
 const { protect, roleMiddleware } = require('../middlewares/authMiddleware');
@@ -23,6 +24,7 @@ router.get('/plans', getAllWarrantyPlans);
 router.post('/activate-warranty', protect, roleMiddleware(['shop-owner']), activateWarranty);
 // Route to fetch all issued warranties
 router.get('/issued-warranties', getAllIssuedWarranties);
+router.get('/issued-warranties/shopOwner',protect, roleMiddleware(['shop-owner']), getAllIssuedWarrantiesForShopOwner);
 router.post('/claim-warranty', protect, roleMiddleware(['customer']), claimWarranty);
 router.put('/confirm/:warrantyId',confirmWarranty);
 router.get('/download-warranty/:warrantyId', protect, downloadWarrantyPDF);

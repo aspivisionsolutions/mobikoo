@@ -25,6 +25,7 @@ exports.getAllWarrantyPlans = async (req, res) => {
 
 // Function to activate warranty
 const ActivityLog = require('../models/activityLog');
+const ShopOwner = require('../models/shopOwner');
 
 exports.activateWarranty = async (req, res) => {
     const { 
@@ -85,6 +86,39 @@ exports.activateWarranty = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.getAllIssuedWarrantiesForShopOwner = async (req, res) => {
+    try {
+
+        const shopOwner = await ShopOwner.findOne({ userId: req.user.userId });
+        if (!shopOwner) {
+            return res.status(404).json({ error: 'Shop Owner not found' });
+        }
+
+        const issuedWarranties = await IssuedWarranties.find()
+            .populate({
+                path: 'inspectionReport',
+                populate: { path: 'inspectorId' } // Only populate necessary fields
+            })
+            .populate('warrantyPlanId');
+
+            const filteredWarranties = issuedWarranties.filter(warranty => 
+                warranty.inspectionReport && warranty.inspectionReport.shopName === shopOwner.shopName
+            );
+    
+            // Fetch customer details based on IMEI
+            const populatedWarranties = await Promise.all(filteredWarranties.map(async (warranty) => {
+                const imei = warranty.inspectionReport.imeiNumber; 
+                const customer = await Customer.findOne({ imeiNumber: imei }); 
+                return { ...warranty.toObject(), customer }; 
+            }));
+
+        res.status(200).json({ success: true, data: populatedWarranties });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching issued warranties', error: error.message });
+    }
+}
+        
 
 // Function to get all issued warranties
 exports.getAllIssuedWarranties = async (req, res) => {

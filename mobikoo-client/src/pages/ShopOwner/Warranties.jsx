@@ -29,7 +29,7 @@ const Warranties = () => {
 
   const fetchWarranties = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
+      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
       setWarranties(response.data.data);
