@@ -12,6 +12,7 @@ import {
   FiDollarSign,
   FiUsers as FiPartners
 } from 'react-icons/fi';
+import { FaCashRegister } from 'react-icons/fa';
 import AdminLogsTable from './AdminLogsTable';
 import PhoneInspectionTable from './PhoneInspectionTable';
 import WarrantiesManagement from './WarrantiesManagement';
@@ -22,6 +23,7 @@ import axios from 'axios';
 import PartnerManagement from './PartnerDashboard';
 import AdminFinesPanel from './AdminFinesPanel';
 import SalesGraph from './SalesGraph';
+import Invoices from './Invoices';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -58,6 +60,8 @@ const AdminDashboard = () => {
         return <PartnerManagement />;
       case 'fines':
         return <AdminFinesPanel />; 
+      case 'invoices':
+        return <Invoices/>
       default:
         return <DashboardContent />;
     }
@@ -143,6 +147,12 @@ const AdminDashboard = () => {
               isActive={activeMenu === 'fines'} 
               onClick={() => handleMenuSelect('fines')} 
             />
+            <SidebarItem 
+              icon={<FaCashRegister />} 
+              text="Invoice Management" 
+              isActive={activeMenu === 'invoices'} 
+              onClick={() => handleMenuSelect('invoices')} 
+            />
           </div>
 
           {/* Logout button at bottom */}
@@ -171,6 +181,7 @@ const AdminDashboard = () => {
               {activeMenu === 'logs' && 'Activity Logs'}
               {activeMenu === 'partners' && 'Partners Management'}
               {activeMenu === 'fines' && 'Fine Management'}
+              {activeMenu ==='invoices' && 'Invoice Management'}
             </h2>
           </div>
         </div>

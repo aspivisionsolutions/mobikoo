@@ -14,10 +14,9 @@ const Invoices = () => {
 
   const fetchWarranties = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
+      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties', {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      console.log(response.data)
       // Filter out warranties without customer name during initial fetch
       const warrantiesWithCustomerName = response.data.data.filter(
         (warranty) => warranty.customer?.customerName

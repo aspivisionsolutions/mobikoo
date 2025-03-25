@@ -62,6 +62,7 @@ const PhoneCheckerDashboard = () => {
           Authorization: `${localStorage.getItem('token')}`
         }
       });
+      console.log(response.data)
       setShopOwners(response.data);
     } catch (error) {
       toast.error('Failed to fetch shop owners');
