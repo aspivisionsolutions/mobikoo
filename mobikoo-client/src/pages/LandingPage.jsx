@@ -188,22 +188,22 @@ const handleSearch = async () => {
   const reviews = [
     {
       name: 'Ravi Sharma',
-      image: '/api/placeholder/200/200',
+      image: '/pfp1.jpg',
       text: 'Mobikoo saved my day when I accidentally dropped my phone. The claims process was so quick and easy. Highly recommend!',
     },
     {
       name: 'Priya Mehta',
-      image: '/api/placeholder/200/200',
+      image: '/pfp3.jpg',
       text: "Excellent service! Mobikoo's affordable plans and comprehensive coverage give me peace of mind knowing my phone is always protected.",
     },
     {
       name: 'Anil Kapoor',
-      image: '/api/placeholder/200/200',
+      image: '/pfp2.jpg',
       text: "Partnering with Mobikoo has been great for my business. My customers love the added security, and I've seen an increase in sales.",
     },
     {
       name: 'Sneha Patil',
-      image: '/api/placeholder/200/200',
+      image: '/pfp4.jpg',
       text: "I was skeptical at first, but Mobikoo's customer support is fantastic. They guided me through every step when I needed to file a claim.",
     },
   ];
@@ -724,30 +724,31 @@ const handleSearch = async () => {
 
         {/* Content section with description and phone images */}
         <div className='flex flex-col md:flex-row'>
-          {/* Left text section */}
-          <div className='w-full md:w-1/2 bg-slate-700 p-10 flex items-center'>
-            <p className='text-xl leading-relaxed'>
-              Mobikoo is a pioneering mobile insurance company dedicated to
-              providing comprehensive protection for your devices. With our
-              affordable and flexible plans, we ensure your mobile is
-              safeguarded against accidental damage, theft, and other common
-              issues. Our easy claims process, coupled with 24/7 customer
-              support, guarantees hassle-free and swift resolution of any
-              problems you may face.
-            </p>
-          </div>
+  {/* Left text section */}
+  <div className='w-full md:w-1/2 p-10 flex items-center h-[400px] relative'> {/* Added relative */}
+  <div className='absolute inset-0 bg-[url("/sux.jpg")] bg-cover bg-center opacity-50'></div> {/* Opacity applied only to background */}
+  <div className='z-10'> {/* Added z-10 to ensure text is on top */}
+    <p className='text-xl text-bold leading-relaxed text-white'>
+      Mobikoo is a pioneering mobile insurance company dedicated to
+      providing comprehensive protection for your devices. With our
+      affordable and flexible plans, we ensure your mobile is
+      safeguarded against accidental damage, theft, and other common
+      issues. Our easy claims process, coupled with 24/7 customer
+      support, guarantees hassle-free and swift resolution of any
+      problems you may face.
+    </p>
+  </div>
+</div>
 
-          {/* Right image section */}
-          <div className='w-full md:w-1/2 bg-gray-200 p-6 flex justify-center items-center'>
-            <div className='relative w-full h-64'>
-              <img
-                src='/api/placeholder/600/400'
-                alt='iPhone models'
-                className='w-full h-full object-contain'
-              />
-            </div>
-          </div>
-        </div>
+
+  {/* Right image section */}
+  <div className='w-full md:w-1/2 bg-gray-200 flex justify-center bg-[url("/ip.jpg")] bg-cover bg-center items-center h-[400px]'>
+    <div className='relative w-full h-64'>
+      
+    </div>
+  </div>
+</div>
+
       </div>
 
       <div className='w-full bg-black text-white py-12 px-4'>
