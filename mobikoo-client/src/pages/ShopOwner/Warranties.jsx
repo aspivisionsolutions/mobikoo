@@ -3,6 +3,9 @@ import axios from 'axios';
 import { FiDownload, FiEye, FiArrowLeft, FiFilter } from 'react-icons/fi';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import WarrantyDetails from './WarrantyDetails';
+import { Typography, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
 
 const Warranties = () => {
   const [warranties, setWarranties] = useState([]);
@@ -10,16 +13,62 @@ const Warranties = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWarranty, setSelectedWarranty] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Filter states
+  const [shopDetails, setShopDetails] = useState(null);
+  const [shopDetailsComplete, setShopDetailsComplete] = useState(null); // Initialize as null
   const [filters, setFilters] = useState({
     issueDate: '',
     expiryDate: '',
     phoneModel: '',
     status: ''
   });
+  const [fetchError, setFetchError] = useState(null); // Add error handling
+
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchShopDetails = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
+        if (response.status === 200 && response.data.shopprofile && response.data.shopprofile.length > 0) {
+          const profile = response.data.shopprofile[0];
+          const isComplete = profile.shopDetails?.shopName && profile.shopDetails?.address && profile.phoneNumber;
+          setShopDetailsComplete(isComplete);
+          setShopDetails(profile);
+        } else {
+          setShopDetailsComplete(false);
+          setShopDetails(null);
+          if (response.status !== 200) {
+            setFetchError(`API Error: ${response.status} ${response.statusText}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching shop details:', error);
+        setShopDetailsComplete(false);
+        setShopDetails(null);
+        setFetchError('Error fetching shop details. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const fetchWarranties = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
+        setWarranties(response.data.data);
+        setFilteredWarranties(response.data.data);
+      } catch (error) {
+        console.error('Error fetching warranties:', error);
+        setFetchError('Error fetching warranties. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchShopDetails();
     fetchWarranties();
   }, []);
 
@@ -27,20 +76,7 @@ const Warranties = () => {
     applyFilters();
   }, [warranties, filters]);
 
-  const fetchWarranties = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/warranty/issued-warranties/shopOwner', {
-        headers: { Authorization: `${localStorage.getItem('token')}` }
-      });
-      console.log(response.data.data)
-      setWarranties(response.data.data);
-      setFilteredWarranties(response.data.data);
-    } catch (error) {
-      console.error('Error fetching warranties:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
   const updateWarrantyStatuses = (warranties) => {
     return warranties.map(warranty => {
       const issueDate = new Date(warranty.issueDate);

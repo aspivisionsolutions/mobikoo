@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiDownload, FiEye, FiSearch, FiArrowLeft, FiShield } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { Typography,Button } from '@mui/material';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 import WarrantyActivationDialog from '../../components/WarrantyActivationDialog';
@@ -12,11 +14,11 @@ const InspectionReports = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activatingReport, setActivatingReport] = useState(null);
-
+  const [shopDetails, setShopDetails] = useState(null);
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    fetchReports();
-  }, []);
-
+  
   const fetchReports = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/inspection/shopOwner/reports', {
@@ -30,6 +32,55 @@ const InspectionReports = () => {
     }
   };
 
+  fetchReports();
+}, []);
+useEffect(() => {
+
+  const fetchShopDetails = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/user/shop-owner', {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
+        console.log(response.data)
+        if (response.data.shopprofile && response.data.shopprofile.length > 0) {
+          const profile = response.data.shopprofile[0];
+          setShopDetails({
+            shopName: profile.shopDetails?.shopName,
+            address: profile.shopDetails?.address,
+            mobileNumber: profile.phoneNumber
+          });
+        } else {
+          setShopDetails(null);
+        }
+      } catch (error) {
+        console.error('Error fetching shop details:', error);
+        setShopDetails(null);
+      }
+    };
+
+    fetchShopDetails();
+  }, []);
+  
+    const isShopDetailsComplete = () => {
+      return shopDetails && 
+      shopDetails.shopName && 
+      shopDetails.mobileNumber && 
+      shopDetails.address;
+    };
+    if (!isShopDetailsComplete()) {
+      return (
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+          <Typography variant="h5" component="div" gutterBottom>
+            Please complete your shop profile to view invoices.
+          </Typography>
+          <Typography variant="body1" component="div" gutterBottom>
+            Go to your profile settings to complete the missing information.
+          </Typography>
+           <Button variant="contained" onClick={() => navigate('/shop-owner/profile')}>Go to Profile</Button> {/* Added button */}
+        </div>
+      );
+    }
+  
   // Filter reports based on search term
   const filteredReports = reports.filter(report => 
     report.imeiNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
