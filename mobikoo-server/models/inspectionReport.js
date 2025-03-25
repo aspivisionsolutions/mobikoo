@@ -15,7 +15,7 @@ const inspectionReportSchema = new mongoose.Schema({
     cameraFunctionality: { type: String, required: true },
     buttonsSensors: { type: String, required: true },
     osFunctionality: { type: String, required: true },
-    performanceBenchmark: { type: String, required: true },
+    performanceBenchmark: { type: String },
     photos: { type: [String]},
     comments: { type: String, required: true },
     digitalSignature: { type: Boolean, required: true },
