@@ -294,7 +294,7 @@ export function LandingPage() {
               </svg>
             </div>
             <span className='text-xl font-bold text-gray-300'>
-              MOBIKOO.ONLINE
+              MOBIKOO.COM
             </span>
           </div>
 
