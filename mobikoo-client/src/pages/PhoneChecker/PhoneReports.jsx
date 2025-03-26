@@ -1,6 +1,6 @@
 import React, { useState, useEffect,useCallback } from 'react';
 import axios from 'axios';
-import { FiSearch, FiDownload, FiEye, FiShield, FiX, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
+import { FiSearch,FiTrash2, FiDownload, FiEye, FiShield, FiX, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import { toast } from 'react-toastify'; // Ensure you have toast notifications set up
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 import {load} from '@cashfreepayments/cashfree-js'
@@ -29,6 +29,8 @@ const PhoneReports = ({ standalone = false }) => {
   const [showDevicePriceModal, setShowDevicePriceModal] = useState(false);
   const [devicePrices, setDevicePrices] = useState({});
   const [profile, setProfile] = useState({})
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState(null);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -149,7 +151,7 @@ const PhoneReports = ({ standalone = false }) => {
   let insitialzeSDK = async function () {
 
     cashfree = await load({
-      mode: "sandbox",
+      mode: "production",
     })
   }
 
@@ -353,7 +355,88 @@ const PhoneReports = ({ standalone = false }) => {
       toast.error(error.response?.data?.message || 'Failed to purchase bulk warranty');
     }
   };
+  const handleDeleteReport = async () => {
+    if (!reportToDelete) return;
 
+    try {
+      await axios.delete(`${API_URL}/api/inspection/reports/${reportToDelete._id}`, {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+
+      toast.success('Report deleted successfully');
+      fetchReports(); // Refresh the reports list
+      setDeleteConfirmOpen(false);
+      setReportToDelete(null);
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast.error('Failed to delete report');
+    }
+  };
+
+  const confirmDeleteReport = (report) => {
+    setReportToDelete(report);
+    setDeleteConfirmOpen(true);
+  };
+  const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, report }) => {
+    if (!isOpen) return null;
+  
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+        <div className="relative bg-white rounded-lg shadow-xl transform transition-all sm:max-w-lg w-full max-w-[95%]">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <FiTrash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 truncate">
+                  Delete Inspection Report
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500 whitespace-normal break-words">
+                    Are you sure you want to delete the inspection report for 
+                    <span className="font-semibold"> 
+                      {report.deviceModel ? 
+                        (report.deviceModel.length > 30 
+                          ? `${report.deviceModel.substring(0, 30)}...` 
+                          : report.deviceModel)
+                        : 'this device'
+                      }
+                    </span>? 
+                    This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 
+              bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 
+              focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm 
+              px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+              sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
   if (!isProfileComplete) {
     return (
       <div className="flex flex-col items-center justify-center mt-10">
@@ -590,6 +673,23 @@ const PhoneReports = ({ standalone = false }) => {
                         <FiEye className="h-5 w-5 mr-1" />
                         View Report
                       </button>
+                      <DeleteConfirmationModal 
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setReportToDelete(null);
+        }}
+        onConfirm={handleDeleteReport}
+        report={reportToDelete || {}}
+      />
+                      <button
+                        onClick={() => confirmDeleteReport(report)}
+                        className="px-3 py-1.5 text-red-600 hover:text-red-900 flex items-center border border-red-600 rounded-md hover:bg-red-50 cursor-pointer"
+                      >
+                        <FiTrash2 className="h-5 w-5 mr-1" />
+                        Delete
+                      </button>
+          
                       {report.warrantyStatus === 'not-purchased' ? (
                         <button
                           onClick={() => handlePurchaseWarranty(report)}

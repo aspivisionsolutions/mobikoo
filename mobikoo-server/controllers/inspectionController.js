@@ -612,4 +612,22 @@ exports.getAllInspectionReports = async (req, res) => {
 };
 
 
+exports.deleteInspectionReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedReport = await InspectionReport.findByIdAndDelete(id);
+
+    if (!deletedReport) {
+      return res.status(404).json({ message: "Inspection report not found" });
+    }
+
+    res.status(200).json({ message: "Inspection report deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting inspection report:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
 

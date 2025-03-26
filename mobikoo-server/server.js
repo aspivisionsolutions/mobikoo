@@ -12,7 +12,7 @@ const statsRoutes = require("./routes/statsRoutes");
 const partnerRoutes = require('./routes/partnerRoutes');
 const {protect,roleMiddleware} = require('./middlewares/authMiddleware');
 const {updateFineStatus} = require('./controllers/inspectionController');
-
+const customerRoutes =require('./routes/customerRoutes')
 require("dotenv").config();
 const cors = require("cors");
 
@@ -21,7 +21,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(cors({
-    origin: "https://mobikoo.com", // Change this to match your frontend
+    origin: ["https://mobikoo.com","http://localhost:3000"], // Change this to match your frontend
     methods: "GET,POST,PUT,DELETE",
     credentials: true
   }));
@@ -40,6 +40,7 @@ app.use("/api/admin", adminRoutes); // Mount admin routes
 app.use("/api/stats", statsRoutes)
 
 app.use('/api/partners', partnerRoutes);
+app.use("/api/customers", customerRoutes);
 
 
 app.use("/api/activity-log", activityLogRoutes);
