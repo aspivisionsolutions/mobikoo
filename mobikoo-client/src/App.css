@@ -25,3 +25,9 @@
     0% { transform: translateX(0); }
     100% { transform: translateX(calc(-100px * 16)); } /* Updated to fit doubled items */
   }
+
+@media screen and (max-width: 640px) {
+  .slider{
+    width: 100%;
+  }
+}
