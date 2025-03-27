@@ -16,7 +16,7 @@ exports.getShopOwnerStats = async (req, res) => {
         }
 
         // Count total inspection reports for the shop owner
-        const totalInspectionReports = await InspectionReport.countDocuments({ shopName: shopOwner.shopDetails.shopName });
+        const totalInspectionReports = await InspectionReport.countDocuments({ shopOwnerId: shopOwner.shopOwnerId });
 
         const issuedWarranties = await IssuedWarranties.find()
             .populate({
@@ -27,9 +27,8 @@ exports.getShopOwnerStats = async (req, res) => {
 
         // Count total issued warranties
         const filteredWarranties = issuedWarranties.filter(warranty => 
-            warranty.inspectionReport && warranty.inspectionReport.shopName === shopOwner.shopDetails.shopName
+            warranty.inspectionReport && warranty.inspectionReport.shopOwnerId == shopOwner.shopOwnerId
         );
-
         const totalIssuedWarranties = filteredWarranties.length;
 
         // Count total claims for the shop owner
