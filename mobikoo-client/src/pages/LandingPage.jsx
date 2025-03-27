@@ -213,7 +213,9 @@ export function LandingPage() {
   const [imeiNumber, setImeiNumber] = useState('');
   const [searchError, setSearchError] = useState('');
   const navigate = useNavigate();
-
+  const handleGetStartedClick = () => {
+    navigate("/login"); // Call navigate inside the handler
+  };
   const handleImeiChange = (event) => {
     setImeiNumber(event.target.value);
     setSearchError(''); // Clear previous error
@@ -337,7 +339,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          <button className='bg-transparent text-white font-semibold py-2 px-6 border-2 border-white rounded-full hover:bg-white hover:text-black transition-all'>
+          <button onClick={handleGetStartedClick} className='bg-transparent text-white font-semibold py-2 px-6 border-2 border-white rounded-full hover:bg-white hover:text-black transition-all'>
             GET STARTED
           </button>
         </div>
@@ -796,9 +798,9 @@ export function LandingPage() {
         <div className='flex flex-col md:flex-row'>
           {/* Left text section */}
           <div className='w-full md:w-1/2 p-10 flex items-center h-[400px] relative'> {/* Added relative */}
-            <div className='absolute inset-0 bg-[url("/sux.jpg")] bg-cover bg-center opacity-50'></div> {/* Opacity applied only to background */}
+            <div className='absolute inset-0 bg-[url("/sux.jpg")] bg-cover bg-center opacity-30'></div> {/* Opacity applied only to background */}
             <div className='z-10'> {/* Added z-10 to ensure text is on top */}
-              <p className='text-xl text-bold leading-relaxed text-white'>
+              <p className='text-lg text-bold leading-relaxed text-white'>
                 Mobikoo is a pioneering mobile insurance company dedicated to
                 providing comprehensive protection for your devices. With our
                 affordable and flexible plans, we ensure your mobile is

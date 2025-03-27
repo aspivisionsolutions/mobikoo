@@ -1,11 +1,11 @@
-import React, { useState, useEffect,useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { FiSearch,FiTrash2, FiDownload, FiEye, FiShield, FiX, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
+import { FiSearch, FiTrash2, FiDownload, FiEye, FiShield, FiX, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import { toast } from 'react-toastify'; // Ensure you have toast notifications set up
 import InspectionReportDetails from '../../components/InspectionReportDetails';
-import {load} from '@cashfreepayments/cashfree-js'
+import { load } from '@cashfreepayments/cashfree-js'
 import { useNavigate } from 'react-router-dom';
-import { Typography,Button } from '@mui/material';
+import { Typography, Button } from '@mui/material';
 const API_URL = import.meta.env.VITE_API_URL;
 
 
@@ -34,20 +34,21 @@ const PhoneReports = ({ standalone = false }) => {
 
   useEffect(() => {
     const getProfile = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
-      headers: {
-        Authorization: `${localStorage.getItem('token')}`
+      try {
+        const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
+          headers: {
+            Authorization: `${localStorage.getItem('token')}`
+          }
+        });
+        const profile = {
+          phoneNumber: response.data.phoneChecker.phoneNumber,
+          area: response.data.phoneChecker.area,
+        }
+        setProfile(profile)
+      } catch (error) {
+        console.log({ error: error.response.data.message })
       }
-    });
-    const profile = {
-      phoneNumber : response.data.phoneChecker.phoneNumber,
-      area: response.data.phoneChecker.area,
     }
-    setProfile(profile)
-    } catch (error) {
-      console.log({error: error.response.data.message})
-    }}
     getProfile()
   }, []);
   const isProfileComplete = profile.phoneNumber && profile.area;
@@ -136,11 +137,24 @@ const PhoneReports = ({ standalone = false }) => {
   };
 
   const handleShowWarrantyPlans = () => {
+    // Find the smallest lower_limit in the warrantyPlans
+    const smallestLowerLimit = Math.min(...warrantyPlans.map(plan => plan.lower_limit));
+
+    // Check if the devicePrice is less than the smallest lower_limit
+    if (devicePrice < smallestLowerLimit) {
+      alert('No plans available for the entered price.');
+      setAvailablePlans([]);
+      // setShowDevicePriceModal(false);
+      return;
+    }
+
+    // Filter plans based on the devicePrice and other conditions
     const plans = warrantyPlans.filter(plan =>
       plan.lower_limit <= devicePrice &&
       (plan.upper_limit === null || plan.upper_limit >= devicePrice) &&
       plan.grade === reportForWarranty.grade
     );
+
     setAvailablePlans(plans);
     setShowDevicePriceModal(false);
     setShowWarrantyModal(true);
@@ -151,7 +165,7 @@ const PhoneReports = ({ standalone = false }) => {
   let insitialzeSDK = async function () {
 
     cashfree = await load({
-      mode: "sandbox",
+      mode: "production", // Set "production" for production mode
     })
   }
 
@@ -166,10 +180,10 @@ const PhoneReports = ({ standalone = false }) => {
         receipt: reportForWarranty._id,
         notes: {},
       });
-      
-      if(res.data && res.data.payment_session_id){
+
+      if (res.data && res.data.payment_session_id) {
         console.log('Full response:', res.data);
-        
+
         // Return an object with both session ID and order ID
         return {
           sessionId: res.data.payment_session_id,
@@ -181,20 +195,20 @@ const PhoneReports = ({ standalone = false }) => {
       throw error;
     }
   };
-  
+
   const handleWarrantyPurchaseConfirm = async (plan) => {
     try {
       // Destructure sessionId and orderId from the returned object
       const { sessionId, orderId } = await getSessionId(plan);
-      
+
       let checkoutOptions = {
         paymentSessionId: sessionId,
         redirectTarget: "_modal",
       };
-  
+
       cashfree.checkout(checkoutOptions).then((res) => {
         console.log("Payment initialized");
-        
+
         // Pass both plan and orderId to verifyPayment
         verifyPayment(plan, orderId);
       }).catch((err) => {
@@ -206,7 +220,7 @@ const PhoneReports = ({ standalone = false }) => {
       toast.error(error.response?.data?.message || 'Failed to purchase warranty');
     }
   };
-  
+
   const verifyPayment = async (plan, orderId) => {
     try {
       let res = await axios.post(`${API_URL}/api/payment/payment/verify`, {
@@ -217,8 +231,8 @@ const PhoneReports = ({ standalone = false }) => {
         planId: plan._id,
         orderId: orderId
       });
-  
-      if(res && res.data){
+
+      if (res && res.data) {
         toast.success('Warranty purchased successfully');
         setShowWarrantyModal(false);
         setWarrantyPlan(null);
@@ -230,7 +244,7 @@ const PhoneReports = ({ standalone = false }) => {
       console.error('Verification error:', error);
     }
   };
-  
+
 
   const handleBulkWarrantyPurchase = () => {
     const unpurchasedReports = reports.filter(report => report.warrantyStatus === 'not-purchased');
@@ -262,11 +276,23 @@ const PhoneReports = ({ standalone = false }) => {
   const handleShowPlansForReport = (reportId) => {
     const price = devicePrices[reportId];
     const report = selectedReports.find(report => report._id === reportId);
+
+    // Find the smallest lower_limit in the warrantyPlans
+    const smallestLowerLimit = Math.min(...warrantyPlans.map(plan => plan.lower_limit));
+
+    // Check if the price is less than the smallest lower_limit
+    if (price < smallestLowerLimit) {
+      toast.error('No plans available for the entered price.');
+      setAvailablePlans(prev => ({ ...prev, [reportId]: [] }));
+      return;
+    }
+
     const plans = warrantyPlans.filter(plan =>
       plan.lower_limit <= price &&
       (plan.upper_limit === null || plan.upper_limit >= price) &&
       plan.grade === report.grade
     );
+
     setAvailablePlans(prev => ({ ...prev, [reportId]: plans }));
   };
 
@@ -286,8 +312,8 @@ const PhoneReports = ({ standalone = false }) => {
         receipt: 'bulk_warranty_purchase',
         notes: {},
       })
-      
-      if(res.data && res.data.payment_session_id){
+
+      if (res.data && res.data.payment_session_id) {
 
         console.log(res.data)
         setOrderId(res.data.order_id)
@@ -302,7 +328,7 @@ const PhoneReports = ({ standalone = false }) => {
 
   const verifyPaymentForBulkPurchase = async (purchaseDetails, orderId) => {
     try {
-      
+
       let res = await axios.post(`${API_URL}/api/payment/warranty/bulk-purchase/verify`, {
         purchaseDetails: purchaseDetails,
         orderId: orderId
@@ -310,7 +336,7 @@ const PhoneReports = ({ standalone = false }) => {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       })
 
-      if(res && res.data){
+      if (res && res.data) {
         toast.success('Bulk warranty purchased successfully');
         setShowBulkModal(false);
         fetchReports();
@@ -341,8 +367,8 @@ const PhoneReports = ({ standalone = false }) => {
 
       let sessionId = await getSessionIdForBulkPurchase(totalAmount)
       let checkoutOptions = {
-        paymentSessionId : sessionId,
-        redirectTarget:"_modal",
+        paymentSessionId: sessionId,
+        redirectTarget: "_modal",
       }
 
       cashfree.checkout(checkoutOptions).then((res) => {
@@ -381,7 +407,7 @@ const PhoneReports = ({ standalone = false }) => {
   };
   const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, report }) => {
     if (!isOpen) return null;
-  
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
@@ -396,67 +422,67 @@ const PhoneReports = ({ standalone = false }) => {
                   Delete Inspection Report
                 </h3>
                 <div className="mt-2">
-                {report.warrantyStatus === "purchased" ? (
-                  <p className="text-sm text-red-500">
-                    This report cannot be deleted as it has a purchased warranty.
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-500 whitespace-normal break-words">
-                    Are you sure you want to delete the inspection report for 
-                    <span className="font-semibold"> 
-                      {report.deviceModel ? 
-                        (report.deviceModel.length > 30 
-                          ? `${report.deviceModel.substring(0, 30)}...` 
-                          : report.deviceModel)
-                        : 'this device'
-                      }
-                    </span>? 
-                    This action cannot be undone.
-                  </p>
-                   )}
+                  {report.warrantyStatus === "purchased" ? (
+                    <p className="text-sm text-red-500">
+                      This report cannot be deleted as it has a purchased warranty.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500 whitespace-normal break-words">
+                      Are you sure you want to delete the inspection report for
+                      <span className="font-semibold">
+                        {report.deviceModel ?
+                          (report.deviceModel.length > 30
+                            ? `${report.deviceModel.substring(0, 30)}...`
+                            : report.deviceModel)
+                          : 'this device'
+                        }
+                      </span>?
+                      This action cannot be undone.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
           <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-          {report.warrantyStatus === "purchased" ? (
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 
-              bg-gray-600 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Close
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={onConfirm}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 
-                bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 
-                focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Delete
-              </button>
+            {report.warrantyStatus === "purchased" ? (
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm 
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 
+              bg-gray-600 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                Close
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onConfirm}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 
+                bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 
+                focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm 
                 px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
                 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </>
-          )}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-    
-  );
-};
+
+    );
+  };
 
   if (!isProfileComplete) {
     return (
@@ -471,7 +497,7 @@ const PhoneReports = ({ standalone = false }) => {
       </div>
     );
   }
-  
+
   if (reportToView) {
     return (
       <>
@@ -486,7 +512,7 @@ const PhoneReports = ({ standalone = false }) => {
             <h1 className="text-2xl font-semibold text-gray-900">Inspection Report Details</h1>
           </div>
         </div>
-  
+
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
             <InspectionReportDetails report={reportToView} />
@@ -495,7 +521,7 @@ const PhoneReports = ({ standalone = false }) => {
       </>
     );
   }
-  
+
   return (
     <div className={`h-full flex flex-col ${standalone ? 'ml-64' : ''}`}>
       {/* Search Bar */}
@@ -694,24 +720,27 @@ const PhoneReports = ({ standalone = false }) => {
                         <FiEye className="h-5 w-5 mr-1" />
                         View Report
                       </button>
-                      <DeleteConfirmationModal 
-        isOpen={deleteConfirmOpen}
-        onClose={() => {
-          setDeleteConfirmOpen(false);
-          setReportToDelete(null);
-        }}
-        onConfirm={handleDeleteReport}
-        report={reportToDelete || {}}
-      />
-                      <button
-                        onClick={() => confirmDeleteReport(report)}
-                        className="px-3 py-1.5 text-red-600 hover:text-red-900 flex items-center border border-red-600 rounded-md hover:bg-red-50 cursor-pointer"
-                       
-                     >
-                        <FiTrash2 className="h-5 w-5 mr-1" />
-                        Delete
-                      </button>
-          
+                      <DeleteConfirmationModal
+                        isOpen={deleteConfirmOpen}
+                        onClose={() => {
+                          setDeleteConfirmOpen(false);
+                          setReportToDelete(null);
+                        }}
+                        onConfirm={handleDeleteReport}
+                        report={reportToDelete || {}}
+                      />
+                      {
+                        report.warrantyStatus === 'not-purchased' && (
+                          <button
+                            onClick={() => confirmDeleteReport(report)}
+                            className="px-3 py-1.5 text-red-600 hover:text-red-900 flex items-center border border-red-600 rounded-md hover:bg-red-50 cursor-pointer"
+
+                          >
+                            <FiTrash2 className="h-5 w-5 mr-1" />
+                            Delete
+                          </button>)
+                      }
+
                       {report.warrantyStatus === 'not-purchased' ? (
                         <button
                           onClick={() => handlePurchaseWarranty(report)}

@@ -417,7 +417,7 @@ const PhoneCheckerDashboard = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center md:my-0 my-6">
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard Overview</h1>
         {activeTab === 'inspections' && (
           <button

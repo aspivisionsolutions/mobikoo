@@ -10,6 +10,7 @@ import Claims from './Claims';
 import customersData from "../../assets/customers.json"
 import SalesChart from '../../components/SalesChart';
 import CustomerStats from '../../components/CustomerStats';
+import Invoices from './Invoices';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ShopOwnerDashboard = () => {
@@ -188,7 +189,8 @@ const ShopOwnerDashboard = () => {
 
           {/* Stats Cards */}
           {renderStats()}
-          <SalesChart/>
+          {/* <SalesChart/> */}
+          <Invoices/>
         </div>
         )}
         

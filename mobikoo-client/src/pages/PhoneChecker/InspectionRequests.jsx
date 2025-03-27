@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiSearch, FiCheckCircle, FiXCircle, FiMapPin } from 'react-icons/fi';
 import { Typography, Button } from '@mui/material';
@@ -21,23 +21,25 @@ const InspectionRequests = ({ standalone = false }) => {
   const [profile, setProfile] = useState({});
   const navigate = useNavigate();
 
-  const fetchProfile = useCallback(async () => {
+  useEffect(() => {
+    const getProfile = async () => {
     try {
-      const { data } = await axiosInstance.get('/user/phone-checker');
-      setProfile(data.phoneChecker || {});
-    } catch (error) {
-      console.error('Error fetching profile:', error.response?.data?.message || error.message);
+      const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
+      headers: {
+        Authorization: `${localStorage.getItem('token')}`
+      }
+    });
+    const profile = {
+      phoneNumber : response.data.phoneChecker.phoneNumber,
+      area: response.data.phoneChecker.area,
     }
+    setProfile(profile)
+    } catch (error) {
+      console.log({error: error.response.data.message})
+    }}
+    getProfile()
   }, []);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  const isProfileComplete = profile.phoneNumber && profile.area;
-
-
-  useEffect(() => {
+  const isProfileComplete = profile.phoneNumber && profile.area;  useEffect(() => {
     const fetchRequests = async () => {
       if (!isProfileComplete) return;
       setIsLoading(true);
