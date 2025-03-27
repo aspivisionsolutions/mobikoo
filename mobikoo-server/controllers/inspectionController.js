@@ -616,11 +616,21 @@ exports.deleteInspectionReport = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedReport = await InspectionReport.findByIdAndDelete(id);
+    // Find the report first
+    const report = await InspectionReport.findById(id);
+    console.log("Report",report);
 
-    if (!deletedReport) {
+    if (!report) {
       return res.status(404).json({ message: "Inspection report not found" });
     }
+
+    // Check if warranty is purchased
+    if (report.warrantyStatus=== "purchased") {
+      return res.status(400).json({ message: "Cannot delete report as warranty is purchased" });
+    }
+
+    // Delete the report
+    await InspectionReport.findByIdAndDelete(id);
 
     res.status(200).json({ message: "Inspection report deleted successfully" });
   } catch (error) {
@@ -628,6 +638,4 @@ exports.deleteInspectionReport = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
