@@ -213,7 +213,9 @@ export function LandingPage() {
   const [imeiNumber, setImeiNumber] = useState('');
   const [searchError, setSearchError] = useState('');
   const navigate = useNavigate();
-
+  const handleGetStartedClick = () => {
+    navigate("/login"); // Call navigate inside the handler
+  };
   const handleImeiChange = (event) => {
     setImeiNumber(event.target.value);
     setSearchError(''); // Clear previous error
@@ -337,7 +339,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          <button className='bg-transparent text-white font-semibold py-2 px-6 border-2 border-white rounded-full hover:bg-white hover:text-black transition-all'>
+          <button onClick={handleGetStartedClick} className='bg-transparent text-white font-semibold py-2 px-6 border-2 border-white rounded-full hover:bg-white hover:text-black transition-all'>
             GET STARTED
           </button>
         </div>
