@@ -9,6 +9,7 @@ import CreateInspectionRequestModal from './CreateInspectionRequestModal';
 import Claims from './Claims';
 import customersData from "../../assets/customers.json"
 import SalesChart from '../../components/SalesChart';
+import CustomerStats from '../../components/CustomerStats';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ShopOwnerDashboard = () => {
@@ -140,6 +141,9 @@ const ShopOwnerDashboard = () => {
           </div>
         </div>
       </div>
+      <div className="col-span-1 border-l pl-4">
+          <CustomerStats />
+        </div>
     </div>
   );
 

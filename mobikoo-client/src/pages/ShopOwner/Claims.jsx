@@ -27,7 +27,7 @@ const Claims = () => {
             }
         };
         fetchClaims();
-    })
+    },[])
     useEffect(() => {
 
         const fetchShopDetails = async () => {

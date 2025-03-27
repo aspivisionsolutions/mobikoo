@@ -103,7 +103,7 @@ exports.getAllIssuedWarrantiesForShopOwner = async (req, res) => {
             .populate('warrantyPlanId');
             console.log(issuedWarranties)
             const filteredWarranties = issuedWarranties.filter(warranty => 
-                warranty.inspectionReport && warranty.inspectionReport.shopName === shopOwner.shopDetails.shopName
+                warranty.inspectionReport && warranty.inspectionReport.shopOwnerId === shopOwner.shopOwnerId
             );
             console.log(filteredWarranties)
             // Fetch customer details based on IMEI
@@ -126,7 +126,7 @@ exports.getAllIssuedWarranties = async (req, res) => {
         const issuedWarranties = await IssuedWarranties.find()
             .populate({
                 path: 'inspectionReport',
-                populate: { path: 'inspectorId' } // Only populate necessary fields
+                populate: { path: 'inspectorId' }
             })
             .populate('warrantyPlanId');
 

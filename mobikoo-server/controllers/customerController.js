@@ -69,3 +69,57 @@ exports.getDevicesByCustomer = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.getDailyCustomerChange = async (req, res) => {
+    try {
+      
+        const shopOwnerId = req.user.userId; // Get shop owner ID from request
+     
+  
+        // Ensure the shop owner exists
+        const shopOwner = await ShopOwner.findOne({ userId: shopOwnerId });
+        if (!shopOwner) {
+            return res.status(404).json({ message: "Shop owner not found" });
+        }
+    
+        const allCustomers = await Customer.find({ shopOwner: shopOwner._id });
+     
+        // Get today's and yesterday's dates (UTC)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        // Count total customers for this shop owner
+        const totalCustomers = await Customer.countDocuments({ shopOwner: shopOwner.userId  });
+   
+        // Count new customers for today and yesterday
+        const todayCount = await Customer.countDocuments({
+            shopOwner: shopOwner._id,
+            purchaseDate: { $gte: today }
+        });
+      
+
+        const yesterdayCount = await Customer.countDocuments({
+            shopOwner: shopOwner._id,
+            purchaseDate: { $gte: yesterday, $lt: today }
+        });
+
+        // Calculate the change
+        const change = todayCount - yesterdayCount;
+        const trend = change > 0 ? "increase" : change < 0 ? "decrease" : "no change";
+
+        res.status(200).json({
+            totalCustomers,
+            todayCount,
+            yesterdayCount,
+            change,
+            trend
+        });
+
+    } catch (error) {
+        console.error("Error fetching daily customer change:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

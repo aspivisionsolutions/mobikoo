@@ -1,6 +1,6 @@
 const express = require("express");
 const { protect, roleMiddleware } = require("../middlewares/authMiddleware");
-const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner, addFine, updateFineStatus, payFine } = require("../controllers/inspectionController");
+const { createInspectionRequest, getInspectionRequestsForPhoneChecker, getInspectionRequestsByShopOwner, submitInspectionReport, updateInspectionStatus, getInspectionReportsForPhoneChecker, downloadInspectionReport, getInspectionReportsForShopOwner, addFine, updateFineStatus, payFine,deleteInspectionReport } = require("../controllers/inspectionController");
 const { getAllInspectionReports } = require('../controllers/inspectionController');
 const InspectionReport = require("../models/inspectionReport");
 const upload = require('../multer');
@@ -55,6 +55,12 @@ router.patch(
   protect,
   roleMiddleware(["phone-checker"]),
   updateInspectionStatus // Use the new controller function here
+);
+router.delete(
+  "/reports/:id",
+  protect,
+  roleMiddleware(["phone-checker"]), // Ensure only authorized roles can delete
+  deleteInspectionReport
 );
 
 router.get("/phoneChecker/reports", protect, roleMiddleware(["phone-checker"]), getInspectionReportsForPhoneChecker);

@@ -1,9 +1,14 @@
-import React from 'react';
+import React , {useState, useEffect}from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiPhone, FiMail, FiHash, FiShield, FiCheckCircle, FiHome, FiFileText, FiArrowLeft, FiSmartphone, FiBattery, FiImage } from 'react-icons/fi';
+import { Typography,Button } from '@mui/material';
+import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ClaimDetails = ({ claim }) => {
+
+  const [shopDetails, setShopDetails] = useState(null);
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchShopDetails();
@@ -30,24 +35,6 @@ const ClaimDetails = ({ claim }) => {
         setShopDetails(null);
       }
     };
-    const isShopDetailsComplete = () => {
-      return shopDetails && 
-             shopDetails.shopName && 
-             shopDetails.mobileNumber && 
-             shopDetails.address;
-    };
-    if (!isShopDetailsComplete()) {
-      return (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-          <Typography variant="h5" component="div" gutterBottom>
-            Please complete your shop profile to view invoices.
-          </Typography>
-          <Typography variant="body1" component="div" gutterBottom>
-            Go to your profile settings to complete the missing information.
-          </Typography>
-        </div>
-      );
-    }
   if (!claim) {
     return (
       <div className="text-center py-12">

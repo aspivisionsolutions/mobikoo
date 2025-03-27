@@ -6,7 +6,20 @@ const ShopOwner = require("../models/shopOwner");
 require("dotenv").config();
 const nodemailer = require('nodemailer');
 
-// User Signup
+const generateShopOwnerId = async () => {
+  const lastShopOwner = await ShopOwner.findOne().sort({ shopOwnerId: -1 });
+
+  let newId;
+  if (lastShopOwner && lastShopOwner.shopOwnerId) {
+    const lastIdNumber = parseInt(lastShopOwner.shopOwnerId.replace('SP', ''), 10);
+    newId = `SP${String(lastIdNumber + 1).padStart(3, '0')}`;
+  } else {
+    newId = 'SP001';
+  }
+
+  return newId;
+};
+
 exports.signup = async (req, res) => {
   try {
     const { firstName, lastName, email, password, role } = req.body;
@@ -17,19 +30,27 @@ exports.signup = async (req, res) => {
 
     // Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    user = new User({ firstName, lastName, email, password:hashedPassword, role });
-    
+
+    user = new User({ firstName, lastName, email, password: hashedPassword, role });
+
     if (role === "phone-checker") {
       const pc = new PhoneChecker({ userId: user._id, phoneNumber: "", area: "Your Area" });
       await pc.save();
     } else {
-      const so = new ShopOwner({ userId: user._id, phoneNumber: "", shopDetails: {shopName:"Your Shop Name",address:"Your Shop Address"} });
+      // Generate shopOwnerId before saving
+      const shopOwnerId = await generateShopOwnerId();
+      const so = new ShopOwner({
+        userId: user._id,
+        shopOwnerId,  // Assign generated ID here
+        phoneNumber: "",
+        shopDetails: { shopName: "Your Shop Name", address: "Your Shop Address" }
+      });
       await so.save();
     }
-    await user.save();
 
+    await user.save();
     res.status(201).json({ message: "User registered successfully" });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
@@ -87,7 +108,7 @@ exports.requestOtp = async (req, res) => {
 
     // Generate a new OTP
     const otp = generateOTP();
-    
+
     // Set expiration time (15 minutes from now)
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);
@@ -106,7 +127,7 @@ exports.requestOtp = async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    
+
     res.status(200).json({ message: "OTP sent successfully", otp: otp, expiresAt: expiresAt });
   } catch (error) {
     console.error('Request OTP error:', error);
@@ -121,7 +142,7 @@ exports.resetPassword = async (req, res) => {
 
     // Find user and update password
     const user = await User.findOne({ email });
-    
+
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }

@@ -57,6 +57,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
+     
       const response = await axios.post(`${API_URL}/api/auth/login`, formData);
       toast.success('Login successful!');
       localStorage.setItem('token', response.data.token);

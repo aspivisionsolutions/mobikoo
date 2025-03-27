@@ -23,7 +23,7 @@ const PhoneCheckerDashboard = () => {
   const [showInspectionForm, setShowInspectionForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
-    shopName: '',
+    shopOwnerId: '',
     imeiNumber: '',
     deviceModel: '',
     serialNumber: '',
@@ -142,7 +142,7 @@ const PhoneCheckerDashboard = () => {
   const handleFormClose = () => {
     setShowInspectionForm(false);
     setFormData({
-      shopName: '',
+      shopOwnerId: '',
       imeiNumber: '',
       deviceModel: '',
       serialNumber: '',
@@ -456,16 +456,16 @@ const PhoneCheckerDashboard = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Shop Number *</label>
                   <select
-                    name="shopName"
-                    value={formData.shopName} // Bind to shopName in formData
+                    name="shopOwnerId"
+                    value={formData.shopOwnerId} // Bind to shopName in formData
                     onChange={handleInputChange} // Use the new handler
                     required
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                   >
                     <option value="">Select Shop</option>
                     {shopOwners.map(owner => (
-                      <option key={owner._id} value={owner.shopDetails.shopName}>
-                        {owner.shopDetails.shopName}
+                      <option key={owner._id} value={owner.shopOwnerId}>
+                        {owner.shopOwnerId}
                       </option>
                     ))}
                   </select>

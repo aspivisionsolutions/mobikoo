@@ -109,7 +109,7 @@ export const InspectionReportDetails = ({ report }) => {
             <h2 className="text-2xl font-bold text-gray-900">{report.deviceModel}</h2>
             <p className="text-sm text-gray-500 mt-1">Inspected on {formatDate(report.inspectionDate)}</p>
             <p className="text-sm text-gray-500 mt-1">Inspector: {report.inspectorId?.firstName} {report.inspectorId?.lastName}</p>
-            <p className="text-sm text-gray-500 mt-1">Shop: {report.shopName}</p>
+            <p className="text-sm text-gray-500 mt-1">Shop Owner Id: {report.shopOwnerId}</p>
           </div>
           <div className="flex flex-col gap-2 items-end">
             <div className={`px-4 py-2 rounded-lg ${getStatusColor(report.grade)}`}>

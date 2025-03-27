@@ -576,7 +576,7 @@ exports.downloadInspectionReport = async (req, res) => {
 exports.getInspectionReportsForShopOwner = async (req, res) => {
   try {
     const shopOwner = await ShopOwner.findOne({ userId: req.user.userId });
-    const reports = await InspectionReport.find({ shopName: shopOwner.shopDetails.shopName })
+    const reports = await InspectionReport.find({ shopOwnerId: shopOwner.shopOwnerId })
       .populate('inspectorId')
       .populate({
         path: 'warrantyDetails',
@@ -612,4 +612,30 @@ exports.getAllInspectionReports = async (req, res) => {
 };
 
 
+exports.deleteInspectionReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the report first
+    const report = await InspectionReport.findById(id);
+    console.log("Report",report);
+
+    if (!report) {
+      return res.status(404).json({ message: "Inspection report not found" });
+    }
+
+    // Check if warranty is purchased
+    if (report.warrantyStatus=== "purchased") {
+      return res.status(400).json({ message: "Cannot delete report as warranty is purchased" });
+    }
+
+    // Delete the report
+    await InspectionReport.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Inspection report deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting inspection report:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
