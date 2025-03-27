@@ -61,6 +61,7 @@ const LoginPage = () => {
       const response = await axios.post(`${API_URL}/api/auth/login`, formData);
       toast.success('Login successful!');
       localStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.role);
 
       // Navigate to the appropriate dashboard based on role
