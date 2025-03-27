@@ -131,7 +131,6 @@ exports.getClaimsByCustomerPhoneNumber = async (req, res) => {
 exports.getClaimsByShopOwner = async (req, res) => {
     try {
         const shopOwnerId = req.user.userId;
-        console.log(shopOwnerId)
         const shopOwner = await ShopOwner.findOne({ userId: shopOwnerId })
         if (!shopOwner) {
             return res.status(404).json({ message: "Shop owner not found" });

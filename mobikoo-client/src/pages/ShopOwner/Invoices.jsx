@@ -153,7 +153,7 @@ const Invoices = () => {
   
   Invoice ID: ${warranty._id}
   Customer Name: ${warranty.customer.customerName}
-  Shop Name: ${warranty.inspectionReport.shopName}
+  Shop Owner Id: ${warranty.inspectionReport.shopOwnerId}
   Mobile: ${phoneNumber}
   IMEI: ${warranty.customer.imeiNumber}
   Warranty Plan: ${warranty.warrantyPlanId.lower_limit}-${warranty.warrantyPlanId.upper_limit}

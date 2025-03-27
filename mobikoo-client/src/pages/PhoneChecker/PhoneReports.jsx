@@ -151,7 +151,7 @@ const PhoneReports = ({ standalone = false }) => {
   let insitialzeSDK = async function () {
 
     cashfree = await load({
-      mode: "production",
+      mode: "sandbox",
     })
   }
 
@@ -602,7 +602,7 @@ const PhoneReports = ({ standalone = false }) => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Shop Name
+                Shop Owner ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Phone Model
@@ -638,7 +638,7 @@ const PhoneReports = ({ standalone = false }) => {
               filteredReports.map((report) => (
                 <tr key={report.IMEI} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {report.shopName}
+                    {report.shopOwnerId}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {report.deviceModel}

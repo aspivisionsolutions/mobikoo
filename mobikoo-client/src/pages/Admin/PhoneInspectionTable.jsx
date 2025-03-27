@@ -180,7 +180,7 @@ const response = await axios.get(`${API_URL}/api/inspection/admin/reports`, {
         const status = (report.status || '').toLowerCase();
         const term = searchTerm.toLowerCase();
         const imei = (report.imeiNumber || '').toLowerCase();
-        const shop = (report.shopName || '').toLowerCase();
+        const shop = (report.shopOnwerId || '').toLowerCase();
         const inspector = (report.inspectorId.firstName + " " + report.inspectorId.lastName || '').toLowerCase();
         return device.includes(term) || customer.includes(term) || id.includes(term) || status.includes(term) || imei.includes(term) || shop.includes(term) || inspector.includes(term);
       })
@@ -357,7 +357,7 @@ const response = await axios.get(`${API_URL}/api/inspection/admin/reports`, {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PhoneChecker</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop Owner Id</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI Number</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -379,7 +379,7 @@ const response = await axios.get(`${API_URL}/api/inspection/admin/reports`, {
                             {formatDate(report.inspectionDate)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {report.shopName || report.shopId || 'N/A'}
+                            {report.shopOwnerId || report.shopName || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {report.grade || 'N/A'}

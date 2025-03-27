@@ -144,7 +144,7 @@ useEffect(() => {
       // Update the report status in the local state
       setReports(reports.map(report => 
         report._id === activatingReport._id 
-          ? { ...report, warrantyStatus: 'activated' } 
+          ? { ...report, warrantyStatus: 'processing' } 
           : report
       ));
       

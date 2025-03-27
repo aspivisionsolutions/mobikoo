@@ -118,7 +118,7 @@ if (response.data.success && response.data.data) {
     filteredLogs.forEach(log => {
       const row = [
         log.actionType || 'N/A',
-        log.shopOwnerName || 'N/A',
+        log.shopOwnerId || 'N/A',
         log.phoneCheckerName || 'N/A',
         log.customerName || 'N/A',
         log.imeiNumber || 'N/A',
@@ -212,11 +212,11 @@ if (response.data.success && response.data.data) {
                     <th 
                       scope="col" 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort('shopOwnerName')}
+                      onClick={() => handleSort('shopOwnerId')}
                     >
                       <div className="flex items-center">
                         Shop Owner
-                        {sortField === 'shopOwnerName' && (
+                        {sortField === 'shopOwnerId' && (
                           <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                         )}
                       </div>
@@ -309,7 +309,7 @@ if (response.data.success && response.data.data) {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {log.shopOwnerName == "undefined undefined" ? 'N/A': log.shopOwnerName}
+                          {log.shopOwnerId == "undefined undefined" ? 'N/A': log.shopOwnerId}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {log.phoneCheckerName == "undefined undefined" ? 'N/A' : log.phoneCheckerName}

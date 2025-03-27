@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const inspectionReportSchema = new mongoose.Schema({
-    shopName: { type: String, required: true },
+    shopOwnerId: { type: String, required: true },
     inspectorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     inspectionDate: { type: Date, required: true},
     imeiNumber: { type: String, required: true,unique:true },

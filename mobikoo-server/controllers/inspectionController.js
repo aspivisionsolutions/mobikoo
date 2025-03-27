@@ -576,7 +576,7 @@ exports.downloadInspectionReport = async (req, res) => {
 exports.getInspectionReportsForShopOwner = async (req, res) => {
   try {
     const shopOwner = await ShopOwner.findOne({ userId: req.user.userId });
-    const reports = await InspectionReport.find({ shopName: shopOwner.shopDetails.shopName })
+    const reports = await InspectionReport.find({ shopOwnerId: shopOwner.shopOwnerId })
       .populate('inspectorId')
       .populate({
         path: 'warrantyDetails',
