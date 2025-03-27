@@ -129,7 +129,6 @@ exports.getAllIssuedWarranties = async (req, res) => {
                 populate: { path: 'inspectorId' }
             })
             .populate('warrantyPlanId');
-
         const populatedWarranties = await Promise.all(issuedWarranties.map(async (warranty) => {
             const imei = warranty.inspectionReport.imeiNumber; // Get IMEI from inspectionReport
             const customer = await Customer.findOne({ imeiNumber: imei }); // Find customer by IMEI

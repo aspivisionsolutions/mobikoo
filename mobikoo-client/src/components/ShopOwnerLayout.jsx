@@ -93,8 +93,13 @@ const ShopOwnerLayout = () => {
           {/* Profile Section */}
           <div className="p-4 border-b mt-14 lg:mt-0">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <FiUser className="h-6 w-6 text-blue-600" />
+              {/* Profile Image */}
+              <div className="h-10 w-10 rounded-full overflow-hidden">
+                <img
+                  src="/profile.png" // Path to your image in the public folder
+                  alt="Shop Owner Profile"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-white">{shopDetails?.shopName}</h2>
@@ -147,11 +152,17 @@ const ShopOwnerLayout = () => {
       )}
 
       {/* Main Content */}
-      <div className="lg:ml-64 pt-16 lg:pt-0">
-        <div className="p-4">
-          <Outlet />
-        </div>
-      </div>
+      <div className="lg:ml-64 pt-0 lg:pt-0 flex flex-col">
+  {/* Top Bar */}
+  <div className="hidden md:flex bg-blue-800 border-b h-18 border-gray-200 px-4 py-2 w-full flex items-center justify-end">
+    <h1 className="text-white text-xl font-bold">MobiKoo.com</h1>
+  </div>
+  {/* Main Content */}
+  <div className="p-4 mt-10 flex-1">
+    <Outlet />
+  </div>
+</div>
+
     </div>
   );
 };

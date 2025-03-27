@@ -170,6 +170,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content Area */}
+      
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         <div className="bg-white shadow-sm">
           <div className="h-16 flex items-center px-6">

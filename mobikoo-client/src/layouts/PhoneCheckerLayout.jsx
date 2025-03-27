@@ -106,8 +106,12 @@ const PhoneCheckerLayout = () => {
           {/* Profile Section */}
           <div className="p-4 border-b">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <FiUser className="h-6 w-6 text-blue-600" />
+            <div className="h-10 w-10 rounded-full overflow-hidden">
+                <img
+                  src="/profile.png" // Path to your image in the public folder
+                  alt="Shop Owner Profile"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-white">{profile.firstName + " " + profile.lastName}</h2>
@@ -157,15 +161,16 @@ const PhoneCheckerLayout = () => {
       )}
 
       {/* Main Content */}
-      <div className="lg:pl-64 flex flex-col flex-1">
-        <main className="flex-1">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <Outlet />
-            </div>
-          </div>
-        </main>
-      </div>
+     <div className="lg:ml-64 pt-0 lg:pt-0 flex flex-col">
+       {/* Top Bar */}
+       <div className="hidden md:flex bg-blue-800 border-b h-18 border-gray-200 px-4 py-2 w-full flex items-center justify-end">
+         <h1 className="text-white text-xl font-bold">MobiKoo.com</h1>
+       </div>
+       {/* Main Content */}
+       <div className="p-4 mt-10 flex-1">
+         <Outlet />
+       </div>
+     </div>
     </div>
   );
 };
