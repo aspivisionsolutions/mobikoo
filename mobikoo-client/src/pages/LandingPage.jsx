@@ -797,28 +797,48 @@ export function LandingPage() {
         {/* Content section with description and phone images */}
         <div className='flex flex-col md:flex-row'>
           {/* Left text section */}
-          <div className='w-full md:w-1/2 p-10 flex items-center h-[400px] relative'> {/* Added relative */}
-            <div className='absolute inset-0 bg-[url("/sux.jpg")] bg-cover bg-center opacity-30'></div> {/* Opacity applied only to background */}
-            <div className='z-10'> {/* Added z-10 to ensure text is on top */}
-              <p className='text-lg text-bold leading-relaxed text-white'>
-                Mobikoo is a pioneering mobile insurance company dedicated to
-                providing comprehensive protection for your devices. With our
-                affordable and flexible plans, we ensure your mobile is
-                safeguarded against accidental damage, theft, and other common
-                issues. Our easy claims process, coupled with 24/7 customer
-                support, guarantees hassle-free and swift resolution of any
-                problems you may face.
-              </p>
-            </div>
-          </div>
+          <div className='w-full p-10 flex items-center h-auto relative' style={{backgroundColor: '#360A3F'}}>
+  <div className='relative inset-0 opacity-30' style={{ backgroundColor: 'purple' }}></div>
+  <div className='z-10'>
+    <p className='text-lg leading-relaxed text-white mb-6'>
+      At Mobikoo, we empower mobile retailers with smart extended warranty solutions that boost revenue & cut costs.
+    </p>
+    <h3 className='text-2xl font-bold text-white mb-4'>How Mobikoo Saves You Lakhs?</h3>
+    <ul className='list-disc list-inside text-lg leading-relaxed text-white mb-6'>
+      <li>
+        <span className='text-yellow-500 font-bold'>Zero Repair Bills:</span> We cover 100% repair costs (saves ₹3-5 lakhs/year).
+      </li>
+      <li>
+        <span className='text-yellow-500 font-bold'>Extra Income:</span> Earn ₹500-1,000/warranty (20+ sales = ₹10,000-20,000/month).
+      </li>
+      <li>
+        <span className='text-yellow-500 font-bold'>Customer Lock-in:</span> Reduce churn by 40% with warranty loyalty.
+      </li>
+    </ul>
+    <p className='text-lg leading-relaxed text-white mb-4'>
+      Trusted by 5,000+ shops across India.
+    </p>
+    <p className='text-lg leading-relaxed text-white mb-6'>
+      📞 Join today & start saving! <span className='font-bold'>+91 9699539240</span> | <a href="mailto:support@mobikoo.com" className='underline'>support@mobikoo.com</a>
+    </p>
+    <h3 className='text-2xl font-bold text-white mb-4'>Why Mobikoo?</h3>
+    <ul className='list-disc list-inside text-lg leading-relaxed text-white'>
+      <li>
+        <span className='text-yellow-500 font-bold'>Zero Risk:</span> No upfront costs.
+      </li>
+      <li>
+        <span className='text-yellow-500 font-bold'>Pan-India Network:</span> Fast claim settlements.
+      </li>
+      <li>
+        <span className='text-yellow-500 font-bold'>Easy Onboarding:</span> Start earning in 24hrs.
+      </li>
+    </ul>
+  </div>
+</div>
 
 
           {/* Right image section */}
-          <div className='w-full md:w-1/2 bg-gray-200 flex justify-center bg-[url("/ip.jpg")] bg-cover bg-center items-center h-[400px]'>
-            <div className='relative w-full h-64'>
-
-            </div>
-          </div>
+      
         </div>
 
       </div>
