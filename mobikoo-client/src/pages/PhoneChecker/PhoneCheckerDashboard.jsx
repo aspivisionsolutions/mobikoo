@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
-import { FiSearch, FiDownload, FiTrendingUp, FiPhone, FiCheckCircle, FiEye, FiArrowLeft, FiShield, FiX } from 'react-icons/fi';
+import { FiSearch, FiDownload, FiTrendingUp, FiPhone, FiCheckCircle, FiEye, FiArrowLeft, FiShield, FiX,FiAlertCircle } from 'react-icons/fi';
 import ClaimRequests from './ClaimRequests';
 import InspectionRequests from './InspectionRequests';
 import { InspectionReportDetails } from '../../components/InspectionReportDetails';
@@ -47,7 +48,27 @@ const PhoneCheckerDashboard = () => {
   const [warrantyPlan, setWarrantyPlan] = useState(null);
   const [reportForWarranty, setReportForWarranty] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false); // Add state for submission status
-
+  const [profile, setProfile] = useState({})
+  
+    useEffect(() => {
+      const getProfile = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/user/phone-checker`, {
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+      const profile = {
+        phoneNumber : response.data.phoneChecker.phoneNumber,
+        area: response.data.phoneChecker.area,
+      }
+      setProfile(profile)
+      } catch (error) {
+        console.log({error: error.response.data.message})
+      }}
+      getProfile()
+    }, []);
+    const isProfileComplete = profile.phoneNumber && profile.area;
   useEffect(() => {
     fetchRequests();
     fetchSalesStats();
@@ -418,15 +439,31 @@ const PhoneCheckerDashboard = () => {
   return (
     <>
       <div className="flex justify-between items-center md:my-0 my-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard Overview</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-10">Dashboard Overview</h1>
         {activeTab === 'inspections' && (
-          <button
-            onClick={handleInspectClick}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            New Inspection
-          </button>
+          <div className="relative flex mb-10"> {/* Added relative div for positioning */}
+          {!isProfileComplete && (
+                <div className="flex items-center text-amber-600 bg-amber-50 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm">
+                  <FiAlertCircle className="mr-2 flex-shrink-0" />
+                  <span>
+                    Please <Link to="/phone-checker/profile" className="underline font-medium">complete your profile</Link> to create inspection requests
+                  </span>
+                </div>
+              )}
+            <button
+              onClick={handleInspectClick}
+              className={`w-full sm:w-auto px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center
+                ${!isProfileComplete
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                }`}
+              disabled={!isProfileComplete}
+            >
+              New Inspection
+            </button>
+        </div>
         )}
+
       </div>
 
       <Toaster />

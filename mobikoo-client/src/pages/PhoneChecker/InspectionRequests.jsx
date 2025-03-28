@@ -6,12 +6,12 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 const API_URL = import.meta.env.VITE_API_URL;
 
-const axiosInstance = axios.create({
-  baseURL: `${API_URL}/api`,
-  headers: {
-    Authorization: `${localStorage.getItem('token')}`,
-  },
-});
+// const axiosInstance = axios.create({
+//   baseURL: `${API_URL}/api`,
+//   headers: {
+//     Authorization: `${localStorage.getItem('token')}`,
+//   },
+// });
 
 const InspectionRequests = ({ standalone = false }) => {
   const [requests, setRequests] = useState([]);
@@ -44,7 +44,11 @@ const InspectionRequests = ({ standalone = false }) => {
       if (!isProfileComplete) return;
       setIsLoading(true);
       try {
-        const { data } = await axiosInstance.get('/inspection/phoneChecker');
+        const { data } = await axios.get(`${API_URL}/api/inspection/phoneChecker`,{
+          headers: {
+            Authorization: `${localStorage.getItem('token')}`
+          }
+        });
         setRequests(data);
         setFilteredRequests(data);
       } catch (error) {
@@ -72,7 +76,11 @@ const InspectionRequests = ({ standalone = false }) => {
 
   const handleStatusUpdate = async (requestId, newStatus) => {
     try {
-      await axiosInstance.patch(`/inspection/${requestId}`, { status: newStatus });
+      await axios.patch(`${API_URL}/api/inspection/${requestId}`, { status: newStatus },{
+        headers: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
       setRequests((prev) =>
         prev.map((request) => (request._id === requestId ? { ...request, status: newStatus } : request))
       );
@@ -103,7 +111,6 @@ const InspectionRequests = ({ standalone = false }) => {
       </div>
     );
   }
-
   return (
     <div className={`h-full flex flex-col ${standalone ? 'ml-64' : ''}`}>
       {/* Search Bar */}
