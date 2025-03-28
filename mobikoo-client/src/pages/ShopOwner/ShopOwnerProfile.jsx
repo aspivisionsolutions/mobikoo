@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiUser, FiShoppingBag, FiPhone, FiMapPin, FiSave, FiMail } from 'react-icons/fi';
+import { FiUser, FiHash,FiShoppingBag, FiPhone, FiMapPin, FiSave, FiMail } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,12 +11,14 @@ const ShopOwnerProfile = () => {
     email: '',
     shopName: '',
     mobileNumber: '',
-    address: ''
+    address: '',
+     shopOwnerId: ''
   });
   const [existingFields, setExistingFields] = useState({
     shopName: false,
     mobileNumber: false,
-    address: false
+    address: false,
+    shopOwnerId: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -38,7 +40,8 @@ const ShopOwnerProfile = () => {
           email: profile.userId.email || '',
           shopName: profile.shopDetails?.shopName || '',
           address: profile.shopDetails?.address || '',
-          mobileNumber: profile.phoneNumber || ''
+          mobileNumber: profile.phoneNumber || '',
+           shopOwnerId: profile.shopOwnerId || ''
         };
         setFormData(newFormData);
         
@@ -46,7 +49,8 @@ const ShopOwnerProfile = () => {
         setExistingFields({
           shopName: !!profile.shopDetails?.shopName,
           address: !!profile.shopDetails?.address,
-          mobileNumber: !!profile.phoneNumber
+          mobileNumber: !!profile.phoneNumber,
+          shopOwnerId: !!profile.shopOwnerId
         });
       }
     } catch (error) {
@@ -102,6 +106,25 @@ const ShopOwnerProfile = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+            <label htmlFor="shopOwnerId" className="block text-sm font-medium text-gray-700">
+              Shop Owner ID
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiHash className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                name="shopOwnerId"
+                id="shopOwnerId"
+                value={formData.shopOwnerId}
+                disabled={true}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900"
+              />
+            </div>
+            {isEditing && <p className="mt-1 text-sm text-red-500">This field cannot be edited</p>}
+          </div>
           {/* First Name */}
           <div>
             <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -249,7 +272,7 @@ const ShopOwnerProfile = () => {
           </div>
 
           {/* Show message if no fields exist */}
-          {!existingFields.shopName && !existingFields.mobileNumber && !existingFields.address && !isEditing && (
+          {!existingFields.shopName && !existingFields.mobileNumber && !existingFields.address && !existingFields.shopOwnerId && !isEditing && (
             <div className="text-center py-4 text-gray-500">
               No shop details available. Click 'Edit Profile' to add your shop information.
             </div>
