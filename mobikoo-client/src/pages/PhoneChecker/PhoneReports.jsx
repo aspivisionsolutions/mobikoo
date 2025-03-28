@@ -210,7 +210,9 @@ const PhoneReports = ({ standalone = false }) => {
         console.log("Payment initialized");
 
         // Pass both plan and orderId to verifyPayment
-        verifyPayment(plan, orderId);
+        if(res.paymentDetails){
+          verifyPayment(plan, orderId);
+        }
       }).catch((err) => {
         console.error("Checkout error:", err);
         toast.error('Payment initialization failed.');
@@ -374,7 +376,9 @@ const PhoneReports = ({ standalone = false }) => {
       cashfree.checkout(checkoutOptions).then((res) => {
         console.log("payment initialized")
 
-        verifyPaymentForBulkPurchase(purchaseDetails, orderId)
+        if(res.paymentDetails){
+          verifyPaymentForBulkPurchase(purchaseDetails, orderId)
+        }
       })
     } catch (error) {
       console.error('Error purchasing bulk warranty:', error);

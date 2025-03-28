@@ -164,8 +164,9 @@ const PhoneCheckerFinesPanel = () => {
         cashfree.checkout(checkoutOptions).then((res) => {
           console.log("Payment initialized");
           
-          // Pass both fineId and orderId to verifyPayment
-          verifyPayment(fineId, orderId);
+          if(res.paymentDetails){
+            verifyPayment(fineId, orderId);
+          }
         }).catch((err) => {
           console.error("Checkout error:", err);
           toast.error('Payment initialization failed.');
