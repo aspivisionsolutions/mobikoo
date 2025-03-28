@@ -87,7 +87,7 @@ const PhoneCheckerFinesPanel = () => {
     let insitialzeSDK = async function () {
   
       cashfree = await load({
-        mode: "sandbox",
+        mode: "production", // Set "production" for production mode
       })
     }
   
