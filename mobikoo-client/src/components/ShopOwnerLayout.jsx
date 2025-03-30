@@ -18,10 +18,11 @@ const ShopOwnerLayout = () => {
       const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      
+      console.log(response.data);
       if (response.data.shopprofile && response.data.shopprofile.length > 0) {
         const profile = response.data.shopprofile[0];
         setShopDetails({
+          shopOwnerId: profile.shopOwnerId,
           shopName: profile.shopDetails?.shopName,
           address: profile.shopDetails?.address,
           mobileNumber: profile.phoneNumber,
@@ -104,6 +105,7 @@ const ShopOwnerLayout = () => {
               <div>
                 <h2 className="text-sm font-semibold text-white">{shopDetails?.shopName}</h2>
                 <p className="text-xs text-gray-50">{shopDetails?.shopOwnerName}</p>
+                <p className="text-xs text-gray-50">ID : {shopDetails?.shopOwnerId || "Null"}</p> 
               </div>
             </div>
           </div>
