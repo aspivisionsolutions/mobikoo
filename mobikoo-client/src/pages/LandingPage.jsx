@@ -82,10 +82,10 @@ export function LandingPage() {
       { name: 'Contact Us', url: '#' },
     ],
     company: [
-      { name: 'Terms & Conditions', url: '#' },
-      { name: 'Privacy Policy', url: '#' },
+      { name: 'Terms & Conditions', url: '/TandC.pdf' },
+      { name: 'Privacy Policy', url: '/PrivacyPolicy.pdf' },
       { name: 'Contact Us', url: '#' },
-      { name: 'Refund Policy', url: '#' },
+      { name: 'Refund Policy', url: '/RefundPolicy.pdf' },
       { name: 'Shipping', url: '#' },
     ],
   };
@@ -996,6 +996,7 @@ export function LandingPage() {
                 <li key={index}>
                   <a
                     href={link.url}
+                    target='_blank'
                     className='hover:text-gray-300 transition-colors'
                   >
                     {link.name}
