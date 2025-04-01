@@ -331,6 +331,11 @@ const UserManagement = () => {
         <table className="min-w-full bg-white">
           <thead>
             <tr className="bg-gray-100">
+            {activeTab === 'shopOwners' && (
+                <>
+                  <th className="py-3 px-4 text-left">Shop Owner Id</th>
+                </>
+              )}
               <th className="py-3 px-4 text-left">Name</th>
               <th className="py-3 px-4 text-left">Email</th>
               <th className="py-3 px-4 text-left">Phone</th>
@@ -359,6 +364,11 @@ const UserManagement = () => {
           <tbody>
             {users.map((user) => (
               <tr key={user._id} className="border-b hover:bg-gray-50">
+                {activeTab === 'shopOwners' && (
+                  <>
+                    <td className="py-3 px-4">{user.shopOwnerId || 'N/A'}</td>
+                  </>
+                )}
                 <td className="py-3 px-4">
                   {activeTab === 'customers' 
                     ? user.customerName || user.userId?.firstName || 'N/A'

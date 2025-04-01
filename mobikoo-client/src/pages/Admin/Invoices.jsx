@@ -72,7 +72,7 @@ const Invoices = () => {
     const data = [
       { label: 'Invoice ID', value: _id.toString() },
       { label: 'Customer Name', value: customer.customerName },
-      {label:"Shop Name",value:inspectionReport.shopName},
+      {label:"Shop Owner Id",value:inspectionReport.shopOwnerId},
       { label: 'Mobile', value: customer.customerPhoneNumber.toString() },
       { label: 'IMEI', value: customer.imeiNumber.toString() },
       { label: 'Warranty Plan', value: `${warrantyPlanId.lower_limit}-${warrantyPlanId.upper_limit}` },
@@ -82,6 +82,7 @@ const Invoices = () => {
     ];
   
     data.forEach((item) => {
+      console.log(item.label, item.value)
       doc.text(item.label, x, y);
       doc.text(item.value, valueX, y);
       doc.line(x, y + 2, x + lineLength, y + 2); // Add line after each item

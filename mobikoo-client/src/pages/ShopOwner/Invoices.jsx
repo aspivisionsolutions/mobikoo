@@ -122,7 +122,7 @@ const Invoices = () => {
     const data = [
       { label: 'Invoice ID', value: _id.toString() },
       { label: 'Customer Name', value: customer.customerName },
-      {label:"Shop Name",value:inspectionReport.shopName},
+      {label:"Shop Owner Id",value:inspectionReport.shopOwnerId},
       { label: 'Mobile', value: customer.customerPhoneNumber.toString() },
       { label: 'IMEI', value: customer.imeiNumber.toString() },
       { label: 'Warranty Plan', value: `${warrantyPlanId.lower_limit}-${warrantyPlanId.upper_limit}` },
