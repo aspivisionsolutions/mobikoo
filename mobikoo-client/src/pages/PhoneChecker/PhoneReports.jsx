@@ -21,12 +21,12 @@ const PhoneReports = ({ standalone = false }) => {
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
   const [warrantyPlan, setWarrantyPlan] = useState(null);
   const [reportForWarranty, setReportForWarranty] = useState(null);
+  const [showDevicePriceModal, setShowDevicePriceModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedReports, setSelectedReports] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [devicePrice, setDevicePrice] = useState('');
   const [availablePlans, setAvailablePlans] = useState([]);
-  const [showDevicePriceModal, setShowDevicePriceModal] = useState(false);
   const [devicePrices, setDevicePrices] = useState({});
   const [profile, setProfile] = useState({})
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
