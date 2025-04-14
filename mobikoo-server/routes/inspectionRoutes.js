@@ -44,7 +44,7 @@ router.get(
 router.post(
   "/submitReport",
   protect,
-  roleMiddleware(["phone-checker"]),
+  roleMiddleware(["phone-checker","shop-owner"]),
   upload.array('photos', 10),
   submitInspectionReport // Use the controller function here
 );
