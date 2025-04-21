@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { FiDownload, FiEye, FiSearch, FiArrowLeft, FiShield,FiX } from 'react-icons/fi';
+import { FiDownload, FiEye, FiSearch, FiArrowLeft, FiShield, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Button } from '@mui/material';
-import { load } from '@cashfreepayments/cashfree-js'
+import { load } from '@cashfreepayments/cashfree-js';
+import { toast } from 'react-toastify'; // Import toast if not already imported
 import ResponsiveTable from '../../components/ResponsiveTable';
 import InspectionReportDetails from '../../components/InspectionReportDetails';
 import WarrantyActivationDialog from '../../components/WarrantyActivationDialog';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const InspectionReports = () => {
@@ -20,14 +22,57 @@ const InspectionReports = () => {
   const [devicePrice, setDevicePrice] = useState('');
   const [warrantyPlan, setWarrantyPlan] = useState(null);
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
-  const [warrantyPlans, setWarrantyPlans] = useState([])
+  const [warrantyPlans, setWarrantyPlans] = useState([]);
   const [reportForWarranty, setReportForWarranty] = useState(null);
   const [availablePlans, setAvailablePlans] = useState([]);
   const [showDevicePriceModal, setShowDevicePriceModal] = useState(false);
+  const [cashfreeInstance, setCashfreeInstance] = useState(null);
+  const [cashfree, setCashfree] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   const navigate = useNavigate();
 
+  // Initialize Cashfree SDK - Fixed implementation
   useEffect(() => {
-
+    async function initializeCashfree() {
+      try {
+        console.log("Starting Cashfree SDK initialization...");
+        setIsInitializing(true);
+        
+        // Make sure 'load' is imported correctly at the top of your file
+        // import { load } from '@cashfreepayments/cashfree-js';
+        
+        // Log the load function to ensure it exists
+        console.log("Cashfree load function:", load);
+        
+        const cashfreeInstance = await load({
+          mode: "sandbox", // Change to "production" for live environment
+          version: "2.0" // Try specifying version explicitly
+        });
+        
+        console.log("Cashfree SDK initialized successfully:", cashfreeInstance);
+        
+        // Set both state variables to the same instance for consistency
+        setCashfree(cashfreeInstance);
+        
+        // Test the cashfree instance to verify it has the expected methods
+        if (cashfreeInstance && typeof cashfreeInstance.checkout === 'function') {
+          console.log("Cashfree checkout function is available");
+        } else {
+          console.error("Cashfree instance is missing the checkout function");
+        }
+        
+      } catch (error) {
+        console.error("Failed to initialize Cashfree SDK:", error);
+        toast.error("Payment system initialization failed: " + (error.message || "Unknown error"));
+      } finally {
+        setIsInitializing(false);
+      }
+    }
+  
+    initializeCashfree();
+  }, []);
+  // Fetch inspection reports
+  useEffect(() => {
     const fetchReports = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/inspection/shopOwner/reports`, {
@@ -36,6 +81,7 @@ const InspectionReports = () => {
         setReports(response.data);
       } catch (error) {
         console.error('Error fetching reports:', error);
+        toast.error('Failed to load inspection reports');
       } finally {
         setIsLoading(false);
       }
@@ -43,14 +89,15 @@ const InspectionReports = () => {
 
     fetchReports();
   }, []);
-  useEffect(() => {
 
+  // Fetch shop details
+  useEffect(() => {
     const fetchShopDetails = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/user/shop-owner`, {
           headers: { Authorization: `${localStorage.getItem('token')}` }
         });
-        console.log(response.data)
+        console.log(response.data);
         if (response.data.shopprofile && response.data.shopprofile.length > 0) {
           const profile = response.data.shopprofile[0];
           setShopDetails({
@@ -69,30 +116,37 @@ const InspectionReports = () => {
 
     fetchShopDetails();
   }, []);
-  const fetchWarrantyPlans = async () => {
+
+  // Fetch warranty plans - Fixed implementation
+  const fetchWarrantyPlans = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/api/warranty/plans`, {
         headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-      // console.log(response.data.data)
-      setWarrantyPlans(response.data.data)
+      setWarrantyPlans(response.data.data);
     } catch (error) {
       console.error('Error fetching warranty plans:', error);
-      // toast.error('Failed to fetch warranty plans');
+      toast.error('Failed to fetch warranty plans');
     }
-  }
+  }, [API_URL]);
+
   useEffect(() => {
-    fetchWarrantyPlans()
-  })
+    fetchWarrantyPlans();
+  }, [fetchWarrantyPlans]);
+
   const handleShowWarrantyPlans = () => {
     // Find the smallest lower_limit in the warrantyPlans
+    if (!warrantyPlans || !warrantyPlans.length) {
+      toast.error('No warranty plans available. Please try again later.');
+      return;
+    }
+
     const smallestLowerLimit = Math.min(...warrantyPlans.map(plan => plan.lower_limit));
 
     // Check if the devicePrice is less than the smallest lower_limit
     if (devicePrice < smallestLowerLimit) {
-      alert('No plans available for the entered price.');
+      toast.info(`No plans available for the entered price. Minimum device price is ₹${smallestLowerLimit}`);
       setAvailablePlans([]);
-      // setShowDevicePriceModal(false);
       return;
     }
 
@@ -103,76 +157,186 @@ const InspectionReports = () => {
       plan.grade === reportForWarranty.grade
     );
 
+    if (plans.length === 0) {
+      toast.info(`No warranty plans available for ${reportForWarranty.grade} grade devices at this price point.`);
+      return;
+    }
+
     setAvailablePlans(plans);
     setShowDevicePriceModal(false);
     setShowWarrantyModal(true);
   };
 
-  let cashfree;
-
-  let insitialzeSDK = async function () {
-
-    cashfree = await load({
-      mode: "production", // Set "production" for production mode
-    })
-  }
-
-  insitialzeSDK()
-
-  const [orderId, setOrderId] = useState("")
-
   const getSessionId = async (plan) => {
+    if (!plan || !reportForWarranty) {
+      console.error("Missing plan or device information");
+      toast.error('Missing plan or device information');
+      return null;
+    }
+  
     try {
+      console.log('Creating order with plan:', plan);
+      
       let res = await axios.post(`${API_URL}/api/payment/create-order`, {
         amount: plan.price,
         receipt: reportForWarranty._id,
-        notes: {},
+        notes: {
+          planId: plan._id,
+          deviceModel: reportForWarranty.deviceModel,
+          imeiNumber: reportForWarranty.imeiNumber
+        },
+      }, {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-
-      if (res.data && res.data.payment_session_id) {
-        console.log('Full response:', res.data);
-
-        // Return an object with both session ID and order ID
-        return {
-          sessionId: res.data.payment_session_id,
-          orderId: res.data.order_id
-        };
+  
+      console.log('Create order response:', res.data);
+      
+      // The backend is using Cashfree v2 API which returns different fields
+      // Extract the actual fields from the response
+      if (res.data) {
+        // Check for payment_session_id field first (newer API versions)
+        if (res.data.payment_session_id) {
+          return {
+            sessionId: res.data.payment_session_id,
+            orderId: res.data.order_id
+          };
+        }
+        // If not present, look for cf_payment_id or order_token (older API versions)
+        else if (res.data.cf_payment_id || res.data.payment_session_id) {
+          return {
+            sessionId: res.data.cf_payment_id || res.data.payment_session_id,
+            orderId: res.data.order_id
+          };
+        }
+        // Another possibility based on your backend code
+        else if (res.data.payment_link || res.data.payments?.url) {
+          // If the API returns a payment link, we can redirect to it
+          const paymentUrl = res.data.payment_link || res.data.payments?.url;
+          console.log('Redirecting to payment URL:', paymentUrl);
+          window.location.href = paymentUrl;
+          return null; // No need to return session data as we're redirecting
+        }
+        // For PGCreateOrder response format
+        else if (res.data.order_token) {
+          return {
+            sessionId: res.data.order_token,
+            orderId: res.data.order_id
+          };
+        }
+        else {
+          console.error('Unrecognized response format:', res.data);
+          toast.error('Server response format not recognized');
+          return null;
+        }
+      } else {
+        console.error('Empty response from payment API');
+        toast.error('Empty response from server');
+        return null;
       }
     } catch (error) {
       console.error('Error getting session ID:', error);
-      throw error;
+      toast.error(error.response?.data?.message || 'Failed to create payment session');
+      return null;
     }
   };
-
   const handleWarrantyPurchaseConfirm = async (plan) => {
+    console.log("handleWarrantyPurchaseConfirm called with plan:", plan);
+    
+    // Log the Cashfree instance to see what methods are available
+    console.log("Cashfree SDK available methods:", cashfree ? Object.keys(cashfree) : "Cashfree not initialized");
+    
+    if (!cashfree) {
+      console.error("Cashfree SDK not initialized");
+      toast.error('Payment system not initialized. Please refresh the page and try again.');
+      return;
+    }
+  
     try {
-      // Destructure sessionId and orderId from the returned object
-      const { sessionId, orderId } = await getSessionId(plan);
-
-      let checkoutOptions = {
-        paymentSessionId: sessionId,
-        redirectTarget: "_modal",
-      };
-
-      cashfree.checkout(checkoutOptions).then((res) => {
-        console.log("Payment initialized");
-
-        // Pass both plan and orderId to verifyPayment
-        if (res.paymentDetails) {
-          verifyPayment(plan, orderId);
+      console.log("Retrieving session ID for plan:", plan);
+      const sessionData = await getSessionId(plan);
+      
+      // If sessionData is null and we're redirecting via payment link, just return
+      if (!sessionData) {
+        console.log("No session data returned, assuming direct payment link redirect");
+        return;
+      }
+  
+      console.log("Session data received:", sessionData);
+      const { sessionId, orderId } = sessionData;
+  
+      // Based on available methods in your Cashfree instance
+      if (typeof cashfree.checkout === 'function') {
+        console.log("Using cashfree.checkout method with session ID:", sessionId);
+        
+        try {
+          await cashfree.checkout({
+            paymentSessionId: sessionId,
+            redirectTarget: "_self",
+            onSuccess: function(data) {
+              console.log("Payment success:", data);
+              verifyPayment(plan, orderId);
+            },
+            onError: function(err) {
+              console.error("Checkout error:", err);
+              toast.error('Payment failed: ' + (err.message || "Unknown error"));
+            }
+          });
+        } catch (error) {
+          console.error("Checkout error:", error);
+          toast.error('Payment failed: ' + (error.message || "Unknown error"));
         }
-      }).catch((err) => {
-        console.error("Checkout error:", err);
-        toast.error('Payment initialization failed.');
-      });
+      }
+      else if (typeof cashfree.initiatePayment === 'function') {
+        console.log("Using cashfree.initiatePayment method");
+        
+        try {
+          cashfree.initiatePayment({
+            orderToken: sessionId,
+            onSuccess: function(data) {
+              console.log("Payment success:", data);
+              verifyPayment(plan, orderId);
+            },
+            onFailure: function(data) {
+              console.error("Payment failure:", data);
+              toast.error('Payment failed');
+            }
+          });
+        } catch (error) {
+          console.error("initiatePayment error:", error);
+          toast.error('Payment failed: ' + (error.message || "Unknown error"));
+        }
+      }
+      else if (typeof cashfree.pay === 'function') {
+        console.log("Using cashfree.pay method");
+        
+        try {
+          await cashfree.pay({
+            sessionId: sessionId
+          });
+        } catch (error) {
+          console.error("Pay error:", error);
+          toast.error('Payment failed: ' + (error.message || "Unknown error"));
+        }
+      }
+      else {
+        console.error("No suitable payment method found in Cashfree SDK");
+        toast.error("Unable to process payment with current configuration");
+        
+        // Last resort - try to use the session ID as a redirect URL
+        try {
+          window.location.href = sessionId;
+        } catch (error) {
+          console.error("Redirect error:", error);
+        }
+      }
     } catch (error) {
-      console.error('Error purchasing warranty:', error);
+      console.error('Error in warranty purchase process:', error);
       toast.error(error.response?.data?.message || 'Failed to purchase warranty');
     }
   };
-
   const verifyPayment = async (plan, orderId) => {
     try {
+      console.log('Verifying payment for order:', orderId);
       let res = await axios.post(`${API_URL}/api/payment/payment/verify`, {
         reportId: reportForWarranty._id,
         deviceModel: reportForWarranty.deviceModel,
@@ -180,18 +344,26 @@ const InspectionReports = () => {
         grade: reportForWarranty.grade,
         planId: plan._id,
         orderId: orderId
+      }, {
+        headers: { Authorization: `${localStorage.getItem('token')}` }
       });
-
+  
       if (res && res.data) {
         toast.success('Warranty purchased successfully');
         setShowWarrantyModal(false);
         setWarrantyPlan(null);
         setReportForWarranty(null);
-        fetchReports();
+        
+        // Refresh reports after successful purchase
+        const response = await axios.get(`${API_URL}/api/inspection/shopOwner/reports`, {
+          headers: { Authorization: `${localStorage.getItem('token')}` }
+        });
+        setReports(response.data);
       }
     } catch (error) {
-      toast.error('Failed to purchase warranty');
       console.error('Verification error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to verify payment';
+      toast.error(`${errorMessage}. Please contact support with your order details.`);
     }
   };
   const isShopDetailsComplete = () => {
@@ -571,16 +743,17 @@ const InspectionReports = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => {
-                      setWarrantyPlan(() => { console.log(plan, "selecteing plan"); return plan });
-                      setTimeout(() => {
-                        handleWarrantyPurchaseConfirm(plan);
-                      }, 100);
-                    }}
-                    className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-                  >
-                    Select Plan
-                  </button>
+  onClick={() => {
+    console.log("Selected plan:", plan);
+    // Don't set state and immediately call function in the same event handler
+    setWarrantyPlan(plan);
+    // Add a small delay to ensure state is updated before processing
+    setTimeout(() => handleWarrantyPurchaseConfirm(plan), 100);
+  }}
+  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+>
+  Select Plan
+</button>
                 </div>
               ))}
             </div>
