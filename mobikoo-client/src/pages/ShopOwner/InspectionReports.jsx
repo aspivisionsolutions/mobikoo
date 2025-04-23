@@ -33,42 +33,19 @@ const InspectionReports = () => {
 
   // Initialize Cashfree SDK - Fixed implementation
   useEffect(() => {
-    async function initializeCashfree() {
+    const initializeCashfree = async () => {
       try {
-        console.log("Starting Cashfree SDK initialization...");
-        setIsInitializing(true);
-        
-        // Make sure 'load' is imported correctly at the top of your file
-        // import { load } from '@cashfreepayments/cashfree-js';
-        
-        // Log the load function to ensure it exists
-        console.log("Cashfree load function:", load);
-        
         const cashfreeInstance = await load({
-          mode: "sandbox", // Change to "production" for live environment
-          version: "2.0" // Try specifying version explicitly
+          mode: 'sandbox', // Change to 'production' for live environment
         });
-        
-        console.log("Cashfree SDK initialized successfully:", cashfreeInstance);
-        
-        // Set both state variables to the same instance for consistency
         setCashfree(cashfreeInstance);
-        
-        // Test the cashfree instance to verify it has the expected methods
-        if (cashfreeInstance && typeof cashfreeInstance.checkout === 'function') {
-          console.log("Cashfree checkout function is available");
-        } else {
-          console.error("Cashfree instance is missing the checkout function");
-        }
-        
+        console.log('Cashfree SDK initialized successfully:', cashfreeInstance);
       } catch (error) {
-        console.error("Failed to initialize Cashfree SDK:", error);
-        toast.error("Payment system initialization failed: " + (error.message || "Unknown error"));
-      } finally {
-        setIsInitializing(false);
+        console.error('Failed to initialize Cashfree SDK:', error);
+        toast.error('Payment system initialization failed.');
       }
-    }
-  
+    };
+
     initializeCashfree();
   }, []);
   // Fetch inspection reports
@@ -177,61 +154,31 @@ const InspectionReports = () => {
     try {
       console.log('Creating order with plan:', plan);
       
-      let res = await axios.post(`${API_URL}/api/payment/create-order`, {
-        amount: plan.price,
-        receipt: reportForWarranty._id,
-        notes: {
-          planId: plan._id,
-          deviceModel: reportForWarranty.deviceModel,
-          imeiNumber: reportForWarranty.imeiNumber
+      const response = await axios.post(
+        `${API_URL}/api/payment/create-order`,
+        {
+          amount: plan.price,
+          receipt: reportForWarranty._id,
+          notes: {
+            planId: plan._id,
+            deviceModel: reportForWarranty.deviceModel,
+            imeiNumber: reportForWarranty.imeiNumber,
+          },
         },
-      }, {
-        headers: { Authorization: `${localStorage.getItem('token')}` }
-      });
+        {
+          headers: { Authorization: `${localStorage.getItem('token')}` },
+        }
+      );
   
-      console.log('Create order response:', res.data);
+      console.log('Create order response:', response.data);
       
       // The backend is using Cashfree v2 API which returns different fields
       // Extract the actual fields from the response
-      if (res.data) {
-        // Check for payment_session_id field first (newer API versions)
-        if (res.data.payment_session_id) {
-          return {
-            sessionId: res.data.payment_session_id,
-            orderId: res.data.order_id
-          };
-        }
-        // If not present, look for cf_payment_id or order_token (older API versions)
-        else if (res.data.cf_payment_id || res.data.payment_session_id) {
-          return {
-            sessionId: res.data.cf_payment_id || res.data.payment_session_id,
-            orderId: res.data.order_id
-          };
-        }
-        // Another possibility based on your backend code
-        else if (res.data.payment_link || res.data.payments?.url) {
-          // If the API returns a payment link, we can redirect to it
-          const paymentUrl = res.data.payment_link || res.data.payments?.url;
-          console.log('Redirecting to payment URL:', paymentUrl);
-          window.location.href = paymentUrl;
-          return null; // No need to return session data as we're redirecting
-        }
-        // For PGCreateOrder response format
-        else if (res.data.order_token) {
-          return {
-            sessionId: res.data.order_token,
-            orderId: res.data.order_id
-          };
-        }
-        else {
-          console.error('Unrecognized response format:', res.data);
-          toast.error('Server response format not recognized');
-          return null;
-        }
-      } else {
-        console.error('Empty response from payment API');
-        toast.error('Empty response from server');
-        return null;
+      if (response.data && response.data.payment_session_id) {
+        return {
+          sessionId: response.data.payment_session_id,
+          orderId: response.data.order_id,
+        };
       }
     } catch (error) {
       console.error('Error getting session ID:', error);
@@ -239,101 +186,39 @@ const InspectionReports = () => {
       return null;
     }
   };
-  const handleWarrantyPurchaseConfirm = async (plan) => {
-    console.log("handleWarrantyPurchaseConfirm called with plan:", plan);
-    
-    // Log the Cashfree instance to see what methods are available
-    console.log("Cashfree SDK available methods:", cashfree ? Object.keys(cashfree) : "Cashfree not initialized");
-    
-    if (!cashfree) {
-      console.error("Cashfree SDK not initialized");
-      toast.error('Payment system not initialized. Please refresh the page and try again.');
-      return;
-    }
-  
-    try {
-      console.log("Retrieving session ID for plan:", plan);
-      const sessionData = await getSessionId(plan);
-      
-      // If sessionData is null and we're redirecting via payment link, just return
-      if (!sessionData) {
-        console.log("No session data returned, assuming direct payment link redirect");
-        return;
-      }
-  
-      console.log("Session data received:", sessionData);
-      const { sessionId, orderId } = sessionData;
-  
-      // Based on available methods in your Cashfree instance
-      if (typeof cashfree.checkout === 'function') {
-        console.log("Using cashfree.checkout method with session ID:", sessionId);
-        
-        try {
-          await cashfree.checkout({
-            paymentSessionId: sessionId,
-            redirectTarget: "_self",
-            onSuccess: function(data) {
-              console.log("Payment success:", data);
-              verifyPayment(plan, orderId);
-            },
-            onError: function(err) {
-              console.error("Checkout error:", err);
-              toast.error('Payment failed: ' + (err.message || "Unknown error"));
-            }
-          });
-        } catch (error) {
-          console.error("Checkout error:", error);
-          toast.error('Payment failed: ' + (error.message || "Unknown error"));
+const handleWarrantyPurchaseConfirm = async (plan) => {
+  console.log("handleWarrantyPurchaseConfirm called with plan:", plan);
+
+  if (!cashfree) {
+    toast.error('Payment system not initialized. Please refresh the page and try again.');
+    return;
+  }
+
+  try {
+    const { sessionId, orderId } = await getSessionId(plan);
+
+    const checkoutOptions = {
+      paymentSessionId: sessionId,
+      redirectTarget: '_modal',
+    };
+
+    cashfree
+      .checkout(checkoutOptions)
+      .then(res => {
+        console.log('Payment initialized');
+        if (res.paymentDetails) {
+          verifyPayment(plan, orderId);
         }
-      }
-      else if (typeof cashfree.initiatePayment === 'function') {
-        console.log("Using cashfree.initiatePayment method");
-        
-        try {
-          cashfree.initiatePayment({
-            orderToken: sessionId,
-            onSuccess: function(data) {
-              console.log("Payment success:", data);
-              verifyPayment(plan, orderId);
-            },
-            onFailure: function(data) {
-              console.error("Payment failure:", data);
-              toast.error('Payment failed');
-            }
-          });
-        } catch (error) {
-          console.error("initiatePayment error:", error);
-          toast.error('Payment failed: ' + (error.message || "Unknown error"));
-        }
-      }
-      else if (typeof cashfree.pay === 'function') {
-        console.log("Using cashfree.pay method");
-        
-        try {
-          await cashfree.pay({
-            sessionId: sessionId
-          });
-        } catch (error) {
-          console.error("Pay error:", error);
-          toast.error('Payment failed: ' + (error.message || "Unknown error"));
-        }
-      }
-      else {
-        console.error("No suitable payment method found in Cashfree SDK");
-        toast.error("Unable to process payment with current configuration");
-        
-        // Last resort - try to use the session ID as a redirect URL
-        try {
-          window.location.href = sessionId;
-        } catch (error) {
-          console.error("Redirect error:", error);
-        }
-      }
-    } catch (error) {
-      console.error('Error in warranty purchase process:', error);
-      toast.error(error.response?.data?.message || 'Failed to purchase warranty');
-    }
-  };
+      })
+      .catch(err => {
+        console.error('Checkout error:', err);
+        toast.error('Payment initialization failed.');
+      });
+  } catch (error) {
+    console.error('Error purchasing warranty:', error);
+    toast.error('Failed to purchase warranty.');
+  }
+};
   const verifyPayment = async (plan, orderId) => {
     try {
       console.log('Verifying payment for order:', orderId);
