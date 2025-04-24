@@ -36,7 +36,7 @@ const InspectionReports = () => {
     const initializeCashfree = async () => {
       try {
         const cashfreeInstance = await load({
-          mode: 'sandbox', // Change to 'production' for live environment
+          mode: 'production', // Change to 'production' for live environment
         });
         setCashfree(cashfreeInstance);
         console.log('Cashfree SDK initialized successfully:', cashfreeInstance);
