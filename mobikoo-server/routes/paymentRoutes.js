@@ -38,9 +38,9 @@ function generateOrderId() {
 // Create Order POST endpoint
 router.post('/create-order', async (req, res) => {
     try {
-
-        const { amount, receipt, notes } = req.body; // Extract amount and currency from request body
+        const { amount, receipt, notes } = req.body;
         console.log('Amount:', amount, 'Receipt:', receipt, 'Notes:', notes);
+        
         let request = {
             "order_amount": amount,
             "order_currency": process.env.CURRENCY,
@@ -53,16 +53,20 @@ router.post('/create-order', async (req, res) => {
             },
         }
 
-        Cashfree.PGCreateOrder("2025-01-01", request).then(response => {
-            console.log(response.data);
+        try {
+            const response = await Cashfree.PGCreateOrder("2025-01-01", request);
+            console.log('Cashfree response:', response.data);
             res.json(response.data);
-
-        }).catch(error => {
-            console.error(error.response.data.message);
-        })
-        // res.json(order);
-
+        } catch (pgError) {
+            console.error('Cashfree API error:', pgError.response?.data?.message || pgError.message);
+            // Fix: Use pgError instead of undefined 'error' variable
+            res.status(500).json({ 
+                error: pgError.response?.data?.message || 'Payment gateway error', 
+                details: pgError.message 
+            });
+        }
     } catch (error) {
+        console.error('Server error:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
