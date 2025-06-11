@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FaShieldAlt, 
-  FaMobile, 
-  FaCalendarAlt, 
-  FaRupeeSign, 
-  FaArrowRight, 
-  FaCheckCircle, 
-  FaTools, 
+import {
+  FaShieldAlt,
+  FaMobile,
+  FaCalendarAlt,
+  FaRupeeSign,
+  FaArrowRight,
+  FaCheckCircle,
+  FaTools,
   FaWrench,
   FaTimes
 } from 'react-icons/fa';
 import { MdScreenshot } from 'react-icons/md';
+import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL;
+import { load } from '@cashfreepayments/cashfree-js';
 
 // Define the pricing tiers
 const pricingTiers = [
@@ -37,14 +40,14 @@ const calculateDailyPrice = (price) => {
 const findPricingTier = (devicePrice) => {
   // Convert to number if it's a string
   const price = Number(devicePrice);
-  
+
   // Find the first tier that is greater than or equal to the device price
   for (let i = 0; i < pricingTiers.length; i++) {
     if (price <= pricingTiers[i].value) {
       return pricingTiers[i];
     }
   }
-  
+
   // If the price is higher than all tiers, return the highest tier
   return pricingTiers[pricingTiers.length - 1];
 };
@@ -52,19 +55,86 @@ const findPricingTier = (devicePrice) => {
 // Modal component for plans
 const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [customerDetails, setCustomerDetails] = useState({ name: '', email: '', phone: '' });
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [orderId, setOrderId] = useState('');
   
+
   if (!isOpen) return null;
-  
+
   const handlePlanSelect = (plan) => {
     setSelectedPlan(plan);
   };
-  
+
+  const getSessionId = async (amount, customerDetails, planType) => {
+  try {
+    const res = await axios.post(`${API_URL}/api/landing-payment/create-device-protection-order`, {
+      amount,
+      customerDetails,
+      deviceName,
+      planType, // <-- add this
+    });
+    if (res.data && res.data.payment_session_id) {
+      console.log('Payment session initialized:', res.data);
+      setOrderId(res.data.order_id);
+      return res.data.payment_session_id;
+    }
+  } catch (error) {
+    alert('Failed to initialize payment');
+    throw error;
+  }
+};
+
+  let cashfree;
+  const initializeSDK = async () => {
+    if (!cashfree) {
+      cashfree = await load({ mode: "production" });
+    }
+  };
+
+  const handleCashfreePayment = async (planType, planPrice) => {
+    setPaymentLoading(true);
+    try {
+      await initializeSDK();
+      const sessionId = await getSessionId(planPrice, customerDetails, planType);
+
+      let checkoutOptions = {
+        paymentSessionId: sessionId,
+        redirectTarget: "_modal",
+      };
+
+      cashfree.checkout(checkoutOptions).then(async (res) => {
+        setPaymentLoading(false);
+        if (res.paymentDetails) {
+          console.log(orderId)
+          props.setSuccessData({
+  orderId,
+  deviceName,
+  devicePrice,
+  planType,
+  planPrice,
+  customerDetails,
+});
+props.setShowSuccessModal(true);
+          // onClose();
+        }
+      }).catch((err) => {
+        setPaymentLoading(false);
+        alert('Payment failed or cancelled.');
+      });
+    } catch (error) {
+      setPaymentLoading(false);
+      alert('Payment initialization failed.');
+    }
+  };
+
   const handleProceed = () => {
     // Handle payment processing
     alert(`Processing payment for ${selectedPlan} plan`);
     onClose();
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-modal-appear">
@@ -75,22 +145,22 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
             </div>
             <h2 className="text-2xl font-bold ml-4">Available Protection Plans</h2>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="bg-gray-800 hover:bg-gray-700 rounded-full p-2 transition-colors"
           >
             <FaTimes className="text-gray-400 hover:text-white" size={20} />
           </button>
         </div>
-        
+
         <div className="p-6">
           <div className="text-gray-300 mb-6">
             <p>Protection plans for <span className="font-bold text-white">{deviceName}</span> valued at <span className="font-bold text-white">₹{Number(devicePrice).toLocaleString()}</span></p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Screen Protection Plan */}
-            <div 
+            <div
               className={`bg-gray-800 border-2 rounded-xl overflow-hidden transition-all duration-300 ${selectedPlan === 'screen' ? 'border-blue-500 transform scale-[1.02]' : 'border-gray-700'}`}
               onClick={() => handlePlanSelect('screen')}
             >
@@ -100,7 +170,7 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                 </div>
                 <h3 className="text-xl font-bold ml-3">Screen Protection 💠</h3>
               </div>
-              
+
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-300">1-Year Coverage</span>
@@ -108,15 +178,15 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                     <span className="text-2xl font-bold mr-1">₹{pricingTier.screenProtection}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Daily cost</span>
                   <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.screenProtection)}/day</span>
                 </div>
-                
+
                 <p className="text-gray-400 text-sm mb-6">Covers screen cracks from accidental drops</p>
-                
-                <button 
+
+                <button
                   className={`w-full ${selectedPlan === 'screen' ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -134,9 +204,9 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                 </button>
               </div>
             </div>
-            
+
             {/* Extended Warranty Plan */}
-            <div 
+            <div
               className={`bg-gray-800 border-2 rounded-xl overflow-hidden transition-all duration-300 ${selectedPlan === 'warranty' ? 'border-green-500 transform scale-[1.02]' : 'border-gray-700'}`}
               onClick={() => handlePlanSelect('warranty')}
             >
@@ -146,7 +216,7 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                 </div>
                 <h3 className="text-xl font-bold ml-3">Extended Warranty 🔧</h3>
               </div>
-              
+
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-300">1-Year Coverage</span>
@@ -154,15 +224,15 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                     <span className="text-2xl font-bold mr-1">₹{pricingTier.extendedWarranty}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Daily cost</span>
                   <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.extendedWarranty)}/day</span>
                 </div>
-                
+
                 <p className="text-gray-400 text-sm mb-6">Covers hardware failure post manufacturer warranty</p>
-                
-                <button 
+
+                <button
                   className={`w-full ${selectedPlan === 'warranty' ? 'bg-green-600' : 'bg-gray-700'} hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -180,9 +250,9 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                 </button>
               </div>
             </div>
-            
+
             {/* Full Protection Plan */}
-            <div 
+            <div
               className={`bg-gray-800 border-2 rounded-xl overflow-hidden transition-all duration-300 ${selectedPlan === 'full' ? 'border-purple-500 transform scale-[1.02]' : 'border-gray-700'}`}
               onClick={() => handlePlanSelect('full')}
             >
@@ -192,7 +262,7 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                 </div>
                 <h3 className="text-xl font-bold ml-3">Full Protection 🛡️</h3>
               </div>
-              
+
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-300">1-Year Coverage</span>
@@ -200,15 +270,15 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
                     <span className="text-2xl font-bold mr-1">₹{pricingTier.fullProtection}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Daily cost</span>
                   <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.fullProtection)}/day</span>
                 </div>
-                
+
                 <p className="text-gray-400 text-sm mb-6">Covers theft, accidental & liquid damage</p>
-                
-                <button 
+
+                <button
                   className={`w-full ${selectedPlan === 'full' ? 'bg-purple-600' : 'bg-gray-700'} hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -227,7 +297,7 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
               </div>
             </div>
           </div>
-          
+
           {/* Comparison Table */}
           <div className="bg-gray-800 rounded-xl p-6 mb-8">
             <h3 className="text-xl font-bold mb-4">Plan Comparison</h3>
@@ -270,23 +340,74 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
               </table>
             </div>
           </div>
-          
+
           {selectedPlan && (
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 animate-fadeIn">
               <h3 className="text-xl font-bold mb-4">Complete Your Purchase</h3>
               <p className="text-gray-300 mb-6">
                 You've selected the {selectedPlan === 'screen' ? 'Screen Protection' : selectedPlan === 'warranty' ? 'Extended Warranty' : 'Full Protection'} plan for your {deviceName}.
               </p>
-              <button 
-                onClick={handleProceed}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
-              >
-                Proceed to Payment
-              </button>
+              {/* Customer Details Form */}
+              {!showCustomerForm ? (
+                <button
+                  onClick={() => setShowCustomerForm(true)}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
+                >
+                  Proceed to Customer Details
+                </button>
+              ) : (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    // Get the plan price
+                    const planPrice = selectedPlan === 'screen'
+                      ? pricingTier.screenProtection
+                      : selectedPlan === 'warranty'
+                        ? pricingTier.extendedWarranty
+                        : pricingTier.fullProtection;
+                    await handleCashfreePayment(selectedPlan, planPrice);
+                  }}
+                  className="space-y-4"
+                >
+                  <input
+                    type="text"
+                    required
+                    placeholder="Full Name"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white"
+                    value={customerDetails.name}
+                    onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
+                  />
+                  <input
+                    type="email"
+                    required
+                    placeholder="Email"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white"
+                    value={customerDetails.email}
+                    onChange={e => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+                  />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Phone Number"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white"
+                    value={customerDetails.phone}
+                    onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
+                  />
+                  <button
+                    type="submit"
+                    disabled={paymentLoading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
+                  >
+                    {paymentLoading ? 'Processing Payment...' : 'Pay Now'}
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </div>
       </div>
+
+
     </div>
   );
 };
@@ -297,11 +418,13 @@ const DeviceProtectionForm = () => {
     purchaseDate: '',
     devicePrice: '',
   });
-  
+
   const [showModal, setShowModal] = useState(false);
   const [pricingTier, setPricingTier] = useState(null);
   const [formError, setFormError] = useState('');
-  
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+const [successData, setSuccessData] = useState(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -309,41 +432,83 @@ const DeviceProtectionForm = () => {
       [name]: value
     });
   };
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Form validation
     if (!formData.deviceName || !formData.purchaseDate || !formData.devicePrice) {
       setFormError('Please fill in all fields');
       return;
     }
-    
+
     if (isNaN(formData.devicePrice) || Number(formData.devicePrice) <= 0) {
       setFormError('Please enter a valid device price');
       return;
     }
-    
+
     setFormError('');
     const tier = findPricingTier(formData.devicePrice);
     setPricingTier(tier);
     setShowModal(true);
   };
-  
+
+  const SuccessModal = ({ data, onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+    <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-xl border-2 border-green-600 animate-modal-appear">
+      <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center">
+        <FaCheckCircle className="mr-2" /> Payment Successful!
+      </h2>
+      <div className="mb-4">
+        <div className="mb-2 text-yellow-300 font-semibold">
+          Order ID: <span className="break-all">{data.orderId}</span>
+        </div>
+        <div className="text-xs text-yellow-400 mb-4">
+          <b>Note:</b> Please note down your Order ID for future reference.
+        </div>
+        <div className="mb-2">
+          <span className="font-semibold text-gray-200">Device:</span> {data.deviceName} (₹{data.devicePrice})
+        </div>
+        <div className="mb-2">
+          <span className="font-semibold text-gray-200">Plan:</span> {data.planType === 'screen' ? 'Screen Protection' : data.planType === 'warranty' ? 'Extended Warranty' : 'Full Protection'} (₹{data.planPrice})
+        </div>
+        <div className="mb-2">
+          <span className="font-semibold text-gray-200">Customer:</span> {data.customerDetails.name}
+        </div>
+        <div className="mb-2">
+          <span className="font-semibold text-gray-200">Email:</span> {data.customerDetails.email}
+        </div>
+        <div className="mb-2">
+          <span className="font-semibold text-gray-200">Phone:</span> {data.customerDetails.phone}
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          setShowSuccessModal(false);
+          onClose();
+        }}
+        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 mt-4"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+);
+
   // Animation for the form appearance
   useEffect(() => {
     const formElement = document.getElementById('device-form');
     const imageElement = document.getElementById('device-image');
-    
+
     if (formElement) {
       formElement.classList.add('form-appear');
     }
-    
+
     if (imageElement) {
       imageElement.classList.add('image-appear');
     }
   }, []);
-  
+
   return (
     <div className="bg-gradient-to-br from-gray-900 to-black text-white min-h-screen p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -355,19 +520,19 @@ const DeviceProtectionForm = () => {
             Enter your device details to find the perfect protection plan
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Image Section */}
-          <div 
+          <div
             id="device-image"
             className="relative h-auto flex items-center justify-center opacity-0"
           >
             <div className="relative w-full max-w-md">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-lg opacity-75"></div>
               <div className="relative bg-gray-800 rounded-3xl overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1567&q=80" 
-                  alt="Protected smartphone" 
+                <img
+                  src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1567&q=80"
+                  alt="Protected smartphone"
                   className="w-full h-auto object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
@@ -376,7 +541,7 @@ const DeviceProtectionForm = () => {
                   <p className="text-gray-300">
                     Safeguard your device against accidents, damage, and hardware failures
                   </p>
-                  
+
                   <div className="mt-6 flex flex-wrap gap-3">
                     <span className="bg-blue-900/50 text-blue-300 text-xs font-medium px-3 py-1 rounded-full border border-blue-800">
                       Screen Protection
@@ -391,14 +556,14 @@ const DeviceProtectionForm = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Floating elements for visual interest */}
             <div className="absolute top-10 left-10 bg-blue-500 w-16 h-16 rounded-full blur-xl opacity-20"></div>
             <div className="absolute bottom-10 right-10 bg-purple-500 w-20 h-20 rounded-full blur-xl opacity-20"></div>
           </div>
-          
+
           {/* Form Section */}
-          <div 
+          <div
             id="device-form"
             className="bg-gray-800 rounded-2xl p-6 md:p-8 shadow-xl opacity-0 transition-all duration-700"
           >
@@ -408,13 +573,13 @@ const DeviceProtectionForm = () => {
               </div>
               <h2 className="text-2xl font-bold ml-4">Device Details</h2>
             </div>
-            
+
             {formError && (
               <div className="bg-red-900/30 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-6">
                 {formError}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
                 <label className="block text-gray-300 mb-2 font-medium">
@@ -432,7 +597,7 @@ const DeviceProtectionForm = () => {
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
-              
+
               <div className="mb-6">
                 <label className="block text-gray-300 mb-2 font-medium">
                   <div className="flex items-center">
@@ -448,7 +613,7 @@ const DeviceProtectionForm = () => {
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
-              
+
               <div className="mb-8">
                 <label className="block text-gray-300 mb-2 font-medium">
                   <div className="flex items-center">
@@ -465,7 +630,7 @@ const DeviceProtectionForm = () => {
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
-              
+
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center"
@@ -474,7 +639,7 @@ const DeviceProtectionForm = () => {
                 <FaArrowRight className="ml-2" />
               </button>
             </form>
-            
+
             {/* Trust indicators */}
             <div className="mt-8 pt-6 border-t border-gray-700">
               <p className="text-gray-400 text-sm mb-4 text-center">Trusted by thousands of customers across India</p>
@@ -495,7 +660,7 @@ const DeviceProtectionForm = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Additional Information */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-gray-800/50 rounded-xl p-6">
@@ -509,7 +674,7 @@ const DeviceProtectionForm = () => {
               Our protection plans cover all types of damages, from screen cracks to liquid damage and hardware failures.
             </p>
           </div>
-          
+
           <div className="bg-gray-800/50 rounded-xl p-6">
             <div className="flex items-center mb-4">
               <div className="bg-green-600 p-2 rounded-full">
@@ -521,7 +686,7 @@ const DeviceProtectionForm = () => {
               Get your device repaired quickly with our network of authorized service centers across the country.
             </p>
           </div>
-          
+
           <div className="bg-gray-800/50 rounded-xl p-6">
             <div className="flex items-center mb-4">
               <div className="bg-purple-600 p-2 rounded-full">
@@ -535,16 +700,21 @@ const DeviceProtectionForm = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Modal for plans */}
-      <PlansModal 
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        pricingTier={pricingTier}
-        deviceName={formData.deviceName}
-        devicePrice={formData.devicePrice}
-      />
-      
+      <PlansModal
+  isOpen={showModal}
+  onClose={() => setShowModal(false)}
+  pricingTier={pricingTier}
+  deviceName={formData.deviceName}
+  devicePrice={formData.devicePrice}
+  setShowSuccessModal={setShowSuccessModal}
+  setSuccessData={setSuccessData}
+/>
+
+            {showSuccessModal && successData && (
+        <SuccessModal data={successData} onClose={onClose} />)}
+
       <style jsx>{`
         .form-appear {
           animation: formAppear 0.7s forwards;

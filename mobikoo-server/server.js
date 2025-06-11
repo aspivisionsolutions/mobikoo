@@ -13,6 +13,7 @@ const partnerRoutes = require('./routes/partnerRoutes');
 const {protect,roleMiddleware} = require('./middlewares/authMiddleware');
 const {updateFineStatus} = require('./controllers/inspectionController');
 const customerRoutes =require('./routes/customerRoutes')
+const landingPagePaymentRoutes = require('./routes/LandingPagePaymentRoutes');
 require("dotenv").config();
 const cors = require("cors");
 
@@ -41,7 +42,7 @@ app.use("/api/stats", statsRoutes)
 
 app.use('/api/partners', partnerRoutes);
 app.use("/api/customers", customerRoutes);
-
+app.use('/api/landing-payment', landingPagePaymentRoutes);
 
 app.use("/api/activity-log", activityLogRoutes);
 
