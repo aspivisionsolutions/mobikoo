@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const DirectWarranties = require('../models/directWarranties');
 const paymentController = require('../controllers/LandingPagePaymentController');
 
 const { Cashfree } = require('cashfree-pg');
@@ -58,6 +59,45 @@ router.post('/device-protection/payment-callback', async (req, res) => {
     // Log all details
     console.log('Payment Success:', { order_id, payment_status /*, ...other details */ });
     res.sendStatus(200);
+});
+
+router.post('/add/direct-warranty', async (req, res)=>{
+
+    try {
+        const { paymentOrderId, deviceDetails, customerDetails, planDetails } = req.body;
+        const directWarranty = {
+            paymentOrderId,
+            deviceDetails,
+            customerDetails: {
+                customerName: customerDetails?.name,
+                customerEmail: customerDetails?.email,
+                customerPhone: customerDetails?.phone,
+            },
+            planDetails
+        };
+        // Here you would typically save the directWarranty to your database
+        const newWarranty = new DirectWarranties(directWarranty);
+        await newWarranty.save();
+        console.log(req.body);
+        console.log(directWarranty);
+
+        // For now, we just return it as a response
+        res.status(201).json(newWarranty);
+    } catch (error) {
+        console.error('Error adding direct warranty:', error);
+        res.status(500).json({ error: 'Failed to add direct warranty' });
+    }
+
+});
+
+router.get('/get/direct-warranties', async (req, res) => {
+    try {
+        const directWarranties = await DirectWarranties.find({});
+        res.status(200).json(directWarranties);
+    } catch (error) {
+        console.error('Error fetching direct warranties:', error);
+        res.status(500).json({ error: 'Failed to fetch direct warranties' });
+    }
 });
 
 module.exports = router;

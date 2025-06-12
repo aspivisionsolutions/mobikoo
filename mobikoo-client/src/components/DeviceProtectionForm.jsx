@@ -53,13 +53,13 @@ const findPricingTier = (devicePrice) => {
 };
 
 // Modal component for plans
-const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) => {
+const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, purchaseDate, setSuccessData, setShowSuccessModal }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [customerDetails, setCustomerDetails] = useState({ name: '', email: '', phone: '' });
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [orderId, setOrderId] = useState('');
-  
+
 
   if (!isOpen) return null;
 
@@ -68,23 +68,23 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
   };
 
   const getSessionId = async (amount, customerDetails, planType) => {
-  try {
-    const res = await axios.post(`${API_URL}/api/landing-payment/create-device-protection-order`, {
-      amount,
-      customerDetails,
-      deviceName,
-      planType, // <-- add this
-    });
-    if (res.data && res.data.payment_session_id) {
-      console.log('Payment session initialized:', res.data);
-      setOrderId(res.data.order_id);
-      return res.data.payment_session_id;
+    try {
+      const res = await axios.post(`${API_URL}/api/landing-payment/create-device-protection-order`, {
+        amount,
+        customerDetails,
+        deviceName,
+        planType, // <-- add this
+      });
+      if (res.data && res.data.payment_session_id) {
+        console.log('Payment session initialized:', res.data);
+        setOrderId(res.data.order_id);
+        return { sessionId: res.data.payment_session_id, orderId: res.data.order_id };
+      }
+    } catch (error) {
+      alert('Failed to initialize payment');
+      throw error;
     }
-  } catch (error) {
-    alert('Failed to initialize payment');
-    throw error;
-  }
-};
+  };
 
   let cashfree;
   const initializeSDK = async () => {
@@ -93,11 +93,11 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
     }
   };
 
-  const handleCashfreePayment = async (planType, planPrice) => {
+  const handleCashfreePayment = async (planType, planPrice, setShowSuccessModal, setSuccessData) => {
     setPaymentLoading(true);
     try {
       await initializeSDK();
-      const sessionId = await getSessionId(planPrice, customerDetails, planType);
+      const { sessionId, orderId } = await getSessionId(planPrice, customerDetails, planType);
 
       let checkoutOptions = {
         paymentSessionId: sessionId,
@@ -108,15 +108,35 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice }) =
         setPaymentLoading(false);
         if (res.paymentDetails) {
           console.log(orderId)
-          props.setSuccessData({
-  orderId,
-  deviceName,
-  devicePrice,
-  planType,
-  planPrice,
-  customerDetails,
-});
-props.setShowSuccessModal(true);
+
+          try {
+            const response = await axios.post(`${API_URL}/api/landing-payment/add/direct-warranty`, {
+              paymentOrderId: orderId,
+              deviceDetails: {
+                deviceName,
+                purchaseDate, // Use current date as purchase date
+                devicePrice: devicePrice.toString(),
+              },
+              customerDetails,
+              planDetails: {
+                planType: planType === 'screen' ? 'Screen Protection' : planType === 'warranty' ? 'Extended Warranty' : 'Full Protection',
+                planPrice: planPrice.toString(),
+              },
+            });
+            console.log('Direct warranty added:', response.data);
+            setSuccessData({
+              orderId,
+              deviceName,
+              devicePrice,
+              planType,
+              planPrice,
+              customerDetails,
+            });
+            setShowSuccessModal(true);
+          } catch (error) {
+            alert('Failed to add direct warranty');
+            console.error('Error adding direct warranty:', error);
+          }
           // onClose();
         }
       }).catch((err) => {
@@ -127,12 +147,6 @@ props.setShowSuccessModal(true);
       setPaymentLoading(false);
       alert('Payment initialization failed.');
     }
-  };
-
-  const handleProceed = () => {
-    // Handle payment processing
-    alert(`Processing payment for ${selectedPlan} plan`);
-    onClose();
   };
 
   return (
@@ -365,7 +379,7 @@ props.setShowSuccessModal(true);
                       : selectedPlan === 'warranty'
                         ? pricingTier.extendedWarranty
                         : pricingTier.fullProtection;
-                    await handleCashfreePayment(selectedPlan, planPrice);
+                    await handleCashfreePayment(selectedPlan, planPrice, setShowSuccessModal, setSuccessData);
                   }}
                   className="space-y-4"
                 >
@@ -423,7 +437,12 @@ const DeviceProtectionForm = () => {
   const [pricingTier, setPricingTier] = useState(null);
   const [formError, setFormError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-const [successData, setSuccessData] = useState(null);
+  const [successData, setSuccessData] = useState(null);
+
+  const onClose = () =>{
+    setShowSuccessModal(false);
+    setSuccessData(null);
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -454,46 +473,46 @@ const [successData, setSuccessData] = useState(null);
   };
 
   const SuccessModal = ({ data, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-    <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-xl border-2 border-green-600 animate-modal-appear">
-      <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center">
-        <FaCheckCircle className="mr-2" /> Payment Successful!
-      </h2>
-      <div className="mb-4">
-        <div className="mb-2 text-yellow-300 font-semibold">
-          Order ID: <span className="break-all">{data.orderId}</span>
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-xl border-2 border-green-600 animate-modal-appear">
+        <h2 className="text-2xl font-bold text-green-400 mb-4 flex items-center">
+          <FaCheckCircle className="mr-2" /> Payment Successful!
+        </h2>
+        <div className="mb-4">
+          <div className="mb-2 text-yellow-300 font-semibold">
+            Order ID: <span className="break-all">{data.orderId}</span>
+          </div>
+          <div className="text-xs text-yellow-400 mb-4">
+            <b>Note:</b> Please note down your Order ID for future reference.
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold text-gray-200">Device:</span> {data.deviceName} (₹{data.devicePrice})
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold text-gray-200">Plan:</span> {data.planType === 'screen' ? 'Screen Protection' : data.planType === 'warranty' ? 'Extended Warranty' : 'Full Protection'} (₹{data.planPrice})
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold text-gray-200">Customer:</span> {data.customerDetails.name}
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold text-gray-200">Email:</span> {data.customerDetails.email}
+          </div>
+          <div className="mb-2">
+            <span className="font-semibold text-gray-200">Phone:</span> {data.customerDetails.phone}
+          </div>
         </div>
-        <div className="text-xs text-yellow-400 mb-4">
-          <b>Note:</b> Please note down your Order ID for future reference.
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold text-gray-200">Device:</span> {data.deviceName} (₹{data.devicePrice})
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold text-gray-200">Plan:</span> {data.planType === 'screen' ? 'Screen Protection' : data.planType === 'warranty' ? 'Extended Warranty' : 'Full Protection'} (₹{data.planPrice})
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold text-gray-200">Customer:</span> {data.customerDetails.name}
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold text-gray-200">Email:</span> {data.customerDetails.email}
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold text-gray-200">Phone:</span> {data.customerDetails.phone}
-        </div>
+        <button
+          onClick={() => {
+            setShowSuccessModal(false);
+            onClose();
+          }}
+          className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 mt-4"
+        >
+          Close
+        </button>
       </div>
-      <button
-        onClick={() => {
-          setShowSuccessModal(false);
-          onClose();
-        }}
-        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 mt-4"
-      >
-        Close
-      </button>
     </div>
-  </div>
-);
+  );
 
   // Animation for the form appearance
   useEffect(() => {
@@ -703,16 +722,17 @@ const [successData, setSuccessData] = useState(null);
 
       {/* Modal for plans */}
       <PlansModal
-  isOpen={showModal}
-  onClose={() => setShowModal(false)}
-  pricingTier={pricingTier}
-  deviceName={formData.deviceName}
-  devicePrice={formData.devicePrice}
-  setShowSuccessModal={setShowSuccessModal}
-  setSuccessData={setSuccessData}
-/>
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        pricingTier={pricingTier}
+        deviceName={formData.deviceName}
+        devicePrice={formData.devicePrice}
+        purchaseDate={formData.purchaseDate}
+        setShowSuccessModal={setShowSuccessModal}
+        setSuccessData={setSuccessData}
+      />
 
-            {showSuccessModal && successData && (
+      {showSuccessModal && successData && (
         <SuccessModal data={successData} onClose={onClose} />)}
 
       <style jsx>{`
