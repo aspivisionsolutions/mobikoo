@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FiHome, 
-  FiUsers, 
-  FiPhone, 
-  FiClipboard,  
-  FiLogOut, 
-  FiMenu, 
+import {
+  FiHome,
+  FiUsers,
+  FiPhone,
+  FiClipboard,
+  FiLogOut,
+  FiMenu,
   FiX,
   FiShield,
   FiList,
@@ -24,6 +24,7 @@ import PartnerManagement from './PartnerDashboard';
 import AdminFinesPanel from './AdminFinesPanel';
 import SalesGraph from './SalesGraph';
 import Invoices from './Invoices';
+import DirectWarrantiesTable from './DirectWarrantiesTable';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const AdminDashboard = () => {
@@ -60,9 +61,11 @@ const AdminDashboard = () => {
       case 'partners':
         return <PartnerManagement />;
       case 'fines':
-        return <AdminFinesPanel />; 
+        return <AdminFinesPanel />;
       case 'invoices':
-        return <Invoices/>
+        return <Invoices />
+      case 'directWarranties':
+        return <DirectWarrantiesTable />;
       default:
         return <DashboardContent />;
     }
@@ -86,7 +89,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Sidebar - Slide from left without darkening background */}
-      <div 
+      <div
         className={`
           fixed lg:static z-40 h-full bg-blue-800 shadow-lg w-64 transition-transform duration-300 ease-in-out
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -100,65 +103,71 @@ const AdminDashboard = () => {
         {/* Sidebar Menu */}
         <nav className="mt-6 px-4 pb-20 h-full overflow-y-auto">
           <div className="space-y-2">
-            <SidebarItem 
-              icon={<FiHome />} 
-              text="Dashboard" 
-              isActive={activeMenu === 'dashboard'} 
-              onClick={() => handleMenuSelect('dashboard')} 
+            <SidebarItem
+              icon={<FiHome />}
+              text="Dashboard"
+              isActive={activeMenu === 'dashboard'}
+              onClick={() => handleMenuSelect('dashboard')}
             />
-            <SidebarItem 
-              icon={<FiUsers />} 
-              text="Users Management" 
-              isActive={activeMenu === 'users'} 
-              onClick={() => handleMenuSelect('users')} 
+            <SidebarItem
+              icon={<FiUsers />}
+              text="Users Management"
+              isActive={activeMenu === 'users'}
+              onClick={() => handleMenuSelect('users')}
             />
-            <SidebarItem 
-              icon={<FiPhone />} 
-              text="Phone Inspections" 
-              isActive={activeMenu === 'phones'} 
-              onClick={() => handleMenuSelect('phones')} 
+            <SidebarItem
+              icon={<FiPhone />}
+              text="Phone Inspections"
+              isActive={activeMenu === 'phones'}
+              onClick={() => handleMenuSelect('phones')}
             />
-            <SidebarItem 
-              icon={<FiClipboard />} 
-              text="Claims Management" 
-              isActive={activeMenu === 'claims'} 
-              onClick={() => handleMenuSelect('claims')} 
+            <SidebarItem
+              icon={<FiClipboard />}
+              text="Claims Management"
+              isActive={activeMenu === 'claims'}
+              onClick={() => handleMenuSelect('claims')}
             />
-            <SidebarItem 
-              icon={<FiShield />} 
-              text="Warranty Management" 
-              isActive={activeMenu === 'warranty'} 
-              onClick={() => handleMenuSelect('warranty')} 
+            <SidebarItem
+              icon={<FiShield />}
+              text="Warranty Management"
+              isActive={activeMenu === 'warranty'}
+              onClick={() => handleMenuSelect('warranty')}
             />
-            <SidebarItem 
-              icon={<FiList />} 
-              text="Activity Logs" 
-              isActive={activeMenu === 'logs'} 
-              onClick={() => handleMenuSelect('logs')} 
+            <SidebarItem
+              icon={<FiList />}
+              text="Activity Logs"
+              isActive={activeMenu === 'logs'}
+              onClick={() => handleMenuSelect('logs')}
             />
-            <SidebarItem 
-              icon={<FiPartners />} 
-              text="Partners" 
-              isActive={activeMenu === 'partners'} 
-              onClick={() => handleMenuSelect('partners')} 
+            <SidebarItem
+              icon={<FiPartners />}
+              text="Partners"
+              isActive={activeMenu === 'partners'}
+              onClick={() => handleMenuSelect('partners')}
             />
-            <SidebarItem 
-              icon={<FiDollarSign />} 
-              text="Fines Management" 
-              isActive={activeMenu === 'fines'} 
-              onClick={() => handleMenuSelect('fines')} 
+            <SidebarItem
+              icon={<FiDollarSign />}
+              text="Fines Management"
+              isActive={activeMenu === 'fines'}
+              onClick={() => handleMenuSelect('fines')}
             />
-            <SidebarItem 
-              icon={<FaCashRegister />} 
-              text="Invoice Management" 
-              isActive={activeMenu === 'invoices'} 
-              onClick={() => handleMenuSelect('invoices')} 
+            <SidebarItem
+              icon={<FaCashRegister />}
+              text="Invoice Management"
+              isActive={activeMenu === 'invoices'}
+              onClick={() => handleMenuSelect('invoices')}
+            />
+            <SidebarItem
+              icon={<FiShield />}
+              text="Direct Warranties"
+              isActive={activeMenu === 'directWarranties'}
+              onClick={() => handleMenuSelect('directWarranties')}
             />
           </div>
 
           {/* Logout button at bottom */}
           <div className="absolute bottom-8 w-full left-0 px-4">
-            <button 
+            <button
               onClick={handleLogout}
               className="flex items-center w-full px-4 py-2 text-white hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors"
             >
@@ -170,7 +179,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content Area */}
-      
+
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         <div className="bg-white shadow-sm">
           <div className="h-16 flex items-center px-6">
@@ -183,7 +192,8 @@ const AdminDashboard = () => {
               {activeMenu === 'logs' && 'Activity Logs'}
               {activeMenu === 'partners' && 'Partners Management'}
               {activeMenu === 'fines' && 'Fine Management'}
-              {activeMenu ==='invoices' && 'Invoice Management'}
+              {activeMenu === 'invoices' && 'Invoice Management'}
+              {activeMenu === 'directWarranties' && 'Direct Warranties'}
             </h2>
           </div>
         </div>
@@ -200,11 +210,10 @@ const SidebarItem = ({ icon, text, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center w-full px-4 py-2 rounded-md transition-colors ${
-        isActive
-          ? 'bg-blue-100 text-gray-900'
-          : 'text-white hover:bg-gray-100 hover:text-gray-900'
-      }`}
+      className={`flex items-center w-full px-4 py-2 rounded-md transition-colors ${isActive
+        ? 'bg-blue-100 text-gray-900'
+        : 'text-white hover:bg-gray-100 hover:text-gray-900'
+        }`}
     >
       <span className="mr-3">{icon}</span>
       <span>{text}</span>
@@ -280,9 +289,9 @@ const DashboardContent = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Recent Activity Section */}
-      <SalesGraph/>
+      <SalesGraph />
     </div>
   );
 };
