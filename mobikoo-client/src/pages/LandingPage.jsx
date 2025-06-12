@@ -329,13 +329,14 @@ export function LandingPage() {
             </div>
           </div>
 
-          <Link to={"/direct-warranty-search"}><button
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg ml-4"
+          
+
+          <div className="flex items-center gap-4">
+            <Link to={"/direct-warranty-search"}><button
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
           >
             My Direct Warranties
           </button></Link>
-
-          <div className="flex items-center gap-4">
             {/* IMEI Search Button */}
             <button
               onClick={() => setShowImeiPopup(true)}
