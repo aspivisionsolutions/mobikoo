@@ -18,6 +18,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import InspectionReportDetails from './components/InspectionReportDetails';
 import PhoneCheckerFinesPanel from './pages/PhoneChecker/Fines';
 import Invoices from './pages/ShopOwner/Invoices';
+import DirectWarrantySearch from './pages/DirectWarrantySearch';
 import ProtectedRoute from './ProtectedRoute'; // Import the ProtectedRoute
 
 const App = () => {
@@ -58,6 +59,7 @@ const App = () => {
 
         {/* Warranty Details - Protected */}
         <Route path="/warranty-details" element={<ProtectedRoute element={<CustomerWarrantyDetails />} />} />
+        <Route path="/direct-warranty-search" element={<DirectWarrantySearch />} />
       </Routes>
     </Router>
   );

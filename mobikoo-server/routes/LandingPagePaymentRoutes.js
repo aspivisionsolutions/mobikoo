@@ -100,4 +100,18 @@ router.get('/get/direct-warranties', async (req, res) => {
     }
 });
 
+router.get('/get/direct-warranties/by-phone', async (req, res) => {
+    try {
+        const { phone } = req.query;
+        if (!phone) {
+            return res.status(400).json({ error: 'Phone number is required' });
+        }
+        const directWarranties = await DirectWarranties.find({ "customerDetails.customerPhone": phone });
+        res.status(200).json(directWarranties);
+    } catch (error) {
+        console.error('Error fetching direct warranties by phone:', error);
+        res.status(500).json({ error: 'Failed to fetch direct warranties' });
+    }
+});
+
 module.exports = router;

@@ -15,6 +15,7 @@ import Amazon from "../../public/amazon.png"
 import Flipkart from "../../public/flipkart.png"
 import SuccessStories from "../components/SuccessStories"
 import DeviceProtectionForm from "../components/DeviceProtectionForm"
+import { Link } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL
 
 gsap.registerPlugin(ScrollTrigger)
@@ -327,6 +328,12 @@ export function LandingPage() {
               </div>
             </div>
           </div>
+
+          <Link to={"/direct-warranty-search"}><button
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg ml-4"
+          >
+            My Direct Warranties
+          </button></Link>
 
           <div className="flex items-center gap-4">
             {/* IMEI Search Button */}
