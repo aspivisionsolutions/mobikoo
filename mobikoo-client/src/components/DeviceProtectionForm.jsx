@@ -17,18 +17,20 @@ import { load } from '@cashfreepayments/cashfree-js';
 
 // Define the pricing tiers
 const pricingTiers = [
-  { value: 10000, screenProtection: 999, extendedWarranty: 599, fullProtection: 1699 },
-  { value: 15000, screenProtection: 1399, extendedWarranty: 799, fullProtection: 2199 },
-  { value: 20000, screenProtection: 1699, extendedWarranty: 999, fullProtection: 2699 },
-  { value: 25000, screenProtection: 1999, extendedWarranty: 1199, fullProtection: 3199 },
-  { value: 30000, screenProtection: 2299, extendedWarranty: 1399, fullProtection: 3699 },
-  { value: 35000, screenProtection: 2599, extendedWarranty: 1599, fullProtection: 4199 },
-  { value: 40000, screenProtection: 2899, extendedWarranty: 1799, fullProtection: 4699 },
-  { value: 45000, screenProtection: 3199, extendedWarranty: 1999, fullProtection: 5199 },
-  { value: 50000, screenProtection: 3499, extendedWarranty: 2199, fullProtection: 5699 },
-  { value: 60000, screenProtection: 3999, extendedWarranty: 2599, fullProtection: 6199 },
-  { value: 70000, screenProtection: 4499, extendedWarranty: 2899, fullProtection: 7199 },
-  { value: 75000, screenProtection: 4799, extendedWarranty: 3199, fullProtection: 7699 },
+  { range: '₹5,000 – ₹9,999', extendedWarranty1Year: 599, extendedWarranty2Year: 899, screenProtection1Year: 899 },
+  { range: '₹10,000 – ₹14,999', extendedWarranty1Year: 699, extendedWarranty2Year: 999, screenProtection1Year: 999 },
+  { range: '₹15,000 – ₹19,999', extendedWarranty1Year: 699, extendedWarranty2Year: 999, screenProtection1Year: 999 },
+  { range: '₹20,000 – ₹24,999', extendedWarranty1Year: 799, extendedWarranty2Year: 1199, screenProtection1Year: 1399 },
+  { range: '₹25,000 – ₹29,999', extendedWarranty1Year: 799, extendedWarranty2Year: 1199, screenProtection1Year: 1499 },
+  { range: '₹30,000 – ₹34,999', extendedWarranty1Year: 899, extendedWarranty2Year: 1399, screenProtection1Year: 1599 },
+  { range: '₹35,000 – ₹39,999', extendedWarranty1Year: 899, extendedWarranty2Year: 1399, screenProtection1Year: 1699 },
+  { range: '₹40,000 – ₹44,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1599 },
+  { range: '₹45,000 – ₹49,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1599 },
+  { range: '₹50,000 – ₹59,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1499 },
+  { range: '₹60,000 – ₹69,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1699 },
+  { range: '₹70,000 – ₹74,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1899 },
+  { range: '₹75,000 – ₹79,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1999 },
+  { range: '₹80,000 – ₹99,999', extendedWarranty1Year: 1199, extendedWarranty2Year: 1799, screenProtection1Year: 2199 },
 ];
 
 // Calculate daily price
@@ -38,12 +40,12 @@ const calculateDailyPrice = (price) => {
 
 // Find the appropriate pricing tier
 const findPricingTier = (devicePrice) => {
-  // Convert to number if it's a string
   const price = Number(devicePrice);
 
-  // Find the first tier that is greater than or equal to the device price
+  // Find the first tier where the price falls within the range
   for (let i = 0; i < pricingTiers.length; i++) {
-    if (price <= pricingTiers[i].value) {
+    const [min, max] = pricingTiers[i].range.replace(/₹|,/g, '').split('–').map(Number);
+    if (price >= min && price <= max) {
       return pricingTiers[i];
     }
   }
@@ -119,7 +121,7 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
               },
               customerDetails,
               planDetails: {
-                planType: planType === 'screen' ? 'Screen Protection' : planType === 'warranty' ? 'Extended Warranty' : 'Full Protection',
+                planType: planType === 'screen' ? '1 Year Extented Warranty' : planType === 'warranty' ? '2 Year Extended Warranty' : '1 Year Screen Protection',
                 planPrice: planPrice.toString(),
               },
             });
@@ -182,20 +184,20 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
                 <div className="bg-blue-600 p-2 rounded-full">
                   <MdScreenshot className="text-white text-xl" />
                 </div>
-                <h3 className="text-xl font-bold ml-3">Screen Protection 💠</h3>
+                <h3 className="text-xl font-bold ml-3">1 Year Extended Warranty💠</h3>
               </div>
 
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-300">1-Year Coverage</span>
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold mr-1">₹{pricingTier.screenProtection}</span>
+                    <span className="text-2xl font-bold mr-1">₹{pricingTier.extendedWarranty1Year}</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Daily cost</span>
-                  <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.screenProtection)}/day</span>
+                  <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.extendedWarranty1Year)}/day</span>
                 </div>
 
                 <p className="text-gray-400 text-sm mb-6">Covers screen cracks from accidental drops</p>
@@ -228,20 +230,20 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
                 <div className="bg-green-600 p-2 rounded-full">
                   <FaTools className="text-white text-xl" />
                 </div>
-                <h3 className="text-xl font-bold ml-3">Extended Warranty 🔧</h3>
+                <h3 className="text-xl font-bold ml-3">2 Year Extended Warranty 🔧</h3>
               </div>
 
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-300">1-Year Coverage</span>
+                  <span className="text-gray-300">2-Year Coverage</span>
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold mr-1">₹{pricingTier.extendedWarranty}</span>
+                    <span className="text-2xl font-bold mr-1">₹{pricingTier.extendedWarranty2Year}</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Daily cost</span>
-                  <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.extendedWarranty)}/day</span>
+                  <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.extendedWarranty2Year)}/day</span>
                 </div>
 
                 <p className="text-gray-400 text-sm mb-6">Covers hardware failure post manufacturer warranty</p>
@@ -274,20 +276,20 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
                 <div className="bg-purple-600 p-2 rounded-full">
                   <FaShieldAlt className="text-white text-xl" />
                 </div>
-                <h3 className="text-xl font-bold ml-3">Full Protection 🛡️</h3>
+                <h3 className="text-xl font-bold ml-3">1 Year Screen Protection 🛡️</h3>
               </div>
 
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-300">1-Year Coverage</span>
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold mr-1">₹{pricingTier.fullProtection}</span>
+                    <span className="text-2xl font-bold mr-1">₹{pricingTier.screenProtection1Year}</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Daily cost</span>
-                  <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.fullProtection)}/day</span>
+                  <span className="text-gray-300">₹{calculateDailyPrice(pricingTier.screenProtection1Year)}/day</span>
                 </div>
 
                 <p className="text-gray-400 text-sm mb-6">Covers theft, accidental & liquid damage</p>
@@ -320,9 +322,9 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
                 <thead>
                   <tr className="border-b border-gray-700">
                     <th className="text-left py-3 px-4">Coverage</th>
-                    <th className="text-center py-3 px-4 text-blue-400">Screen Protection</th>
-                    <th className="text-center py-3 px-4 text-green-400">Extended Warranty</th>
-                    <th className="text-center py-3 px-4 text-purple-400">Full Protection</th>
+                    <th className="text-center py-3 px-4 text-blue-400">1 Year Extended Warranty</th>
+                    <th className="text-center py-3 px-4 text-green-400">2 Year Extended Warranty</th>
+                    <th className="text-center py-3 px-4 text-purple-400">1 Year Screen Protection</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -336,19 +338,19 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
                     <td className="py-3 px-4">Hardware Failure</td>
                     <td className="text-center py-3 px-4">❌</td>
                     <td className="text-center py-3 px-4">✅</td>
-                    <td className="text-center py-3 px-4">✅</td>
+                    <td className="text-center py-3 px-4">❌</td>
                   </tr>
                   <tr className="border-b border-gray-700">
                     <td className="py-3 px-4">Liquid Damage</td>
-                    <td className="text-center py-3 px-4">❌</td>
-                    <td className="text-center py-3 px-4">❌</td>
                     <td className="text-center py-3 px-4">✅</td>
+                    <td className="text-center py-3 px-4">✅</td>
+                    <td className="text-center py-3 px-4">❌</td>
                   </tr>
                   <tr>
                     <td className="py-3 px-4">Theft Protection</td>
                     <td className="text-center py-3 px-4">❌</td>
                     <td className="text-center py-3 px-4">❌</td>
-                    <td className="text-center py-3 px-4">✅</td>
+                    <td className="text-center py-3 px-4">❌</td>
                   </tr>
                 </tbody>
               </table>
@@ -359,7 +361,7 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 animate-fadeIn">
               <h3 className="text-xl font-bold mb-4">Complete Your Purchase</h3>
               <p className="text-gray-300 mb-6">
-                You've selected the {selectedPlan === 'screen' ? 'Screen Protection' : selectedPlan === 'warranty' ? 'Extended Warranty' : 'Full Protection'} plan for your {deviceName}.
+                You've selected the {selectedPlan === 'screen' ? '1 Year Extended Warranty' : selectedPlan === 'warranty' ? '2 Year Extended Warranty' : '1 Year Screen Protection'} plan for your {deviceName}.
               </p>
               {/* Customer Details Form */}
               {!showCustomerForm ? (
@@ -375,10 +377,10 @@ const PlansModal = ({ isOpen, onClose, pricingTier, deviceName, devicePrice, pur
                     e.preventDefault();
                     // Get the plan price
                     const planPrice = selectedPlan === 'screen'
-                      ? pricingTier.screenProtection
+                      ? pricingTier.extendedWarranty1Year
                       : selectedPlan === 'warranty'
-                        ? pricingTier.extendedWarranty
-                        : pricingTier.fullProtection;
+                        ? pricingTier.extendedWarranty2Year
+                        : pricingTier.screenProtection1Year;
                     await handleCashfreePayment(selectedPlan, planPrice, setShowSuccessModal, setSuccessData);
                   }}
                   className="space-y-4"
@@ -489,7 +491,7 @@ const DeviceProtectionForm = () => {
             <span className="font-semibold text-gray-200">Device:</span> {data.deviceName} (₹{data.devicePrice})
           </div>
           <div className="mb-2">
-            <span className="font-semibold text-gray-200">Plan:</span> {data.planType === 'screen' ? 'Screen Protection' : data.planType === 'warranty' ? 'Extended Warranty' : 'Full Protection'} (₹{data.planPrice})
+            <span className="font-semibold text-gray-200">Plan:</span> {data.planType === 'screen' ? '1 Year Extended Warranty' : data.planType === 'warranty' ? '2 Year Extended Warranty' : '1 Year Screen Protection'} (₹{data.planPrice})
           </div>
           <div className="mb-2">
             <span className="font-semibold text-gray-200">Customer:</span> {data.customerDetails.name}
