@@ -16,6 +16,7 @@ import Flipkart from "../../public/flipkart.png"
 import SuccessStories from "../components/SuccessStories"
 import DeviceProtectionForm from "../components/DeviceProtectionForm"
 import { Link } from "react-router-dom";
+import WhyChooseMobikoo from "../components/WhyChooseMobikoo"
 const API_URL = import.meta.env.VITE_API_URL
 
 gsap.registerPlugin(ScrollTrigger)
@@ -329,14 +330,14 @@ export function LandingPage() {
             </div>
           </div>
 
-          
+
 
           <div className="flex items-center gap-4">
             <Link to={"/direct-warranty-search"}><button
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
-          >
-            My Direct Warranties
-          </button></Link>
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+            >
+              My Direct Warranties
+            </button></Link>
             {/* IMEI Search Button */}
             <button
               onClick={() => setShowImeiPopup(true)}
@@ -821,6 +822,9 @@ export function LandingPage() {
 
       <SuccessStories />
 
+
+      <WhyChooseMobikoo />
+
       {/* Partners Sections */}
 
       <div className="w-full py-32 my-20">
@@ -867,14 +871,25 @@ export function LandingPage() {
         </div>
       </div>
 
-      <div className="w-full bg-black text-white py-12 px-4">
+      <div className="w-full bg-gradient-to-b from-gray-900 to-black text-white py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold mb-12 px-4">Customer Reviews</h2>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+              What Our Customers Say
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Don't just take our word for it - hear from our satisfied customers
+            </p>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4"></div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {reviews.map((review, index) => (
-              <div key={index} className="bg-gray-900 rounded-lg p-6 flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full overflow-hidden mb-4">
+              <div
+                key={index}
+                className="group bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105 hover:shadow-xl hover:shadow-blue-500/10"
+              >
+                <div className="w-20 h-20 rounded-full overflow-hidden mb-6 mx-auto ring-4 ring-gray-700/50 group-hover:ring-blue-500/50 transition-all duration-300">
                   <img
                     src={review.image || "/placeholder.svg"}
                     alt={`${review.name} avatar`}
@@ -882,44 +897,59 @@ export function LandingPage() {
                   />
                 </div>
 
-                <div className="flex justify-center text-blue-500 mb-2">
-                  <Quote size={24} />
-                  <Quote size={24} />
+                <div className="flex justify-center text-blue-400 mb-4">
+                  <Quote size={20} className="opacity-60" />
+                  <Quote size={20} className="opacity-60 -ml-2" />
                 </div>
 
-                <h3 className="text-blue-500 text-xl font-medium mb-4">{review.name}</h3>
+                <h3 className="text-blue-400 text-lg font-semibold mb-4 text-center group-hover:text-blue-300 transition-colors">{review.name}</h3>
 
-                <p className="text-blue-400 text-center">{review.text}</p>
+                <p className="text-gray-300 text-center text-sm leading-relaxed group-hover:text-gray-200 transition-colors">{review.text}</p>
+
+                {/* Rating stars */}
+                <div className="flex justify-center mt-4 space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="w-full bg-black py-12 px-4">
+      <div className="w-full bg-gradient-to-b from-black to-gray-900 py-20 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header with background image */}
-          <div className="relative w-full h-32 mb-8 rounded-lg overflow-hidden">
+          <div className="relative w-full h-40 mb-12 rounded-2xl overflow-hidden">
             <img src="/api/placeholder/1200/200" alt="Mobile phone repair" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30"></div>
             <div className="absolute inset-0 flex items-center px-8">
-              <h2 className="text-4xl font-light text-white">A Glimpse into Our Growth</h2>
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                Our Growing Impact
+              </h2>
             </div>
           </div>
 
           {/* Stats grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <div key={index} className="rounded-lg overflow-hidden">
+              <div key={index} className="group rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105">
                 {/* Upper section with large number */}
-                <div className="bg-gray-700 p-8 flex items-center justify-center">
-                  <span className="text-6xl font-light text-white">{stat.value}</span>
+                <div className="bg-gradient-to-br from-gray-700/50 to-gray-800/50 p-8 flex items-center justify-center group-hover:from-blue-900/30 group-hover:to-purple-900/30 transition-all duration-300">
+                  <span className="text-5xl md:text-6xl font-light bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-300">
+                    {stat.value}
+                  </span>
                 </div>
 
                 {/* Lower section with label */}
-                <div className="bg-gray-800 p-4 flex items-center">
-                  <ArrowRight className="text-gray-500 mr-2" size={16} />
-                  <span className="text-gray-400 text-sm font-medium tracking-wider">{stat.label}</span>
+                <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-4 flex items-center group-hover:from-gray-700/50 group-hover:to-gray-800/50 transition-all duration-300">
+                  <ArrowRight className="text-blue-400 mr-2 group-hover:text-blue-300 transition-colors duration-300" size={16} />
+                  <span className="text-gray-300 text-sm font-medium tracking-wider group-hover:text-white transition-colors duration-300">
+                    {stat.label}
+                  </span>
                 </div>
               </div>
             ))}
