@@ -77,7 +77,8 @@ const DirectWarrantiesTable = () => {
         w.customerDetails?.customerEmail || 'N/A',
         w.customerDetails?.customerPhone || 'N/A',
         w.planDetails?.planType || 'N/A',
-        w.planDetails?.planPrice || 'N/A'
+        w.planDetails?.planPrice || 'N/A',
+        w.planDetails?.planPurchaseDate || 'N/A'
       ];
       csvContent += row.join(",") + "\n";
     });
@@ -147,7 +148,8 @@ const DirectWarrantiesTable = () => {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Purchase Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device Purchase Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan Purchase Date</th> {/* New Column */}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device Price</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
@@ -163,6 +165,7 @@ const DirectWarrantiesTable = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.paymentOrderId || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.deviceDetails?.deviceName || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.deviceDetails?.purchaseDate || 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.planDetails?.planPurchaseDate || 'N/A'}</td> {/* New Column Data */}
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.deviceDetails?.devicePrice || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.customerDetails?.customerName || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.customerDetails?.customerEmail || 'N/A'}</td>
@@ -173,7 +176,7 @@ const DirectWarrantiesTable = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" className="px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan="10" className="px-6 py-4 text-center text-sm text-gray-500">
                         No direct warranties found
                       </td>
                     </tr>

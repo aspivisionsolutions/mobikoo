@@ -42,7 +42,8 @@ const directWarrantiesSchema = mongoose.Schema({
         planPrice: {
             type: String,
             required: true
-        }
+        },
+        planPurchaseDate: { type: String, default: new Date().toISOString().split('T')[0] }
     }
 
 })

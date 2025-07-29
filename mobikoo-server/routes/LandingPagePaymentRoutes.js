@@ -65,6 +65,7 @@ router.post('/add/direct-warranty', async (req, res)=>{
 
     try {
         const { paymentOrderId, deviceDetails, customerDetails, planDetails } = req.body;
+        console.log(req.body);
         const directWarranty = {
             paymentOrderId,
             deviceDetails,
@@ -73,7 +74,11 @@ router.post('/add/direct-warranty', async (req, res)=>{
                 customerEmail: customerDetails?.email,
                 customerPhone: customerDetails?.phone,
             },
-            planDetails
+            planDetails: {
+                planType: planDetails?.planType,
+                planPrice: planDetails?.planPrice,
+                planPurchaseDate: new Date().toISOString().split('T')[0]
+            }
         };
         // Here you would typically save the directWarranty to your database
         const newWarranty = new DirectWarranties(directWarranty);

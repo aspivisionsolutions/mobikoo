@@ -53,9 +53,10 @@ function DirectWarrantySearch() {
             <thead>
               <tr className="bg-gray-800">
                 <th className="p-3 text-left">Device Name</th>
-                <th className="p-3 text-left">Purchase Date</th>
+                <th className="p-3 text-left">Device Purchase Date</th>
                 <th className="p-3 text-left">Plan Type</th>
                 <th className="p-3 text-left">Plan Price</th>
+                <th className="p-3 text-left">Plan Purchase Date</th>
                 <th className="p-3 text-left">Order ID</th>
               </tr>
             </thead>
@@ -66,6 +67,7 @@ function DirectWarrantySearch() {
                   <td className="p-3">{w.deviceDetails?.purchaseDate}</td>
                   <td className="p-3">{w.planDetails?.planType}</td>
                   <td className="p-3">{w.planDetails?.planPrice}</td>
+                  <td className="p-3">{w.planDetails?.planPurchaseDate}</td>
                   <td className="p-3">{w.paymentOrderId}</td>
                 </tr>
               ))}
