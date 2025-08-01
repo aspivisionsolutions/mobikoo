@@ -14,6 +14,7 @@ const {protect,roleMiddleware} = require('./middlewares/authMiddleware');
 const {updateFineStatus} = require('./controllers/inspectionController');
 const customerRoutes =require('./routes/customerRoutes')
 const landingPagePaymentRoutes = require('./routes/LandingPagePaymentRoutes');
+const directWarrantyPlansRoutes = require('./routes/DirectWarrantyPlansRoutes');
 require("dotenv").config();
 const cors = require("cors");
 
@@ -45,6 +46,7 @@ app.use("/api/customers", customerRoutes);
 app.use('/api/landing-payment', landingPagePaymentRoutes);
 
 app.use("/api/activity-log", activityLogRoutes);
+app.use('/api/direct-warranty', directWarrantyPlansRoutes);
 
 app.post("/fine/:reportId",protect,roleMiddleware(["admin"]), updateFineStatus);
 

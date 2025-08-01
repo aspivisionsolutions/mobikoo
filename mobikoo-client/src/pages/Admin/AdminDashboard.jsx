@@ -25,6 +25,7 @@ import AdminFinesPanel from './AdminFinesPanel';
 import SalesGraph from './SalesGraph';
 import Invoices from './Invoices';
 import DirectWarrantiesTable from './DirectWarrantiesTable';
+import DirectWarrantyPlansManagement from './DirectWarrantyPlansManagement';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const AdminDashboard = () => {
@@ -66,6 +67,8 @@ const AdminDashboard = () => {
         return <Invoices />
       case 'directWarranties':
         return <DirectWarrantiesTable />;
+      case 'directWarrantyPlans':
+        return <DirectWarrantyPlansManagement />;
       default:
         return <DashboardContent />;
     }
@@ -163,6 +166,12 @@ const AdminDashboard = () => {
               isActive={activeMenu === 'directWarranties'}
               onClick={() => handleMenuSelect('directWarranties')}
             />
+            <SidebarItem
+              icon={<FiShield />}
+              text="Direct Warranty Plans"
+              isActive={activeMenu === 'directWarrantyPlans'}
+              onClick={() => handleMenuSelect('directWarrantyPlans')}
+            />
           </div>
 
           {/* Logout button at bottom */}
@@ -194,6 +203,7 @@ const AdminDashboard = () => {
               {activeMenu === 'fines' && 'Fine Management'}
               {activeMenu === 'invoices' && 'Invoice Management'}
               {activeMenu === 'directWarranties' && 'Direct Warranties'}
+              {activeMenu === 'directWarrantyPlans' && 'Direct Warranty Plans'}
             </h2>
           </div>
         </div>

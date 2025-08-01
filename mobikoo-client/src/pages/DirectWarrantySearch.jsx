@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -8,6 +9,7 @@ function DirectWarrantySearch() {
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSearch = async () => {
     setError("");
@@ -27,15 +29,28 @@ function DirectWarrantySearch() {
     setLoading(false);
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-16 px-4">
+      <button
+        onClick={() => navigate("/")}
+        className="self-start px-4 py-2 bg-gray-700 rounded hover:bg-gray-800 font-semibold mb-4"
+      >
+        Back to Landing Page
+      </button>
       <h1 className="text-3xl font-bold mb-8">Search Your Direct Warranties</h1>
       <div className="flex gap-2 mb-6 w-full max-w-md">
         <input
           type="text"
           placeholder="Enter your phone number"
           value={phone}
-          onChange={e => setPhone(e.target.value)}
+          onChange={(e) => setPhone(e.target.value)}
+          onKeyPress={handleKeyPress}
           className="flex-1 px-4 py-2 rounded bg-gray-800 border border-gray-600 text-white"
         />
         <button

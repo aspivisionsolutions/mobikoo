@@ -15,43 +15,9 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 import { load } from '@cashfreepayments/cashfree-js';
 
-// Define the pricing tiers
-const pricingTiers = [
-  { range: '₹5,000 – ₹9,999', extendedWarranty1Year: 599, extendedWarranty2Year: 899, screenProtection1Year: 899 },
-  { range: '₹10,000 – ₹14,999', extendedWarranty1Year: 699, extendedWarranty2Year: 999, screenProtection1Year: 999 },
-  { range: '₹15,000 – ₹19,999', extendedWarranty1Year: 699, extendedWarranty2Year: 999, screenProtection1Year: 999 },
-  { range: '₹20,000 – ₹24,999', extendedWarranty1Year: 799, extendedWarranty2Year: 1199, screenProtection1Year: 1399 },
-  { range: '₹25,000 – ₹29,999', extendedWarranty1Year: 799, extendedWarranty2Year: 1199, screenProtection1Year: 1499 },
-  { range: '₹30,000 – ₹34,999', extendedWarranty1Year: 899, extendedWarranty2Year: 1399, screenProtection1Year: 1599 },
-  { range: '₹35,000 – ₹39,999', extendedWarranty1Year: 899, extendedWarranty2Year: 1399, screenProtection1Year: 1699 },
-  { range: '₹40,000 – ₹44,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1599 },
-  { range: '₹45,000 – ₹49,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1599 },
-  { range: '₹50,000 – ₹59,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1499 },
-  { range: '₹60,000 – ₹69,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1699 },
-  { range: '₹70,000 – ₹74,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1899 },
-  { range: '₹75,000 – ₹79,999', extendedWarranty1Year: 999, extendedWarranty2Year: 1599, screenProtection1Year: 1999 },
-  { range: '₹80,000 – ₹99,999', extendedWarranty1Year: 1199, extendedWarranty2Year: 1799, screenProtection1Year: 2199 },
-];
-
 // Calculate daily price
 const calculateDailyPrice = (price) => {
   return (price / 365).toFixed(2);
-};
-
-// Find the appropriate pricing tier
-const findPricingTier = (devicePrice) => {
-  const price = Number(devicePrice);
-
-  // Find the first tier where the price falls within the range
-  for (let i = 0; i < pricingTiers.length; i++) {
-    const [min, max] = pricingTiers[i].range.replace(/₹|,/g, '').split('–').map(Number);
-    if (price >= min && price <= max) {
-      return pricingTiers[i];
-    }
-  }
-
-  // If the price is higher than all tiers, return the highest tier
-  return pricingTiers[pricingTiers.length - 1];
 };
 
 // Modal component for plans
@@ -434,17 +400,56 @@ const DeviceProtectionForm = () => {
     purchaseDate: '',
     devicePrice: '',
   });
-
+  const [pricingTiers, setPricingTiers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [pricingTier, setPricingTier] = useState(null);
   const [formError, setFormError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successData, setSuccessData] = useState(null);
 
-  const onClose = () =>{
+  useEffect(() => {
+    const fetchPricingTiers = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/direct-warranty`);
+        setPricingTiers(response.data);
+      } catch (error) {
+        console.error('Error fetching pricing tiers:', error);
+      }
+    };
+
+    fetchPricingTiers();
+  }, []);
+
+  const resetForm = () => {
+    setFormData({
+      deviceName: '',
+      purchaseDate: '',
+      devicePrice: '',
+    });
+    setPricingTier(null);
+    setShowModal(false);
+    setFormError('');
     setShowSuccessModal(false);
     setSuccessData(null);
+  };
+
+  const findPricingTier = (devicePrice) => {
+  const price = Number(devicePrice);
+
+  for (let i = 0; i < pricingTiers.length; i++) {
+    const cleanRange = pricingTiers[i].range
+      .replace(/[₹,\s]/g, '') // remove ₹, commas, spaces
+      .replace(/–|—|-/g, '-'); // normalize all dashes to hyphen-minus
+
+    const [min, max] = cleanRange.split('-').map(Number);
+
+    if (price >= min && price <= max) {
+      return pricingTiers[i];
+    }
   }
+
+  return pricingTiers[pricingTiers.length - 1];
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -505,7 +510,7 @@ const DeviceProtectionForm = () => {
         </div>
         <button
           onClick={() => {
-            setShowSuccessModal(false);
+            resetForm(); // Reset all states and return to the initial stage
             onClose();
           }}
           className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 mt-4"
@@ -735,7 +740,8 @@ const DeviceProtectionForm = () => {
       />
 
       {showSuccessModal && successData && (
-        <SuccessModal data={successData} onClose={onClose} />)}
+        <SuccessModal data={successData} onClose={() => setShowSuccessModal(false)} />
+      )}
 
       <style jsx>{`
         .form-appear {
